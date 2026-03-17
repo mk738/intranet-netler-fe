@@ -1,0 +1,114 @@
+import { useState } from 'react'
+import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useNewsPost } from '@/hooks/useNews'
+import { useAuth } from '@/context/AuthContext'
+import { Avatar } from '@/components/ui/Avatar'
+import { ToastContainer } from '@/components/ui/Toast'
+import { RichTextEditor } from '@/components/hub/RichTextEditor'
+import { DeleteNewsConfirmModal } from '@/components/hub/DeleteNewsConfirmModal'
+import { Button, EmptyState } from '@/components/ui'
+import { formatShortDate } from '@/lib/dateUtils'
+
+function SkeletonDetail() {
+  return (
+    <div className="max-w-2xl space-y-4 animate-pulse">
+      <div className="h-3 w-20 bg-bg-hover rounded" />
+      <div className="bg-bg-hover h-56 rounded-xl" />
+      <div className="h-6 bg-bg-hover rounded w-3/4" />
+      <div className="flex items-center gap-2">
+        <div className="w-6 h-6 bg-bg-hover rounded-full" />
+        <div className="h-3 w-32 bg-bg-hover rounded" />
+      </div>
+      <div className="border-b border-subtle" />
+      <div className="space-y-2">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-3 bg-bg-hover rounded" style={{ width: `${70 + (i % 3) * 10}%` }} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export function NewsDetailPage() {
+  const { id }          = useParams<{ id: string }>()
+  const navigate        = useNavigate()
+  const { isAdmin }     = useAuth()
+  const [deleteOpen, setDeleteOpen] = useState(false)
+
+  const { data: post, isLoading, isError } = useNewsPost(id ?? '')
+
+  if (isLoading) return <SkeletonDetail />
+
+  if (isError || !post) {
+    return (
+      <EmptyState
+        title="Post not found"
+        description="This post may have been removed."
+        action={<Button variant="secondary" onClick={() => navigate('/news')}>← Back to news</Button>}
+      />
+    )
+  }
+
+  return (
+    <>
+      <ToastContainer />
+
+      <div className="max-w-2xl space-y-6">
+        {/* Back link */}
+        <Link to="/news" className="text-sm text-text-3 hover:text-text-1 transition-colors">
+          ← News
+        </Link>
+
+        {/* Cover image */}
+        {post.hasCoverImage && post.coverImageData && post.coverImageType && (
+          <img
+            src={`data:${post.coverImageType};base64,${post.coverImageData}`}
+            alt={post.title}
+            className="w-full max-h-[360px] object-cover rounded-xl"
+          />
+        )}
+
+        {/* Title */}
+        <h1 className="text-2xl font-semibold text-text-1">{post.title}</h1>
+
+        {/* Meta */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Avatar name={post.authorName} avatarUrl={null} size="sm" />
+          <span className="text-sm text-text-2">{post.authorName}</span>
+          <span className="text-text-3">·</span>
+          <span className="text-sm text-text-3">{formatShortDate(post.publishedAt)}</span>
+          {post.pinned && (
+            <span className="badge-active ml-1">Pinned</span>
+          )}
+        </div>
+
+        <div className="border-b border-subtle" />
+
+        {/* Body */}
+        <RichTextEditor content={post.body} onChange={() => void 0} readOnly />
+
+        {/* Admin actions */}
+        {isAdmin && (
+          <div className="flex items-center gap-3 pt-2">
+            <Button
+              variant="secondary"
+              onClick={() => navigate(`/admin/news/${post.id}/edit`)}
+            >
+              Edit post
+            </Button>
+            <Button variant="danger" onClick={() => setDeleteOpen(true)}>
+              Delete post
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {deleteOpen && (
+        <DeleteNewsConfirmModal
+          postId={post.id}
+          onClose={() => setDeleteOpen(false)}
+        />
+      )}
+    </>
+  )
+}

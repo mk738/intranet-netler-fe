@@ -1,0 +1,240 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-bg text-text-1 font-sans;
+    min-height: 100vh;
+  }
+
+  input, select, textarea {
+    @apply bg-bg-input border border-mild rounded text-text-1 text-sm
+           placeholder:text-text-3 outline-none
+           focus:border-purple focus:ring-0;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-text-3 rounded-full;
+  }
+}
+
+@layer components {
+  /* Buttons */
+  .btn-primary {
+    @apply bg-purple-dark border border-purple text-text-1
+           px-4 py-2 rounded text-sm font-medium
+           hover:bg-purple transition-colors cursor-pointer;
+  }
+
+  .btn-secondary {
+    @apply bg-transparent border border-mild text-text-2
+           px-4 py-2 rounded text-sm
+           hover:bg-bg-hover hover:text-text-1 transition-colors cursor-pointer;
+  }
+
+  .btn-danger {
+    @apply bg-danger-bg border border-danger/30 text-danger
+           px-4 py-2 rounded text-sm font-medium
+           hover:bg-danger/20 transition-colors cursor-pointer;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-bg-card border border-subtle rounded-lg p-4;
+  }
+
+  /* Badges */
+  .badge-active   { @apply bg-success-bg text-success text-xs px-2 py-0.5 rounded-full font-medium; }
+  .badge-pending  { @apply bg-warning-bg text-warning text-xs px-2 py-0.5 rounded-full font-medium; }
+  .badge-unplaced { @apply bg-danger-bg text-danger text-xs px-2 py-0.5 rounded-full font-medium; }
+  .badge-prospect { @apply bg-prospect-bg text-prospect text-xs px-2 py-0.5 rounded-full font-medium; }
+  .badge-ended    { @apply bg-bg-hover text-text-3 text-xs px-2 py-0.5 rounded-full font-medium; }
+  .badge-ending   { @apply bg-warning-bg text-warning text-xs px-2 py-0.5 rounded-full font-medium; }
+
+  /* Form field */
+  .field-label {
+    @apply block text-xs font-medium text-text-3 uppercase tracking-wide mb-1.5;
+  }
+
+  .field-input {
+    @apply w-full px-3 py-2 bg-bg-input border border-mild rounded text-sm
+           text-text-1 placeholder:text-text-3
+           focus:border-purple focus:outline-none transition-colors;
+  }
+
+  /* Table */
+  .table-row {
+    @apply border-b border-subtle last:border-0 hover:bg-bg-hover transition-colors;
+  }
+
+  /* Section label */
+  .section-label {
+    @apply text-xs font-semibold text-text-3 uppercase tracking-widest;
+  }
+
+  /* Date picker — match dark theme */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.6) sepia(1) saturate(2) hue-rotate(220deg);
+    cursor: pointer;
+    opacity: 0.7;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+  }
+  input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+    color: #f0ecf8;
+  }
+  input[type="date"]::-webkit-datetime-edit-text {
+    color: #6b617e;
+    padding: 0 2px;
+  }
+  input[type="date"]::-webkit-inner-spin-button {
+    display: none;
+  }
+
+  /* Animated background orbs */
+  .bg-orb {
+    position: absolute;
+    border-radius: 9999px;
+    will-change: transform;
+  }
+
+  .bg-orb-1 {
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(circle, #7c3aed 0%, transparent 70%);
+    top: -220px;
+    left: -180px;
+    opacity: 0.32;
+    filter: blur(70px);
+    animation: orb-drift-a 28s ease-in-out infinite;
+  }
+
+  .bg-orb-2 {
+    width: 580px;
+    height: 580px;
+    background: radial-gradient(circle, #5b21b6 0%, transparent 70%);
+    bottom: -150px;
+    right: -120px;
+    opacity: 0.38;
+    filter: blur(78px);
+    animation: orb-drift-b 34s ease-in-out infinite;
+  }
+
+  .bg-orb-3 {
+    width: 420px;
+    height: 420px;
+    background: radial-gradient(circle, #9d5ff5 0%, transparent 70%);
+    top: 45%;
+    left: 55%;
+    opacity: 0.26;
+    filter: blur(58px);
+    animation: orb-drift-c 22s ease-in-out infinite;
+  }
+
+  .bg-orb-4 {
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, #6d28d9 0%, transparent 70%);
+    top: 15%;
+    right: 20%;
+    opacity: 0.3;
+    filter: blur(48px);
+    animation: orb-drift-a 40s ease-in-out infinite reverse;
+  }
+
+  /* Cyan orbs */
+  .bg-orb-5 {
+    width: 540px;
+    height: 540px;
+    background: radial-gradient(circle, #0891b2 0%, transparent 70%);
+    bottom: -80px;
+    left: -100px;
+    opacity: 0.3;
+    filter: blur(72px);
+    animation: orb-drift-b 38s ease-in-out infinite reverse;
+  }
+
+  /* Form field error state */
+  .field-input-error {
+    @apply border-danger focus:border-danger;
+  }
+
+  /* Filter pills */
+  .pill {
+    @apply px-3 py-1.5 rounded-full text-xs font-medium border border-subtle
+           text-text-3 hover:text-text-1 transition-colors cursor-pointer bg-transparent;
+  }
+  .pill-active {
+    @apply border-purple/50 bg-purple-bg text-purple-light;
+  }
+
+  /* Prose styles for RichTextEditor rendered HTML */
+  .prose-dark h1     { @apply text-xl font-semibold text-text-1 mb-3 mt-4; }
+  .prose-dark h2     { @apply text-lg font-medium text-text-1 mb-2 mt-3; }
+  .prose-dark p      { @apply text-text-2 mb-2 leading-relaxed; }
+  .prose-dark ul     { @apply list-disc list-inside text-text-2 mb-2; }
+  .prose-dark ol     { @apply list-decimal list-inside text-text-2 mb-2; }
+  .prose-dark strong { @apply text-text-1 font-medium; }
+  .prose-dark em     { @apply italic; }
+
+  .bg-orb-6 {
+    width: 360px;
+    height: 360px;
+    background: radial-gradient(circle, #06b6d4 0%, transparent 70%);
+    top: 30%;
+    left: 25%;
+    opacity: 0.22;
+    filter: blur(52px);
+    animation: orb-drift-c 26s ease-in-out infinite reverse;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.25s ease-out forwards;
+}
+
+@keyframes orb-drift-a {
+  0%,  100% { transform: translate(0px,   0px)  scale(1);    }
+  25%        { transform: translate(55px, -45px) scale(1.08); }
+  50%        { transform: translate(20px,  60px) scale(0.94); }
+  75%        { transform: translate(-40px, 20px) scale(1.04); }
+}
+
+@keyframes orb-drift-b {
+  0%,  100% { transform: translate(0px,   0px)  scale(1);    }
+  30%        { transform: translate(-60px, 50px) scale(0.92); }
+  60%        { transform: translate(45px, -30px) scale(1.06); }
+  80%        { transform: translate(-20px, -50px) scale(0.97); }
+}
+
+@keyframes orb-drift-c {
+  0%,  100% { transform: translate(0px,  0px)  scale(1);    }
+  50%        { transform: translate(35px, 55px) scale(1.1);  }
+}

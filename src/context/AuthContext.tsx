@@ -1,0 +1,70 @@
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { auth } from '@/lib/firebase'
+import api from '@/lib/api'
+import type { Employee } from '@/types'
+import { LoadingScreen } from '@/components/ui/LoadingScreen'
+
+interface AuthContextValue {
+  employee:  Employee | null
+  loading:   boolean
+  isAdmin:   boolean
+  authError: string | null
+}
+
+const AuthContext = createContext<AuthContextValue>({
+  employee:  null,
+  loading:   true,
+  isAdmin:   false,
+  authError: null,
+})
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [employee,  setEmployee]  = useState<Employee | null>(null)
+  const [loading,   setLoading]   = useState(true)
+  const [authError, setAuthError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+      setAuthError(null)
+
+      if (firebaseUser) {
+        try {
+          const res = await api.post<{ data: Employee }>('/api/auth/me')
+          setEmployee(res.data.data)
+        } catch (err: unknown) {
+          const status = (err as { response?: { status?: number } }).response?.status
+          setEmployee(null)
+          if (status === 404) {
+            // Firebase user exists but no Employee record — sign out and surface error
+            await auth.signOut()
+            setAuthError('Account not found. Contact your administrator.')
+          } else {
+            // Network/server error — leave Firebase session intact so user can retry
+            setAuthError('Connection error. Please try again.')
+          }
+        }
+      } else {
+        setEmployee(null)
+      }
+
+      setLoading(false)
+    })
+
+    return unsubscribe
+  }, [])
+
+  if (loading) return <LoadingScreen />
+
+  return (
+    <AuthContext.Provider value={{
+      employee,
+      loading,
+      isAdmin: employee?.role === 'ADMIN',
+      authError,
+    }}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export const useAuth = () => useContext(AuthContext)
