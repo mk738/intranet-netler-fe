@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { signInWithRedirect, signInWithEmailAndPassword, getRedirectResult } from 'firebase/auth'
+import { signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth'
 import { auth, provider } from '@/lib/firebase'
 import { useAuth } from '@/context/AuthContext'
 import { Button, Spinner } from '@/components/ui'
@@ -14,20 +14,6 @@ export function LoginPage() {
 
   const { employee, loading, authError } = useAuth()
   const spotlightRef = useRef<HTMLDivElement>(null)
-
-  // Handle redirect result from Google sign-in
-  useEffect(() => {
-    getRedirectResult(auth).catch((err: unknown) => {
-      const code = (err as { code?: string }).code ?? 'unknown'
-      const messages: Record<string, string> = {
-        'auth/unauthorized-domain':   'This domain is not authorised in Firebase.',
-        'auth/operation-not-allowed': 'Google sign-in is not enabled in Firebase.',
-        'auth/network-request-failed': 'Network error. Check your connection and try again.',
-      }
-      setError(messages[code] ?? `Google sign-in failed (${code}).`)
-      setPending(null)
-    })
-  }, [])
 
   // Navigate once AuthContext resolves a valid employee
   useEffect(() => {
@@ -44,14 +30,27 @@ export function LoginPage() {
     spotlightRef.current.style.top  = `${e.clientY - rect.top}px`
   }
 
-  const handleGoogle = () => {
+  const handleGoogle = async () => {
     setError(null)
     setPending('google')
-    signInWithRedirect(auth, provider).catch((err: unknown) => {
+    try {
+      await signInWithPopup(auth, provider)
+    } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? 'unknown'
-      setError(`Google sign-in failed (${code}).`)
+      console.error('[Google sign-in error]', code, err)
+
+      const messages: Record<string, string> = {
+        'auth/popup-closed-by-user':      'Sign-in popup was closed before completing.',
+        'auth/popup-blocked':             'Popup was blocked by your browser. Allow popups for this site and try again.',
+        'auth/unauthorized-domain':       'This domain is not authorised in Firebase. Add it under Authentication → Settings → Authorized domains.',
+        'auth/operation-not-allowed':     'Google sign-in is not enabled. Enable it in the Firebase console under Authentication → Sign-in methods.',
+        'auth/cancelled-popup-request':   'Sign-in was cancelled.',
+        'auth/network-request-failed':    'Network error. Check your connection and try again.',
+      }
+
+      setError(messages[code] ?? `Google sign-in failed (${code}).`)
       setPending(null)
-    })
+    }
   }
 
   const handlePassword = async (e: React.FormEvent) => {

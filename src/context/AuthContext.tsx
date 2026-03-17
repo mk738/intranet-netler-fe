@@ -28,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAuthError(null)
 
       if (firebaseUser) {
+        setLoading(true)
         try {
           const res = await api.post<{ data: Employee }>('/api/auth/me')
           setEmployee(res.data.data)
