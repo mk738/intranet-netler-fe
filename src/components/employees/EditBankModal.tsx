@@ -18,7 +18,8 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 interface Props {
-  onClose: () => void
+  onClose:      () => void
+  employeeId?:  string
 }
 
 export function EditBankModal({ onClose }: Props) {

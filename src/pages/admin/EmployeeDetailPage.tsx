@@ -121,9 +121,6 @@ export function EmployeeDetailPage() {
 
   const p         = data.profile
   const name      = p ? `${p.firstName} ${p.lastName}`.trim() : data.email
-  const initials  = p
-    ? [p.firstName[0], p.lastName[0]].filter(Boolean).join('').toUpperCase()
-    : '?'
   const memberSince = p?.startDate
     ? format(new Date(p.startDate), 'MMMM yyyy')
     : null

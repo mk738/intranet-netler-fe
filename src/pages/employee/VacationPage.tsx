@@ -5,7 +5,7 @@ import { AnimatedList, AnimatedListItem } from '@/components/ui/AnimatedList'
 import { ToastContainer } from '@/components/ui/Toast'
 import { RequestVacationModal } from '@/components/vacation/RequestVacationModal'
 import { CancelVacationConfirmModal } from '@/components/vacation/CancelVacationConfirmModal'
-import { formatDateRange, formatShortDate } from '@/lib/dateUtils'
+import { formatDateRange } from '@/lib/dateUtils'
 import type { VacationDto } from '@/types'
 
 function StatusBadge({ status }: { status: VacationDto['status'] }) {
