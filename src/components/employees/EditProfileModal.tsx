@@ -10,8 +10,8 @@ import { getApiError } from '@/lib/api'
 import type { Employee } from '@/types'
 
 const schema = z.object({
-  firstName:        z.string().min(1, 'First name is required'),
-  lastName:         z.string().min(1, 'Last name is required'),
+  firstName:        z.string().min(1, 'Förnamn krävs'),
+  lastName:         z.string().min(1, 'Efternamn krävs'),
   jobTitle:         z.string().optional(),
   phone:            z.string().optional(),
   address:          z.string().optional(),
@@ -55,13 +55,13 @@ export function EditProfileModal({ employee, isAdmin, onClose }: Props) {
 
   return (
     <Modal
-      title="Edit profile"
+      title="Redigera profil"
       onClose={onClose}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" onClick={onClose}>Avbryt</Button>
           <Button form="edit-profile-form" type="submit" loading={mutation.isPending}>
-            Save changes
+            Spara ändringar
           </Button>
         </>
       }
@@ -69,46 +69,46 @@ export function EditProfileModal({ employee, isAdmin, onClose }: Props) {
       <form id="edit-profile-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="field-label">First name *</label>
+            <label className="field-label">Förnamn *</label>
             <input {...register('firstName')} className={clsx('field-input', errors.firstName && 'field-input-error')} />
             <FieldError message={errors.firstName?.message} />
           </div>
           <div>
-            <label className="field-label">Last name *</label>
+            <label className="field-label">Efternamn *</label>
             <input {...register('lastName')} className={clsx('field-input', errors.lastName && 'field-input-error')} />
             <FieldError message={errors.lastName?.message} />
           </div>
         </div>
 
         <div>
-          <label className="field-label">Job title</label>
+          <label className="field-label">Jobbtitel</label>
           <input {...register('jobTitle')} className="field-input" />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="field-label">Phone</label>
+            <label className="field-label">Telefon</label>
             <input {...register('phone')} className="field-input" />
           </div>
           <div>
-            <label className="field-label">Birth date</label>
+            <label className="field-label">Födelsedatum</label>
             <input {...register('birthDate')} type="date" className="field-input" />
           </div>
         </div>
 
         <div>
-          <label className="field-label">Address</label>
+          <label className="field-label">Adress</label>
           <input {...register('address')} className="field-input" />
         </div>
 
         <div>
-          <label className="field-label">Emergency contact</label>
-          <input {...register('emergencyContact')} className="field-input" placeholder="Name — phone" />
+          <label className="field-label">Nödkontakt</label>
+          <input {...register('emergencyContact')} className="field-input" placeholder="Namn — telefon" />
         </div>
 
         {isAdmin && (
           <div>
-            <label className="field-label">Start date</label>
+            <label className="field-label">Startdatum</label>
             <input {...register('startDate')} type="date" className="field-input" />
           </div>
         )}

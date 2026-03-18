@@ -36,7 +36,7 @@ function EducationEntry({ entry }: { entry: Education }) {
   if (confirming) {
     return (
       <li className="border-b border-subtle last:border-0 pb-3 last:pb-0">
-        <p className="text-xs text-text-2 mb-2">Remove this education entry?</p>
+        <p className="text-xs text-text-2 mb-2">Ta bort den här utbildningsposten?</p>
         <div className="flex gap-2">
           <Button
             variant="danger"
@@ -44,10 +44,10 @@ function EducationEntry({ entry }: { entry: Education }) {
             loading={deleteMutation.isPending}
             onClick={() => deleteMutation.mutate(entry.id, { onSuccess: () => setConfirming(false) })}
           >
-            Remove
+            Ta bort
           </Button>
           <Button variant="secondary" size="sm" onClick={() => setConfirming(false)}>
-            Cancel
+            Avbryt
           </Button>
         </div>
       </li>
@@ -61,7 +61,7 @@ function EducationEntry({ entry }: { entry: Education }) {
           <p className="text-sm font-medium text-text-1">{entry.institution}</p>
           <p className="text-sm text-text-2">{entry.degree} · {entry.field}</p>
           <p className="text-xs text-text-3 mt-0.5">
-            {entry.startYear} – {entry.endYear ?? 'present'}
+            {entry.startYear} – {entry.endYear ?? 'pågående'}
           </p>
         </div>
         <button
@@ -126,7 +126,7 @@ export function ProfilePage() {
                 {employee.role}
               </span>
               {memberSince && (
-                <p className="text-xs text-text-3">Member since {memberSince}</p>
+                <p className="text-xs text-text-3">Medlem sedan {memberSince}</p>
               )}
             </div>
           </Card>
@@ -136,19 +136,19 @@ export function ProfilePage() {
             {/* Personal info */}
             <Card>
               <div className="flex items-center justify-between mb-3">
-                <p className="section-label">Personal info</p>
+                <p className="section-label">Personlig information</p>
                 <Button variant="secondary" size="sm" onClick={() => setEditProfile(true)}>
-                  Edit
+                  Redigera
                 </Button>
               </div>
               {personalEmpty ? (
-                <EmptyState title="No personal info added yet" />
+                <EmptyState title="Ingen personlig information tillagd ännu" />
               ) : (
                 <div className="grid grid-cols-2 gap-4">
-                  <InfoRow label="Phone"             value={p?.phone} />
-                  <InfoRow label="Birth date"        value={p?.birthDate ? format(new Date(p.birthDate), 'MMM d, yyyy') : null} />
-                  <InfoRow label="Address"           value={p?.address} />
-                  <InfoRow label="Emergency contact" value={p?.emergencyContact} />
+                  <InfoRow label="Telefon"    value={p?.phone} />
+                  <InfoRow label="Födelsedatum" value={p?.birthDate ? format(new Date(p.birthDate), 'MMM d, yyyy') : null} />
+                  <InfoRow label="Adress"     value={p?.address} />
+                  <InfoRow label="Nödkontakt" value={p?.emergencyContact} />
                 </div>
               )}
             </Card>
@@ -160,23 +160,23 @@ export function ProfilePage() {
                   <svg className="w-3 h-3 text-text-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                   </svg>
-                  <p className="section-label">Bank info</p>
+                  <p className="section-label">Bankinformation</p>
                 </div>
                 <Button variant="secondary" size="sm" onClick={() => setEditBank(true)}>
-                  Edit
+                  Redigera
                 </Button>
               </div>
               {bankInfo ? (
                 <div className="space-y-3">
-                  <InfoRow label="Bank name"       value={bankInfo.bankName} />
-                  <InfoRow label="Clearing number" value={bankInfo.clearingNumber} />
-                  <InfoRow label="Account number"  value={maskAccount(bankInfo.accountNumber)} />
+                  <InfoRow label="Banknamn"        value={bankInfo.bankName} />
+                  <InfoRow label="Clearingnummer"  value={bankInfo.clearingNumber} />
+                  <InfoRow label="Kontonummer"     value={maskAccount(bankInfo.accountNumber)} />
                 </div>
               ) : (
                 <EmptyState
-                  title="No bank info added"
-                  description="Add your bank details for payroll."
-                  action={<Button variant="secondary" size="sm" onClick={() => setEditBank(true)}>Add bank info</Button>}
+                  title="Ingen bankinformation tillagd"
+                  description="Lägg till dina bankuppgifter för löneutbetalning."
+                  action={<Button variant="secondary" size="sm" onClick={() => setEditBank(true)}>Lägg till bankinformation</Button>}
                 />
               )}
             </Card>
@@ -184,14 +184,14 @@ export function ProfilePage() {
             {/* Education */}
             <Card>
               <div className="flex items-center justify-between mb-3">
-                <p className="section-label">Education</p>
-                <Button size="sm" onClick={() => setAddEdu(true)}>Add education</Button>
+                <p className="section-label">Utbildning</p>
+                <Button size="sm" onClick={() => setAddEdu(true)}>Lägg till utbildning</Button>
               </div>
               {!education.length ? (
                 <EmptyState
-                  title="No education added"
-                  description="Add your qualifications to your profile."
-                  action={<Button size="sm" onClick={() => setAddEdu(true)}>Add education</Button>}
+                  title="Ingen utbildning tillagd"
+                  description="Lägg till dina kvalifikationer i din profil."
+                  action={<Button size="sm" onClick={() => setAddEdu(true)}>Lägg till utbildning</Button>}
                 />
               ) : (
                 <ul className="space-y-3">

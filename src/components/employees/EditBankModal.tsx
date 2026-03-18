@@ -10,9 +10,9 @@ import { getApiError } from '@/lib/api'
 import type { BankInfo } from '@/types'
 
 const schema = z.object({
-  bankName:       z.string().min(1, 'Bank name is required'),
-  accountNumber:  z.string().min(1, 'Account number is required'),
-  clearingNumber: z.string().min(1, 'Clearing number is required'),
+  bankName:       z.string().min(1, 'Banknamn krävs'),
+  accountNumber:  z.string().min(1, 'Kontonummer krävs'),
+  clearingNumber: z.string().min(1, 'Clearingnummer krävs'),
 })
 
 type FormData = z.infer<typeof schema>
@@ -35,36 +35,36 @@ export function EditBankModal({ onClose }: Props) {
 
   return (
     <Modal
-      title="Edit bank info"
+      title="Redigera bankinformation"
       onClose={onClose}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" onClick={onClose}>Avbryt</Button>
           <Button form="edit-bank-form" type="submit" loading={mutation.isPending}>
-            Save changes
+            Spara ändringar
           </Button>
         </>
       }
     >
       <form id="edit-bank-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <p className="text-xs text-text-3 bg-bg-hover border border-subtle rounded px-3 py-2">
-          Enter the real values — they are stored securely and masked when displayed.
+          Ange de verkliga värdena — de lagras säkert och maskeras vid visning.
         </p>
 
         <div>
-          <label className="field-label">Bank name</label>
-          <input {...register('bankName')} className={clsx('field-input', errors.bankName && 'field-input-error')} placeholder="e.g. Swedbank" />
+          <label className="field-label">Banknamn</label>
+          <input {...register('bankName')} className={clsx('field-input', errors.bankName && 'field-input-error')} placeholder="t.ex. Swedbank" />
           <FieldError message={errors.bankName?.message} />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="field-label">Clearing number</label>
+            <label className="field-label">Clearingnummer</label>
             <input {...register('clearingNumber')} className={clsx('field-input', errors.clearingNumber && 'field-input-error')} placeholder="8105" />
             <FieldError message={errors.clearingNumber?.message} />
           </div>
           <div>
-            <label className="field-label">Account number</label>
+            <label className="field-label">Kontonummer</label>
             <input {...register('accountNumber')} className={clsx('field-input', errors.accountNumber && 'field-input-error')} placeholder="0000000000" />
             <FieldError message={errors.accountNumber?.message} />
           </div>

@@ -19,7 +19,7 @@ export function EndAssignmentConfirmModal({ assignment, onClose }: Props) {
   const handleEnd = () => {
     mutation.mutate({ id: assignment.id, endDate }, {
       onSuccess: () => {
-        showToast('Assignment ended', 'success')
+        showToast('Uppdrag avslutat', 'success')
         onClose()
       },
     })
@@ -27,27 +27,27 @@ export function EndAssignmentConfirmModal({ assignment, onClose }: Props) {
 
   return (
     <Modal
-      title="End assignment?"
+      title="Avsluta uppdrag?"
       onClose={onClose}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" onClick={onClose}>Avbryt</Button>
           <Button variant="danger" loading={mutation.isPending} onClick={handleEnd}>
-            End assignment
+            Avsluta uppdrag
           </Button>
         </>
       }
     >
       <p className="text-sm text-text-2 mb-5">
-        This will mark{' '}
-        <span className="text-text-1 font-medium">{assignment.fullName}</span>'s
-        assignment at{' '}
+        Detta markerar{' '}
+        <span className="text-text-1 font-medium">{assignment.fullName}</span>s
+        uppdrag hos{' '}
         <span className="text-text-1 font-medium">{assignment.companyName}</span>
-        {' '}({assignment.projectName}) as ended.
+        {' '}({assignment.projectName}) som avslutat.
       </p>
 
       <div>
-        <label className="field-label">End date</label>
+        <label className="field-label">Slutdatum</label>
         <DatePicker
           value={endDate}
           onChange={setEndDate}
@@ -57,7 +57,7 @@ export function EndAssignmentConfirmModal({ assignment, onClose }: Props) {
 
       {mutation.isError && (
         <p className="text-xs text-danger bg-danger-bg border border-danger/20 rounded px-3 py-2 mt-4">
-          Failed to end assignment. Please try again.
+          Det gick inte att avsluta uppdraget. Försök igen.
         </p>
       )}
     </Modal>

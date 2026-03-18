@@ -11,11 +11,11 @@ import { getApiError } from '@/lib/api'
 import type { ClientDto } from '@/types'
 
 const schema = z.object({
-  companyName:  z.string().min(1, 'Company name is required'),
+  companyName:  z.string().min(1, 'Företagsnamn krävs'),
   orgNumber:    z.string().optional(),
   status:       z.enum(['ACTIVE', 'PROSPECT', 'INACTIVE']),
   contactName:  z.string().optional(),
-  contactEmail: z.string().email('Invalid email').optional().or(z.literal('')),
+  contactEmail: z.string().email('Ogiltig e-post').optional().or(z.literal('')),
   phone:        z.string().optional(),
 })
 
@@ -52,7 +52,7 @@ export function EditClientModal({ client, onClose }: Props) {
       status:       data.status,
     }, {
       onSuccess: () => {
-        showToast('Client updated', 'success')
+        showToast('Kund uppdaterad', 'success')
         onClose()
       },
     })
@@ -60,52 +60,52 @@ export function EditClientModal({ client, onClose }: Props) {
 
   return (
     <Modal
-      title="Edit client"
+      title="Redigera kund"
       onClose={onClose}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" onClick={onClose}>Avbryt</Button>
           <Button form="edit-client-form" type="submit" loading={mutation.isPending}>
-            Save changes
+            Spara ändringar
           </Button>
         </>
       }
     >
       <form id="edit-client-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label className="field-label">Company name *</label>
+          <label className="field-label">Företagsnamn *</label>
           <input {...register('companyName')} className={clsx('field-input', errors.companyName && 'field-input-error')} />
           <FieldError message={errors.companyName?.message} />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="field-label">Org number</label>
+            <label className="field-label">Org-nummer</label>
             <input {...register('orgNumber')} className="field-input" />
           </div>
           <div>
             <label className="field-label">Status</label>
             <select {...register('status')} className="field-input">
-              <option value="ACTIVE">Active</option>
+              <option value="ACTIVE">Aktiv</option>
               <option value="PROSPECT">Prospect</option>
-              <option value="INACTIVE">Inactive</option>
+              <option value="INACTIVE">Inaktiv</option>
             </select>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="field-label">Contact name</label>
+            <label className="field-label">Kontaktperson</label>
             <input {...register('contactName')} className="field-input" />
           </div>
           <div>
-            <label className="field-label">Phone</label>
+            <label className="field-label">Telefon</label>
             <input {...register('phone')} className="field-input" />
           </div>
         </div>
 
         <div>
-          <label className="field-label">Contact email</label>
+          <label className="field-label">Kontakt-e-post</label>
           <input {...register('contactEmail')} type="email" className={clsx('field-input', errors.contactEmail && 'field-input-error')} />
           <FieldError message={errors.contactEmail?.message} />
         </div>

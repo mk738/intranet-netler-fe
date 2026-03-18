@@ -42,9 +42,9 @@ export function NewsDetailPage() {
   if (isError || !post) {
     return (
       <EmptyState
-        title="Post not found"
-        description="This post may have been removed."
-        action={<Button variant="secondary" onClick={() => navigate('/news')}>← Back to news</Button>}
+        title="Inlägg hittades inte"
+        description="Det här inlägget kan ha tagits bort."
+        action={<Button variant="secondary" onClick={() => navigate('/news')}>← Tillbaka till nyheter</Button>}
       />
     )
   }
@@ -56,7 +56,7 @@ export function NewsDetailPage() {
       <div className="max-w-2xl space-y-6">
         {/* Back link */}
         <Link to="/news" className="text-sm text-text-3 hover:text-text-1 transition-colors">
-          ← News
+          ← Nyheter
         </Link>
 
         {/* Cover image */}
@@ -78,7 +78,7 @@ export function NewsDetailPage() {
           <span className="text-text-3">·</span>
           <span className="text-sm text-text-3">{formatShortDate(post.publishedAt)}</span>
           {post.pinned && (
-            <span className="badge-active ml-1">Pinned</span>
+            <span className="badge-active ml-1">Fäst</span>
           )}
         </div>
 
@@ -94,10 +94,10 @@ export function NewsDetailPage() {
               variant="secondary"
               onClick={() => navigate(`/admin/news/${post.id}/edit`)}
             >
-              Edit post
+              Redigera inlägg
             </Button>
             <Button variant="danger" onClick={() => setDeleteOpen(true)}>
-              Delete post
+              Ta bort inlägg
             </Button>
           </div>
         )}

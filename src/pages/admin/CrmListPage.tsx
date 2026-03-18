@@ -22,9 +22,9 @@ const tbodyVariants = {
 }
 
 function StatusBadge({ status }: { status: ClientDto['status'] }) {
-  if (status === 'ACTIVE')   return <span className="badge-active">Active</span>
+  if (status === 'ACTIVE')   return <span className="badge-active">Aktiv</span>
   if (status === 'PROSPECT') return <span className="badge-prospect">Prospect</span>
-  return <span className="badge-ended">Inactive</span>
+  return <span className="badge-ended">Inaktiv</span>
 }
 
 function StatCard({ label, value }: { label: string; value: number }) {
@@ -71,14 +71,14 @@ export function CrmListPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold text-text-1">CRM</h1>
-          <Button onClick={() => setAddOpen(true)}>Add client</Button>
+          <Button onClick={() => setAddOpen(true)}>Lägg till kund</Button>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
-          <StatCard label="Active clients" value={activeCount} />
-          <StatCard label="Prospects"      value={prospectCount} />
-          <StatCard label="Total"          value={clients?.length ?? 0} />
+          <StatCard label="Aktiva kunder" value={activeCount} />
+          <StatCard label="Prospects"     value={prospectCount} />
+          <StatCard label="Totalt"        value={clients?.length ?? 0} />
         </div>
 
         {/* Search */}
@@ -92,7 +92,7 @@ export function CrmListPage() {
           <input
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search by company name..."
+            placeholder="Sök på företagsnamn..."
             className="field-input pl-9"
           />
         </div>
@@ -104,22 +104,22 @@ export function CrmListPage() {
           </table>
         ) : !clients?.length ? (
           <EmptyState
-            title="No clients yet"
-            description="Add your first client to start tracking placements."
-            action={<Button onClick={() => setAddOpen(true)}>Add client</Button>}
+            title="Inga kunder ännu"
+            description="Lägg till din första kund för att börja spåra placeringar."
+            action={<Button onClick={() => setAddOpen(true)}>Lägg till kund</Button>}
           />
         ) : !filtered.length && query ? (
           <EmptyState
-            title={`No results for "${query}"`}
-            description="Try a different company name."
-            action={<Button variant="secondary" size="sm" onClick={() => setQuery('')}>Clear search</Button>}
+            title={`Inga resultat för "${query}"`}
+            description="Prova ett annat företagsnamn."
+            action={<Button variant="secondary" size="sm" onClick={() => setQuery('')}>Rensa sökning</Button>}
           />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-subtle">
-                  {['Company', 'Contact', 'Email', 'Status', 'Org number', ''].map(col => (
+                  {['Företag', 'Kontakt', 'E-post', 'Status', 'Orgnummer', ''].map(col => (
                     <th key={col} className="section-label px-4 pb-2 text-left font-semibold">
                       {col}
                     </th>
@@ -146,14 +146,14 @@ export function CrmListPage() {
                           size="sm"
                           onClick={() => setEditTarget(client)}
                         >
-                          Edit
+                          Redigera
                         </Button>
                         <Button
                           variant="secondary"
                           size="sm"
                           onClick={() => navigate(`/admin/crm/${client.id}`)}
                         >
-                          View
+                          Visa
                         </Button>
                       </div>
                     </td>

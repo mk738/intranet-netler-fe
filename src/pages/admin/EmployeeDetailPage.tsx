@@ -27,7 +27,7 @@ function InfoRow({ label, value }: { label: string; value: string | null }) {
 // ── Sub-sections ──────────────────────────────────────────────
 
 function EducationList({ entries }: { entries: Education[] }) {
-  if (!entries.length) return <EmptyState title="No education added yet" />
+  if (!entries.length) return <EmptyState title="Ingen utbildning tillagd ännu" />
   return (
     <ul className="space-y-3">
       {entries.map(e => (
@@ -35,7 +35,7 @@ function EducationList({ entries }: { entries: Education[] }) {
           <p className="text-sm font-medium text-text-1">{e.institution}</p>
           <p className="text-sm text-text-2">{e.degree} · {e.field}</p>
           <p className="text-xs text-text-3 mt-0.5">
-            {e.startYear} – {e.endYear ?? 'present'}
+            {e.startYear} – {e.endYear ?? 'pågående'}
           </p>
         </li>
       ))}
@@ -44,7 +44,7 @@ function EducationList({ entries }: { entries: Education[] }) {
 }
 
 function AssignmentList({ items }: { items: Assignment[] }) {
-  if (!items.length) return <EmptyState title="No assignments yet" />
+  if (!items.length) return <EmptyState title="Inga uppdrag ännu" />
   return (
     <ul className="space-y-3">
       {items.map(a => (
@@ -54,11 +54,11 @@ function AssignmentList({ items }: { items: Assignment[] }) {
               <p className="text-sm font-medium text-text-1">{a.projectName}</p>
               <p className="text-xs text-text-3 mt-0.5">
                 {format(new Date(a.startDate), 'MMM yyyy')} –{' '}
-                {a.endDate ? format(new Date(a.endDate), 'MMM yyyy') : 'present'}
+                {a.endDate ? format(new Date(a.endDate), 'MMM yyyy') : 'pågående'}
               </p>
             </div>
             <span className={a.status === 'ACTIVE' ? 'badge-active' : 'badge-ended'}>
-              {a.status === 'ACTIVE' ? 'Active' : 'Ended'}
+              {a.status === 'ACTIVE' ? 'Aktiv' : 'Avslutad'}
             </span>
           </div>
         </li>
@@ -75,18 +75,18 @@ function BankInfoCard({ bankInfo, onEdit }: { bankInfo: BankInfo | null; onEdit:
           <svg className="w-3 h-3 text-text-3" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
           </svg>
-          <p className="section-label">Bank info</p>
+          <p className="section-label">Bankinformation</p>
         </div>
-        <Button variant="secondary" size="sm" onClick={onEdit}>Edit</Button>
+        <Button variant="secondary" size="sm" onClick={onEdit}>Redigera</Button>
       </div>
       {bankInfo ? (
         <div className="space-y-3">
-          <InfoRow label="Bank name"       value={bankInfo.bankName} />
-          <InfoRow label="Clearing number" value={bankInfo.clearingNumber} />
-          <InfoRow label="Account number"  value={maskAccount(bankInfo.accountNumber)} />
+          <InfoRow label="Banknamn"       value={bankInfo.bankName} />
+          <InfoRow label="Clearingnummer" value={bankInfo.clearingNumber} />
+          <InfoRow label="Kontonummer"    value={maskAccount(bankInfo.accountNumber)} />
         </div>
       ) : (
-        <EmptyState title="No bank info added yet" />
+        <EmptyState title="Ingen bankinformation tillagd ännu" />
       )}
     </Card>
   )
@@ -113,8 +113,8 @@ export function EmployeeDetailPage() {
   if (error || !data) {
     return (
       <div className="text-center py-24">
-        <p className="text-sm text-danger mb-4">Failed to load employee.</p>
-        <Button variant="secondary" onClick={() => navigate(-1)}>Go back</Button>
+        <p className="text-sm text-danger mb-4">Det gick inte att läsa in den anställde.</p>
+        <Button variant="secondary" onClick={() => navigate(-1)}>Gå tillbaka</Button>
       </div>
     )
   }
@@ -135,7 +135,7 @@ export function EmployeeDetailPage() {
           onClick={() => navigate('/admin/employees')}
           className="text-xs text-text-3 hover:text-text-1 transition-colors flex items-center gap-1"
         >
-          ← Employees
+          ← Anställda
         </button>
 
         <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
@@ -158,11 +158,11 @@ export function EmployeeDetailPage() {
                     {data.role}
                   </span>
                   <span className={data.isActive ? 'badge-active' : 'badge-unplaced'}>
-                    {data.isActive ? 'Active' : 'Inactive'}
+                    {data.isActive ? 'Aktiv' : 'Inaktiv'}
                   </span>
                 </div>
                 {memberSince && (
-                  <p className="text-xs text-text-3">Member since {memberSince}</p>
+                  <p className="text-xs text-text-3">Medlem sedan {memberSince}</p>
                 )}
               </div>
             </Card>
@@ -172,22 +172,22 @@ export function EmployeeDetailPage() {
               className="w-full justify-center"
               onClick={() => setEditProfile(true)}
             >
-              Edit profile
+              Redigera profil
             </Button>
           </div>
 
           {/* Right column */}
           <div className="space-y-5">
             {/* Personal info */}
-            <Card title="Personal info">
+            <Card title="Personlig information">
               {personalEmpty ? (
-                <EmptyState title="No personal info added yet" />
+                <EmptyState title="Ingen personlig information tillagd ännu" />
               ) : (
                 <div className="grid grid-cols-2 gap-4">
-                  <InfoRow label="Phone"             value={p?.phone ?? null} />
-                  <InfoRow label="Birth date"        value={p?.birthDate ? format(new Date(p.birthDate), 'MMM d, yyyy') : null} />
-                  <InfoRow label="Address"           value={p?.address ?? null} />
-                  <InfoRow label="Emergency contact" value={p?.emergencyContact ?? null} />
+                  <InfoRow label="Telefon"      value={p?.phone ?? null} />
+                  <InfoRow label="Födelsedatum" value={p?.birthDate ? format(new Date(p.birthDate), 'MMM d, yyyy') : null} />
+                  <InfoRow label="Adress"       value={p?.address ?? null} />
+                  <InfoRow label="Nödkontakt"   value={p?.emergencyContact ?? null} />
                 </div>
               )}
             </Card>
@@ -196,12 +196,12 @@ export function EmployeeDetailPage() {
             <BankInfoCard bankInfo={data.bankInfo} onEdit={() => setEditBank(true)} />
 
             {/* Education */}
-            <Card title="Education">
+            <Card title="Utbildning">
               <EducationList entries={data.education ?? []} />
             </Card>
 
             {/* Assignments */}
-            <Card title="Assignment history">
+            <Card title="Uppdragshistorik">
               <AssignmentList items={data.assignments ?? []} />
             </Card>
           </div>

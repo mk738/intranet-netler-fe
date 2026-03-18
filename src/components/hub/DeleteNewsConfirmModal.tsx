@@ -16,7 +16,7 @@ export function DeleteNewsConfirmModal({ postId, onClose }: Props) {
   const handleDelete = () => {
     mutation.mutate(postId, {
       onSuccess: () => {
-        showToast('Post deleted', 'success')
+        showToast('Inlägg borttaget', 'success')
         navigate('/news')
       },
     })
@@ -24,24 +24,24 @@ export function DeleteNewsConfirmModal({ postId, onClose }: Props) {
 
   return (
     <Modal
-      title="Delete post?"
+      title="Ta bort inlägg?"
       onClose={onClose}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" onClick={onClose}>Avbryt</Button>
           <Button variant="danger" loading={mutation.isPending} onClick={handleDelete}>
-            Delete
+            Ta bort
           </Button>
         </>
       }
     >
       <p className="text-sm text-text-2">
-        This will permanently delete this news post. All employees will lose access to it.
+        Det här inlägget tas bort permanent. Alla anställda förlorar åtkomst till det.
       </p>
 
       {mutation.isError && (
         <p className="text-xs text-danger bg-danger-bg border border-danger/20 rounded px-3 py-2 mt-4">
-          Failed to delete post. Please try again.
+          Det gick inte att ta bort inlägget. Försök igen.
         </p>
       )}
     </Modal>

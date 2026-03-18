@@ -87,7 +87,7 @@ function NewsCard({ post }: { post: NewsPostDto }) {
           onClick={() => navigate(`/news/${post.id}`)}
           className="text-xs text-purple-light mt-2 hover:underline"
         >
-          Read more →
+          Läs mer →
         </button>
       </div>
     </div>
@@ -110,7 +110,7 @@ export function NewsPage() {
       <ToastContainer />
 
       <div className="max-w-2xl space-y-6">
-        <h1 className="text-xl font-semibold text-text-1">Company news</h1>
+        <h1 className="text-xl font-semibold text-text-1">Företagsnyheter</h1>
 
         {isLoading ? (
           <div className="space-y-4">
@@ -118,16 +118,16 @@ export function NewsPage() {
           </div>
         ) : !posts.length ? (
           <EmptyState
-            title="Nothing posted yet"
-            description="Check back soon for company news and updates."
-            action={isAdmin ? <Button onClick={() => navigate('/admin/publish')}>Write first post</Button> : undefined}
+            title="Inget publicerat ännu"
+            description="Kom tillbaka snart för företagsnyheter och uppdateringar."
+            action={isAdmin ? <Button onClick={() => navigate('/admin/publish')}>Skriv första inlägg</Button> : undefined}
           />
         ) : (
           <div className="space-y-6">
             {/* Pinned section */}
             {pinned.length > 0 && (
               <div>
-                <p className="section-label mb-3">Pinned</p>
+                <p className="section-label mb-3">Fästa</p>
                 <AnimatedList className="space-y-3">
                   {pinned.map(p => (
                     <AnimatedListItem key={p.id}>
@@ -157,17 +157,17 @@ export function NewsPage() {
                   onClick={() => setPage(p => p - 1)}
                   disabled={page === 0}
                 >
-                  ← Previous
+                  ← Föregående
                 </Button>
                 <span className="text-sm text-text-3">
-                  Page {page + 1} of {totalPages}
+                  Sida {page + 1} av {totalPages}
                 </span>
                 <Button
                   variant="secondary"
                   onClick={() => setPage(p => p + 1)}
                   disabled={page >= totalPages - 1}
                 >
-                  Next →
+                  Nästa →
                 </Button>
               </div>
             )}
