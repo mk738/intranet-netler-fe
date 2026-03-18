@@ -13,10 +13,10 @@ import { getApiError } from '@/lib/api'
 const today = todayString()
 
 const schema = z.object({
-  startDate: z.string().min(1, 'Required').refine(v => v >= today, 'Start date cannot be in the past'),
-  endDate:   z.string().min(1, 'Required'),
+  startDate: z.string().min(1, 'Obligatoriskt').refine(v => v >= today, 'Startdatum kan inte vara i det förflutna'),
+  endDate:   z.string().min(1, 'Obligatoriskt'),
 }).refine(d => d.endDate >= d.startDate, {
-  message: 'End date must be on or after start date',
+  message: 'Slutdatum måste vara på eller efter startdatum',
   path: ['endDate'],
 })
 
@@ -42,7 +42,7 @@ export function RequestVacationModal({ onClose }: Props) {
   const onSubmit = (data: FormData) => {
     mutation.mutate(data, {
       onSuccess: () => {
-        showToast('Vacation request submitted', 'success')
+        showToast('Ledighetsansökan skickad', 'success')
         onClose()
       },
       onError: (err: unknown) => {
@@ -54,13 +54,13 @@ export function RequestVacationModal({ onClose }: Props) {
 
   return (
     <Modal
-      title="Request vacation"
+      title="Ansök om ledighet"
       onClose={onClose}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" onClick={onClose}>Avbryt</Button>
           <Button form="vacation-form" type="submit" loading={mutation.isPending}>
-            Submit request
+            Skicka ansökan
           </Button>
         </>
       }
@@ -68,7 +68,7 @@ export function RequestVacationModal({ onClose }: Props) {
       <form id="vacation-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="field-label">Start date *</label>
+            <label className="field-label">Startdatum *</label>
             <DatePicker
               value={startDate}
               onChange={v => setValue('startDate', v, { shouldValidate: true })}
@@ -77,7 +77,7 @@ export function RequestVacationModal({ onClose }: Props) {
             <FieldError message={errors.startDate?.message} />
           </div>
           <div>
-            <label className="field-label">End date *</label>
+            <label className="field-label">Slutdatum *</label>
             <DatePicker
               value={endDate}
               onChange={v => setValue('endDate', v, { shouldValidate: true })}
@@ -91,9 +91,9 @@ export function RequestVacationModal({ onClose }: Props) {
         {businessDays !== null && (
           <div className="bg-purple-bg border border-purple/20 rounded-lg p-3">
             <p className="text-sm text-text-1">
-              Estimated{' '}
+              Uppskattat{' '}
               <span className="font-semibold text-purple-light">{businessDays}</span>
-              {' '}business day{businessDays !== 1 ? 's' : ''}
+              {' '}arbetsdag{businessDays !== 1 ? 'ar' : ''}
             </p>
           </div>
         )}

@@ -17,11 +17,11 @@ import { FormError } from '@/components/ui/FormError'
 import { getApiError } from '@/lib/api'
 
 const schema = z.object({
-  title:  z.string().min(1, 'Title is required').max(300, 'Title too long'),
+  title:  z.string().min(1, 'Titel krävs').max(300, 'Titeln är för lång'),
   body:   z.string().refine(html => {
     const text = html.replace(/<[^>]*>/g, '').trim()
     return text.length > 0
-  }, 'Body is required'),
+  }, 'Innehåll krävs'),
   pinned: z.boolean(),
 })
 
@@ -75,7 +75,7 @@ export function NewsCreatePage() {
       updateMutation.mutate(payload, {
         onSuccess: updated => {
           qc.setQueryData(['news', updated.id], updated)
-          showToast('Post updated', 'success')
+          showToast('Inlägg uppdaterat', 'success')
           navigate(`/news/${updated.id}`)
         },
       })
@@ -83,7 +83,7 @@ export function NewsCreatePage() {
       createMutation.mutate(payload, {
         onSuccess: created => {
           qc.setQueryData(['news', created.id], created)
-          showToast('Post published', 'success')
+          showToast('Inlägg publicerat', 'success')
           navigate(`/news/${created.id}`)
         },
       })
@@ -98,11 +98,11 @@ export function NewsCreatePage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold text-text-1">
-            {isEdit ? 'Edit news post' : 'Create news post'}
+            {isEdit ? 'Redigera nyhetsflödesinlägg' : 'Skapa nyhetsflödesinlägg'}
           </h1>
           {isEdit && id && (
             <Button variant="danger" onClick={() => setDeleteOpen(true)}>
-              Delete post
+              Ta bort inlägg
             </Button>
           )}
         </div>
@@ -110,18 +110,18 @@ export function NewsCreatePage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           {/* Title */}
           <div>
-            <label className="field-label">Title *</label>
+            <label className="field-label">Titel *</label>
             <input
               {...register('title')}
               className={clsx('field-input', errors.title && 'field-input-error')}
-              placeholder="Post title"
+              placeholder="Inläggets titel"
             />
             <FieldError message={errors.title?.message} />
           </div>
 
           {/* Cover image */}
           <div>
-            <label className="field-label">Cover image</label>
+            <label className="field-label">Omslagsbild</label>
             <CoverImageUpload value={coverImage} onChange={setCoverImage} />
           </div>
 
@@ -134,12 +134,12 @@ export function NewsCreatePage() {
                          checked:bg-purple-dark checked:border-purple
                          focus:ring-0 focus:outline-none cursor-pointer"
             />
-            <span className="text-sm text-text-2">Pin this post to the top of the feed</span>
+            <span className="text-sm text-text-2">Fäst detta inlägg högst upp i flödet</span>
           </label>
 
           {/* Body */}
           <div>
-            <label className="field-label">Body *</label>
+            <label className="field-label">Innehåll *</label>
             <RichTextEditor
               content={bodyValue}
               onChange={v => setValue('body', v, { shouldValidate: true })}
@@ -153,10 +153,10 @@ export function NewsCreatePage() {
           {/* Actions */}
           <div className="flex items-center gap-3 pt-2">
             <Button variant="secondary" type="button" onClick={() => navigate(-1)}>
-              Cancel
+              Avbryt
             </Button>
             <Button type="submit" loading={isPending}>
-              {isEdit ? 'Save changes' : 'Publish post'}
+              {isEdit ? 'Spara ändringar' : 'Publicera inlägg'}
             </Button>
           </div>
         </form>

@@ -12,9 +12,9 @@ import type { AssignmentDto, UnplacedDto } from '@/types'
 type Filter = 'all' | 'active' | 'unplaced' | 'ending'
 
 function StatusBadge({ status }: { status: AssignmentDto['status'] }) {
-  if (status === 'ACTIVE')      return <span className="badge-active">Active</span>
-  if (status === 'ENDING_SOON') return <span className="badge-ending">Ending soon</span>
-  return <span className="badge-ended">Ended</span>
+  if (status === 'ACTIVE')      return <span className="badge-active">Aktiv</span>
+  if (status === 'ENDING_SOON') return <span className="badge-ending">Avslutas snart</span>
+  return <span className="badge-ended">Avslutad</span>
 }
 
 function StatCard({ label, value, valueClass }: { label: string; value: number; valueClass: string }) {
@@ -39,10 +39,10 @@ function SkeletonRow() {
 }
 
 const FILTERS: { key: Filter; label: string }[] = [
-  { key: 'all',      label: 'All'         },
-  { key: 'active',   label: 'Active'      },
-  { key: 'unplaced', label: 'Unplaced'    },
-  { key: 'ending',   label: 'Ending soon' },
+  { key: 'all',      label: 'Alla'          },
+  { key: 'active',   label: 'Aktiva'        },
+  { key: 'unplaced', label: 'Oplacerade'    },
+  { key: 'ending',   label: 'Avslutas snart' },
 ]
 
 export function PlacementsPage() {
@@ -74,7 +74,7 @@ export function PlacementsPage() {
       <div className="space-y-5">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <h1 className="text-xl font-semibold text-text-1">Consultant placements</h1>
+          <h1 className="text-xl font-semibold text-text-1">Konsultplaceringar</h1>
           <div className="flex gap-1">
             {FILTERS.map(({ key, label }) => (
               <button
@@ -104,10 +104,10 @@ export function PlacementsPage() {
             ))
           ) : data ? (
             <>
-              <StatCard label="On assignment"  value={data.totalPlaced}        valueClass="text-success" />
-              <StatCard label="Unplaced"       value={data.totalUnplaced}      valueClass="text-danger" />
-              <StatCard label="Ending soon"    value={data.endingSoon}         valueClass="text-warning" />
-              <StatCard label="Active clients" value={data.totalActiveClients} valueClass="text-text-1" />
+              <StatCard label="På uppdrag"     value={data.totalPlaced}        valueClass="text-success" />
+              <StatCard label="Oplacerade"     value={data.totalUnplaced}      valueClass="text-danger" />
+              <StatCard label="Avslutas snart" value={data.endingSoon}         valueClass="text-warning" />
+              <StatCard label="Aktiva kunder"  value={data.totalActiveClients} valueClass="text-text-1" />
             </>
           ) : null}
         </div>
@@ -130,7 +130,7 @@ export function PlacementsPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-text-1">{group.companyName}</span>
                     <span className="text-xs text-text-3">
-                      {group.assignments.length} consultant{group.assignments.length !== 1 ? 's' : ''}
+                      {group.assignments.length} konsult{group.assignments.length !== 1 ? 'er' : ''}
                     </span>
                   </div>
                   <span className={group.clientStatus === 'ACTIVE' ? 'badge-active' : 'badge-prospect'}>
@@ -148,9 +148,9 @@ export function PlacementsPage() {
                   </colgroup>
                   <thead className="border-b border-subtle">
                     <tr>
-                      <th className="section-label px-4 py-2 text-left">Consultant</th>
+                      <th className="section-label px-4 py-2 text-left">Konsult</th>
                       <th className="section-label px-4 py-2 text-left">Period</th>
-                      <th className="section-label px-4 py-2 text-left">Project name</th>
+                      <th className="section-label px-4 py-2 text-left">Projektnamn</th>
                       <th className="section-label px-4 py-2 text-left">Status</th>
                       <th className="px-4 py-2" />
                     </tr>
@@ -170,7 +170,7 @@ export function PlacementsPage() {
                         <td className="px-4 py-3 text-xs text-text-2 whitespace-nowrap">
                           {format(new Date(a.startDate), 'MMM d, yyyy')}
                           {' – '}
-                          {a.endDate ? format(new Date(a.endDate), 'MMM d, yyyy') : 'ongoing'}
+                          {a.endDate ? format(new Date(a.endDate), 'MMM d, yyyy') : 'pågående'}
                         </td>
                         <td className="px-4 py-3 text-sm text-text-2 truncate">{a.projectName}</td>
                         <td className="px-4 py-3"><StatusBadge status={a.status} /></td>
@@ -180,7 +180,7 @@ export function PlacementsPage() {
                               onClick={() => setEndTarget(a)}
                               className="btn-danger px-2.5 py-1 text-xs"
                             >
-                              End
+                              Avsluta
                             </button>
                           )}
                         </td>
@@ -198,7 +198,7 @@ export function PlacementsPage() {
         {showUnplaced && data && data.unplaced.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold text-danger">Unplaced consultants</h2>
+              <h2 className="text-sm font-semibold text-danger">Oplacerade konsulter</h2>
               <span className="badge-unplaced">{data.unplaced.length}</span>
             </div>
             <div className="overflow-hidden rounded-lg border border-subtle">
@@ -216,14 +216,14 @@ export function PlacementsPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-xs text-text-3">
-                        {u.lastPlacedClient ? `Last at ${u.lastPlacedClient}` : 'Never placed'}
+                        {u.lastPlacedClient ? `Senast hos ${u.lastPlacedClient}` : 'Aldrig placerad'}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button
                           onClick={() => setAssignTarget(u)}
                           className="btn-primary px-2.5 py-1 text-xs"
                         >
-                          Assign
+                          Tilldela
                         </button>
                       </td>
                     </tr>
@@ -236,16 +236,16 @@ export function PlacementsPage() {
 
         {/* Empty */}
         {isLoaded && visibleGroups.length === 0 && filter === 'active' && (
-          <EmptyState title="No active assignments" description="All consultants are currently unplaced." />
+          <EmptyState title="Inga aktiva uppdrag" description="Alla konsulter är för närvarande oplacerade." />
         )}
         {isLoaded && visibleGroups.length === 0 && filter === 'ending' && (
-          <EmptyState title="No assignments ending soon" description="No active assignments end within the next 30 days." />
+          <EmptyState title="Inga uppdrag avslutas snart" description="Inga aktiva uppdrag avslutas inom de närmaste 30 dagarna." />
         )}
         {isLoaded && visibleGroups.length === 0 && (filter === 'all' || filter === 'unplaced') && (!data?.clientGroups?.length && !data?.unplaced?.length) && (
-          <EmptyState title="No active placements" description="Assign consultants to clients to see them here." />
+          <EmptyState title="Inga aktiva placeringar" description="Tilldela konsulter till kunder för att se dem här." />
         )}
         {isLoaded && visibleGroups.length === 0 && filter === 'all' && data && data.clientGroups.length === 0 && data.unplaced.length > 0 && (
-          <EmptyState title="No placements found" description="Try a different filter." />
+          <EmptyState title="Inga placeringar hittades" description="Prova ett annat filter." />
         )}
       </div>
 

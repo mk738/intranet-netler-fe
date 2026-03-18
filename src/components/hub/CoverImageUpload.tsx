@@ -21,7 +21,7 @@ export function CoverImageUpload({ value, onChange }: Props) {
   const handleFile = (file: File) => {
     setError(null)
     if (file.size > MAX_BYTES) {
-      setError('File exceeds 5 MB limit.')
+      setError('Filen överstiger 5 MB-gränsen.')
       return
     }
     const reader = new FileReader()
@@ -50,7 +50,7 @@ export function CoverImageUpload({ value, onChange }: Props) {
           className="w-full max-h-[200px] object-cover rounded-lg"
         />
         <Button variant="danger" size="sm" onClick={() => onChange(null)}>
-          Remove image
+          Ta bort bild
         </Button>
       </div>
     )
@@ -71,8 +71,8 @@ export function CoverImageUpload({ value, onChange }: Props) {
           <circle cx="8.5" cy="8.5" r="1.5"/>
           <polyline points="21 15 16 10 5 21"/>
         </svg>
-        <p className="text-text-3 text-sm mt-1">Click to upload cover image</p>
-        <p className="text-text-3 text-xs">JPG, PNG, WebP, GIF up to 5MB</p>
+        <p className="text-text-3 text-sm mt-1">Klicka för att ladda upp omslagsbild</p>
+        <p className="text-text-3 text-xs">JPG, PNG, WebP, GIF upp till 5MB</p>
       </button>
 
       {error && (

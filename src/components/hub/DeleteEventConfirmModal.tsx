@@ -16,7 +16,7 @@ export function DeleteEventConfirmModal({ eventId, onClose }: Props) {
   const handleDelete = () => {
     mutation.mutate(eventId, {
       onSuccess: () => {
-        showToast('Event deleted', 'success')
+        showToast('Evenemang borttaget', 'success')
         navigate('/events')
       },
     })
@@ -24,24 +24,24 @@ export function DeleteEventConfirmModal({ eventId, onClose }: Props) {
 
   return (
     <Modal
-      title="Delete event?"
+      title="Ta bort evenemang?"
       onClose={onClose}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" onClick={onClose}>Avbryt</Button>
           <Button variant="danger" loading={mutation.isPending} onClick={handleDelete}>
-            Delete
+            Ta bort
           </Button>
         </>
       }
     >
       <p className="text-sm text-text-2">
-        This will permanently delete this event. It will no longer appear in the calendar.
+        Det här evenemanget tas bort permanent. Det visas inte längre i kalendern.
       </p>
 
       {mutation.isError && (
         <p className="text-xs text-danger bg-danger-bg border border-danger/20 rounded px-3 py-2 mt-4">
-          Failed to delete event. Please try again.
+          Det gick inte att ta bort evenemanget. Försök igen.
         </p>
       )}
     </Modal>

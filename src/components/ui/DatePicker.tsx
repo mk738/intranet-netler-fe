@@ -13,7 +13,7 @@ interface Props {
   className?:   string
 }
 
-export function DatePicker({ value, onChange, min, placeholder = 'Select date', className = '' }: Props) {
+export function DatePicker({ value, onChange, min, placeholder = 'Välj datum', className = '' }: Props) {
   const [open, setOpen]           = useState(false)
   const [viewDate, setViewDate]   = useState<Date>(() =>
     value ? parseISO(value) : new Date()
@@ -93,7 +93,7 @@ export function DatePicker({ value, onChange, min, placeholder = 'Select date', 
 
           {/* Day-of-week headers */}
           <div className="grid grid-cols-7 mb-1">
-            {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map(d => (
+            {['Må', 'Ti', 'On', 'To', 'Fr', 'Lö', 'Sö'].map(d => (
               <div key={d} className="text-center text-[10px] font-semibold text-text-3 py-1">
                 {d}
               </div>
@@ -136,7 +136,7 @@ export function DatePicker({ value, onChange, min, placeholder = 'Select date', 
               onClick={() => { select(new Date()); setViewDate(new Date()) }}
               className="text-xs text-purple-light hover:text-text-1 transition-colors"
             >
-              Today
+              Idag
             </button>
           </div>
         </div>

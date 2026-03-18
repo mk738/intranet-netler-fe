@@ -9,9 +9,9 @@ import { formatDateRange } from '@/lib/dateUtils'
 import type { VacationDto } from '@/types'
 
 function StatusBadge({ status }: { status: VacationDto['status'] }) {
-  if (status === 'PENDING')  return <span className="badge-pending">Pending</span>
-  if (status === 'APPROVED') return <span className="badge-active">Approved</span>
-  return <span className="badge-unplaced">Rejected</span>
+  if (status === 'PENDING')  return <span className="badge-pending">Väntar</span>
+  if (status === 'APPROVED') return <span className="badge-active">Godkänd</span>
+  return <span className="badge-unplaced">Avvisad</span>
 }
 
 function SkeletonCard() {
@@ -49,23 +49,23 @@ export function VacationPage() {
       <div className="max-w-2xl space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-text-1">My vacation</h1>
-          <Button onClick={() => setRequestOpen(true)}>Request vacation</Button>
+          <h1 className="text-xl font-semibold text-text-1">Min ledighet</h1>
+          <Button onClick={() => setRequestOpen(true)}>Ansök om ledighet</Button>
         </div>
 
         {/* Summary */}
         <div className="grid grid-cols-3 gap-3">
           <div className="card text-center">
             <p className="text-xl font-semibold text-warning leading-none">{pending}</p>
-            <p className="text-xs text-text-3 mt-1">Pending</p>
+            <p className="text-xs text-text-3 mt-1">Väntar</p>
           </div>
           <div className="card text-center">
             <p className="text-xl font-semibold text-success leading-none">{approved}</p>
-            <p className="text-xs text-text-3 mt-1">Approved</p>
+            <p className="text-xs text-text-3 mt-1">Godkänd</p>
           </div>
           <div className="card text-center">
             <p className="text-xl font-semibold text-danger leading-none">{rejected}</p>
-            <p className="text-xs text-text-3 mt-1">Rejected</p>
+            <p className="text-xs text-text-3 mt-1">Avvisad</p>
           </div>
         </div>
 
@@ -76,9 +76,9 @@ export function VacationPage() {
           </div>
         ) : !sorted.length ? (
           <EmptyState
-            title="No vacation requests yet"
-            description="Submit your first request to get started."
-            action={<Button onClick={() => setRequestOpen(true)}>Request vacation</Button>}
+            title="Inga ledighetsansökningar ännu"
+            description="Skicka din första ansökan för att komma igång."
+            action={<Button onClick={() => setRequestOpen(true)}>Ansök om ledighet</Button>}
           />
         ) : (
           <AnimatedList className="space-y-3">
@@ -92,16 +92,16 @@ export function VacationPage() {
                       {formatDateRange(v.startDate, v.endDate)}
                     </p>
                     <p className="text-xs text-text-3 mt-0.5">
-                      {v.daysCount} business day{v.daysCount !== 1 ? 's' : ''}
+                      {v.daysCount} arbetsdag{v.daysCount !== 1 ? 'ar' : ''}
                     </p>
                     {v.status === 'APPROVED' && v.reviewedBy && (
                       <p className="text-xs text-text-3 mt-1">
-                        Approved by {v.reviewedBy}
+                        Godkänd av {v.reviewedBy}
                       </p>
                     )}
                     {v.status === 'REJECTED' && v.reviewedBy && (
                       <p className="text-xs text-text-3 mt-1">
-                        Rejected by {v.reviewedBy}
+                        Avvisad av {v.reviewedBy}
                       </p>
                     )}
                   </div>
@@ -115,7 +115,7 @@ export function VacationPage() {
                         size="sm"
                         onClick={() => setCancelTarget(v)}
                       >
-                        Cancel
+                        Avbryt
                       </Button>
                     )}
                   </div>

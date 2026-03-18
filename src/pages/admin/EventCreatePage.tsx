@@ -14,14 +14,14 @@ import { FormError } from '@/components/ui/FormError'
 import { getApiError } from '@/lib/api'
 
 const schema = z.object({
-  title:       z.string().min(1, 'Title is required'),
-  eventDate:   z.string().min(1, 'Date is required'),
+  title:       z.string().min(1, 'Titel krävs'),
+  eventDate:   z.string().min(1, 'Datum krävs'),
   endDate:     z.string().optional(),
   location:    z.string().optional(),
   allDay:      z.boolean(),
   description: z.string().optional(),
 }).refine(d => !d.endDate || !d.eventDate || d.endDate >= d.eventDate, {
-  message: 'End date must be on or after start date',
+  message: 'Slutdatum måste vara på eller efter startdatum',
   path:    ['endDate'],
 })
 
@@ -74,14 +74,14 @@ export function EventCreatePage() {
     if (isEdit) {
       updateMutation.mutate(payload, {
         onSuccess: () => {
-          showToast('Event updated', 'success')
+          showToast('Evenemang uppdaterat', 'success')
           navigate('/events')
         },
       })
     } else {
       createMutation.mutate(payload, {
         onSuccess: () => {
-          showToast('Event created', 'success')
+          showToast('Evenemang skapat', 'success')
           navigate('/events')
         },
       })
@@ -96,11 +96,11 @@ export function EventCreatePage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold text-text-1">
-            {isEdit ? 'Edit event' : 'Create event'}
+            {isEdit ? 'Redigera evenemang' : 'Skapa evenemang'}
           </h1>
           {isEdit && id && (
             <Button variant="danger" onClick={() => setDeleteOpen(true)}>
-              Delete event
+              Ta bort evenemang
             </Button>
           )}
         </div>
@@ -108,11 +108,11 @@ export function EventCreatePage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Title */}
           <div>
-            <label className="field-label">Title *</label>
+            <label className="field-label">Titel *</label>
             <input
               {...register('title')}
               className={clsx('field-input', errors.title && 'field-input-error')}
-              placeholder="Event title"
+              placeholder="Evenemangets titel"
             />
             <FieldError message={errors.title?.message} />
           </div>
@@ -120,7 +120,7 @@ export function EventCreatePage() {
           {/* Date row */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="field-label">Date *</label>
+              <label className="field-label">Datum *</label>
               <input
                 {...register('eventDate')}
                 type="date"
@@ -129,7 +129,7 @@ export function EventCreatePage() {
               <FieldError message={errors.eventDate?.message} />
             </div>
             <div>
-              <label className="field-label">End date</label>
+              <label className="field-label">Slutdatum</label>
               <input
                 {...register('endDate')}
                 type="date"
@@ -141,11 +141,11 @@ export function EventCreatePage() {
 
           {/* Location */}
           <div>
-            <label className="field-label">Location</label>
+            <label className="field-label">Plats</label>
             <input
               {...register('location')}
               className="field-input"
-              placeholder="e.g. Main office, floor 3"
+              placeholder="t.ex. Kontoret, plan 3"
             />
           </div>
 
@@ -158,16 +158,16 @@ export function EventCreatePage() {
                          checked:bg-purple-dark checked:border-purple
                          focus:ring-0 focus:outline-none cursor-pointer"
             />
-            <span className="text-sm text-text-2">All day event</span>
+            <span className="text-sm text-text-2">Heldag</span>
           </label>
 
           {/* Description */}
           <div>
-            <label className="field-label">Description</label>
+            <label className="field-label">Beskrivning</label>
             <textarea
               {...register('description')}
               className="field-input min-h-[100px] resize-none"
-              placeholder="Optional details about the event"
+              placeholder="Valfri information om evenemanget"
             />
           </div>
 
@@ -177,10 +177,10 @@ export function EventCreatePage() {
           {/* Actions */}
           <div className="flex items-center gap-3 pt-2">
             <Button variant="secondary" type="button" onClick={() => navigate(-1)}>
-              Cancel
+              Avbryt
             </Button>
             <Button type="submit" loading={mutation.isPending}>
-              {isEdit ? 'Save changes' : 'Create event'}
+              {isEdit ? 'Spara ändringar' : 'Skapa evenemang'}
             </Button>
           </div>
         </form>

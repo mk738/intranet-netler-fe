@@ -116,7 +116,7 @@ export function RichTextEditor({ content, onChange, readOnly = false }: Props) {
       {/* Toolbar */}
       <div className="bg-bg-hover border-b border-subtle px-3 py-2 flex gap-1">
         <ToolbarButton
-          title="Bold"
+          title="Fet"
           active={editor?.isActive('bold') ?? false}
           onClick={() => editor?.chain().focus().toggleBold().run()}
         >
@@ -124,7 +124,7 @@ export function RichTextEditor({ content, onChange, readOnly = false }: Props) {
         </ToolbarButton>
 
         <ToolbarButton
-          title="Italic"
+          title="Kursiv"
           active={editor?.isActive('italic') ?? false}
           onClick={() => editor?.chain().focus().toggleItalic().run()}
         >
@@ -134,7 +134,7 @@ export function RichTextEditor({ content, onChange, readOnly = false }: Props) {
         <div className="w-px bg-subtle mx-1 self-stretch" />
 
         <ToolbarButton
-          title="Heading 1"
+          title="Rubrik 1"
           active={editor?.isActive('heading', { level: 1 }) ?? false}
           onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
         >
@@ -142,7 +142,7 @@ export function RichTextEditor({ content, onChange, readOnly = false }: Props) {
         </ToolbarButton>
 
         <ToolbarButton
-          title="Heading 2"
+          title="Rubrik 2"
           active={editor?.isActive('heading', { level: 2 }) ?? false}
           onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
         >
@@ -152,7 +152,7 @@ export function RichTextEditor({ content, onChange, readOnly = false }: Props) {
         <div className="w-px bg-subtle mx-1 self-stretch" />
 
         <ToolbarButton
-          title="Bullet list"
+          title="Punktlista"
           active={editor?.isActive('bulletList') ?? false}
           onClick={() => editor?.chain().focus().toggleBulletList().run()}
         >
@@ -160,7 +160,7 @@ export function RichTextEditor({ content, onChange, readOnly = false }: Props) {
         </ToolbarButton>
 
         <ToolbarButton
-          title="Ordered list"
+          title="Numrerad lista"
           active={editor?.isActive('orderedList') ?? false}
           onClick={() => editor?.chain().focus().toggleOrderedList().run()}
         >

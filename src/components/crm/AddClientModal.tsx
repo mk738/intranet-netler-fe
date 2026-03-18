@@ -10,11 +10,11 @@ import { FormError } from '@/components/ui/FormError'
 import { getApiError } from '@/lib/api'
 
 const schema = z.object({
-  companyName:  z.string().min(1, 'Company name is required'),
+  companyName:  z.string().min(1, 'Företagsnamn krävs'),
   orgNumber:    z.string().optional(),
   status:       z.enum(['ACTIVE', 'PROSPECT']),
   contactName:  z.string().optional(),
-  contactEmail: z.string().email('Invalid email').optional().or(z.literal('')),
+  contactEmail: z.string().email('Ogiltig e-post').optional().or(z.literal('')),
   phone:        z.string().optional(),
 })
 
@@ -40,7 +40,7 @@ export function AddClientModal({ onClose }: Props) {
       status:       data.status,
     }, {
       onSuccess: () => {
-        showToast('Client added', 'success')
+        showToast('Kund tillagd', 'success')
         onClose()
       },
     })
@@ -48,33 +48,33 @@ export function AddClientModal({ onClose }: Props) {
 
   return (
     <Modal
-      title="Add client"
+      title="Lägg till kund"
       onClose={onClose}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" onClick={onClose}>Avbryt</Button>
           <Button form="add-client-form" type="submit" loading={mutation.isPending}>
-            Add client
+            Lägg till kund
           </Button>
         </>
       }
     >
       <form id="add-client-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label className="field-label">Company name *</label>
+          <label className="field-label">Företagsnamn *</label>
           <input {...register('companyName')} className={clsx('field-input', errors.companyName && 'field-input-error')} />
           <FieldError message={errors.companyName?.message} />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="field-label">Org number</label>
+            <label className="field-label">Org-nummer</label>
             <input {...register('orgNumber')} className="field-input" placeholder="556000-0000" />
           </div>
           <div>
             <label className="field-label">Status</label>
             <select {...register('status')} className="field-input">
-              <option value="ACTIVE">Active</option>
+              <option value="ACTIVE">Aktiv</option>
               <option value="PROSPECT">Prospect</option>
             </select>
           </div>
@@ -82,17 +82,17 @@ export function AddClientModal({ onClose }: Props) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="field-label">Contact name</label>
+            <label className="field-label">Kontaktperson</label>
             <input {...register('contactName')} className="field-input" />
           </div>
           <div>
-            <label className="field-label">Phone</label>
+            <label className="field-label">Telefon</label>
             <input {...register('phone')} className="field-input" />
           </div>
         </div>
 
         <div>
-          <label className="field-label">Contact email</label>
+          <label className="field-label">Kontakt-e-post</label>
           <input {...register('contactEmail')} type="email" className={clsx('field-input', errors.contactEmail && 'field-input-error')} />
           <FieldError message={errors.contactEmail?.message} />
         </div>
