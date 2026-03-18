@@ -6,6 +6,9 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Card, Spinner, EmptyState, Button } from '@/components/ui'
 import { EditProfileModal } from '@/components/employees/EditProfileModal'
 import { EditBankModal } from '@/components/employees/EditBankModal'
+import { BenefitsCard } from '@/components/employees/BenefitsCard'
+import { EmploymentContractCard } from '@/components/employees/EmploymentContractCard'
+import { CvCard } from '@/components/employees/CvCard'
 import type { BankInfo, Education, Assignment } from '@/types'
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -204,6 +207,15 @@ export function EmployeeDetailPage() {
             <Card title="Uppdragshistorik">
               <AssignmentList items={data.assignments ?? []} />
             </Card>
+
+            {/* Benefits */}
+            <BenefitsCard employeeId={data.id} isAdmin={true} />
+
+            {/* CV */}
+            <CvCard employeeId={data.id} isAdmin={true} />
+
+            {/* Employment contract */}
+            <EmploymentContractCard employeeId={data.id} isAdmin={true} />
           </div>
         </div>
       </div>
