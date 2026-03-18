@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
-import type { Employee, BankInfo, Education, Assignment, ApiResponse } from '@/types'
+import type { Employee, BankInfo, Education, Assignment, BenefitDto, ApiResponse } from '@/types'
 
 // ── Extended detail response ──────────────────────────────────
 
@@ -108,5 +108,56 @@ export function useUpdateEmployeeProfile(id: string) {
       qc.invalidateQueries({ queryKey: ['employees', id] })
       qc.invalidateQueries({ queryKey: ['employees'] })
     },
+  })
+}
+
+export function useBenefits(employeeId: string) {
+  return useQuery({
+    queryKey: ['employees', employeeId, 'benefits'],
+    queryFn:  () =>
+      api.get<ApiResponse<BenefitDto[]>>(`/api/employees/${employeeId}/benefits`)
+         .then(r => r.data.data),
+    enabled: !!employeeId,
+    retry: false,
+  })
+}
+
+export function useUpsertBenefits(employeeId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (benefits: Array<{ name: string; description: string | null }>) =>
+      api.put<ApiResponse<BenefitDto[]>>(
+        `/api/employees/${employeeId}/benefits`,
+        benefits
+      ).then(r => r.data.data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ['employees', employeeId, 'benefits'] }),
+  })
+}
+
+export function useContract(employeeId: string) {
+  return useQuery({
+    queryKey: ['employees', employeeId, 'contract'],
+    queryFn:  () =>
+      api.get<ApiResponse<{ data: string; contentType: string }>>(
+        `/api/employees/${employeeId}/contract`
+      ).then(r => r.data.data),
+    enabled: !!employeeId,
+    retry: false,
+  })
+}
+
+export function useUploadContract(employeeId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData()
+      formData.append('file', file)
+      return api.post(`/api/employees/${employeeId}/contract`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+    },
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ['employees', employeeId, 'contract'] }),
   })
 }

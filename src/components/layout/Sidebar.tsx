@@ -1,8 +1,17 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
+import { useReadNews } from '@/context/ReadNewsContext'
+import { useNewsFeed } from '@/hooks/useNews'
 import { auth } from '@/lib/firebase'
 import clsx from 'clsx'
+
+function useUnreadNewsCount() {
+  const { data }   = useNewsFeed(0, 10)
+  const { isRead } = useReadNews()
+  if (!data?.content) return 0
+  return data.content.filter(p => !isRead(p.id)).length
+}
 
 // ── Icons ──────────────────────────────────────────────────────
 
@@ -164,7 +173,8 @@ const adminLinks = [
 
 export function Sidebar() {
   const { isAdmin, employee } = useAuth()
-  const navigate = useNavigate()
+  const navigate              = useNavigate()
+  const unreadNews            = useUnreadNewsCount()
 
   const initials = employee?.profile
     ? `${employee.profile.firstName[0]}${employee.profile.lastName[0]}`.toUpperCase()
@@ -190,7 +200,13 @@ export function Sidebar() {
       <nav className="flex-1 py-3 overflow-y-auto">
         <p className="section-label px-5 pt-3 pb-1">Allmänt</p>
         {employeeLinks.map(({ to, label, icon }) => (
-          <SidebarItem key={to} to={to} label={label} icon={icon} />
+          <SidebarItem
+            key={to}
+            to={to}
+            label={label}
+            icon={icon}
+            badge={to === '/news' && unreadNews > 0 ? unreadNews : undefined}
+          />
         ))}
 
         {isAdmin && (
@@ -236,7 +252,7 @@ export function Sidebar() {
   )
 }
 
-function SidebarItem({ to, label, icon }: { to: string; label: string; icon: React.ReactNode }) {
+function SidebarItem({ to, label, icon, badge }: { to: string; label: string; icon: React.ReactNode; badge?: number }) {
   return (
     <NavLink
       to={to}
@@ -262,7 +278,12 @@ function SidebarItem({ to, label, icon }: { to: string; label: string; icon: Rea
           <span className={clsx('shrink-0 relative z-10', isActive ? 'text-purple-light' : 'text-text-3')}>
             {icon}
           </span>
-          <span className="relative z-10">{label}</span>
+          <span className="relative z-10 flex-1">{label}</span>
+          {badge !== undefined && (
+            <span className="relative z-10 ml-auto min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-purple-light text-[10px] font-bold text-bg leading-none">
+              {badge > 99 ? '99+' : badge}
+            </span>
+          )}
         </>
       )}
     </NavLink>

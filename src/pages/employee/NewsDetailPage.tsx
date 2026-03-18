@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useNewsPost } from '@/hooks/useNews'
 import { useAuth } from '@/context/AuthContext'
+import { useReadNews } from '@/context/ReadNewsContext'
 import { Avatar } from '@/components/ui/Avatar'
 import { ToastContainer } from '@/components/ui/Toast'
 import { RichTextEditor } from '@/components/hub/RichTextEditor'
@@ -35,7 +36,12 @@ export function NewsDetailPage() {
   const { isAdmin }     = useAuth()
   const [deleteOpen, setDeleteOpen] = useState(false)
 
+  const { markAsRead } = useReadNews()
   const { data: post, isLoading, isError } = useNewsPost(id ?? '')
+
+  useEffect(() => {
+    if (id) markAsRead(id)
+  }, [id, markAsRead])
 
   if (isLoading) return <SkeletonDetail />
 
