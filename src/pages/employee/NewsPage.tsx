@@ -7,6 +7,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { ToastContainer } from '@/components/ui/Toast'
 import { formatShortDate } from '@/lib/dateUtils'
 import { useAuth } from '@/context/AuthContext'
+import { useReadNews } from '@/context/ReadNewsContext'
 import type { NewsPostDto } from '@/types'
 
 function stripHtml(html: string | null | undefined): string {
@@ -54,21 +55,30 @@ function SkeletonCard() {
 }
 
 function NewsCard({ post }: { post: NewsPostDto }) {
-  const navigate = useNavigate()
-  const preview  = stripHtml(post.body).slice(0, 120)
+  const navigate   = useNavigate()
+  const { isRead } = useReadNews()
+  const preview    = stripHtml(post.body).slice(0, 120)
+  const unread     = !isRead(post.id)
 
   return (
     <div className={`card p-0 overflow-hidden ${post.pinned ? 'border-l-2 border-purple-light pl-0' : ''}`}>
       {post.hasCoverImage && <LazyCoverImage id={post.id} />}
       <div className="p-4">
-        <button
-          onClick={() => navigate(`/news/${post.id}`)}
-          className="text-left w-full group"
-        >
-          <p className="text-base font-medium text-text-1 group-hover:text-purple-light transition-colors">
-            {post.title}
-          </p>
-        </button>
+        <div className="flex items-start justify-between gap-2">
+          <button
+            onClick={() => navigate(`/news/${post.id}`)}
+            className="text-left flex-1 group"
+          >
+            <p className="text-base font-medium text-text-1 group-hover:text-purple-light transition-colors">
+              {post.title}
+            </p>
+          </button>
+          {unread && (
+            <span className="mt-0.5 shrink-0 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-purple-bg text-purple-light border border-purple/30">
+              New
+            </span>
+          )}
+        </div>
 
         <div className="flex items-center gap-2 mt-2">
           <Avatar name={post.authorName} avatarUrl={null} size="sm" />
@@ -100,9 +110,9 @@ export function NewsPage() {
   const { isAdmin } = useAuth()
   const navigate = useNavigate()
 
-  const posts    = data?.content ?? []
-  const pinned   = posts.filter(p => p.pinned)
-  const unpinned = posts.filter(p => !p.pinned)
+  const posts      = data?.content ?? []
+  const pinned     = posts.filter(p => p.pinned)
+  const unpinned   = posts.filter(p => !p.pinned)
   const totalPages = data?.totalPages ?? 0
 
   return (

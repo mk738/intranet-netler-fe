@@ -83,6 +83,13 @@ export interface ReviewVacationRequest {
   approved: boolean
 }
 
+// ── Benefits ──────────────────────────────────────────────────
+export interface BenefitDto {
+  id:          string
+  name:        string
+  description: string | null
+}
+
 // ── CRM ───────────────────────────────────────────────────────
 export type ClientStatus = 'ACTIVE' | 'PROSPECT' | 'INACTIVE'
 export type AssignmentStatus = 'ACTIVE' | 'ENDED'
