@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { format } from 'date-fns'
 import { useAuth } from '@/context/AuthContext'
-import { useMe, useDeleteEducation } from '@/hooks/useEmployees'
+import { useMe, useDeleteEducation, useContract, useUploadContract, useBenefits, useUpsertBenefits } from '@/hooks/useEmployees'
+import { useMyVacations } from '@/hooks/useVacations'
 import { Avatar } from '@/components/ui/Avatar'
 import { Card, Spinner, EmptyState, Button } from '@/components/ui'
 import { EditProfileModal } from '@/components/employees/EditProfileModal'
 import { EditBankModal } from '@/components/employees/EditBankModal'
 import { AddEducationModal } from '@/components/employees/AddEducationModal'
-import type { Education } from '@/types'
+import type { Education, BenefitDto } from '@/types'
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -76,11 +77,243 @@ function EducationEntry({ entry }: { entry: Education }) {
   )
 }
 
+// ── Benefits card ─────────────────────────────────────────────
+
+const BENEFIT_ICONS: Record<string, string> = {
+  friskvård:   '🏃',
+  telefon:     '📱',
+  hörlurar:    '🎧',
+  försäkring:  '🛡️',
+  dator:       '💻',
+  pension:     '🏦',
+}
+
+function benefitIcon(name: string): string {
+  const key = name.toLowerCase()
+  for (const [k, v] of Object.entries(BENEFIT_ICONS)) {
+    if (key.includes(k)) return v
+  }
+  return '✦'
+}
+
+function BenefitsCard({ employeeId, isAdmin }: { employeeId: string; isAdmin: boolean }) {
+  const { data: benefits, isLoading } = useBenefits(employeeId)
+  const upsertMutation = useUpsertBenefits(employeeId)
+
+  const [editing,  setEditing]  = useState(false)
+  const [editList, setEditList] = useState<Array<{ name: string; description: string }>>([])
+
+  const startEdit = () => {
+    setEditList(
+      (benefits ?? []).map(b => ({ name: b.name, description: b.description ?? '' }))
+    )
+    setEditing(true)
+  }
+
+  const addRow    = () => setEditList(l => [...l, { name: '', description: '' }])
+  const removeRow = (i: number) => setEditList(l => l.filter((_, idx) => idx !== i))
+  const setField  = (i: number, field: 'name' | 'description', val: string) =>
+    setEditList(l => l.map((r, idx) => idx === i ? { ...r, [field]: val } : r))
+
+  const save = () => {
+    upsertMutation.mutate(
+      editList
+        .filter(r => r.name.trim())
+        .map(r => ({ name: r.name.trim(), description: r.description.trim() || null })),
+      { onSuccess: () => setEditing(false) }
+    )
+  }
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-1.5">
+          <svg className="w-3 h-3 text-text-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v13m0-13V6a4 4 0 00-4-4H5.45a4 4 0 00-3.971 3.545L1 9h22l-.48-3.455A4 4 0 0019.55 2H16a4 4 0 00-4 4zM1 9h22v2a6 6 0 01-6 6H7a6 6 0 01-6-6V9z" />
+          </svg>
+          <p className="section-label">Förmåner</p>
+        </div>
+        {isAdmin && !editing && (
+          <Button variant="secondary" size="sm" onClick={startEdit}>
+            {(benefits?.length ?? 0) > 0 ? 'Edit' : 'Add'}
+          </Button>
+        )}
+      </div>
+
+      {isLoading ? (
+        <div className="flex justify-center py-4"><Spinner size="sm" /></div>
+      ) : editing ? (
+        <div className="space-y-2">
+          {editList.map((row, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <input
+                className="field-input flex-1 text-xs py-1.5"
+                placeholder="Förmån (t.ex. Friskvårdsbidrag)"
+                value={row.name}
+                onChange={e => setField(i, 'name', e.target.value)}
+              />
+              <input
+                className="field-input flex-1 text-xs py-1.5"
+                placeholder="Värde (t.ex. 5 000 kr / år)"
+                value={row.description}
+                onChange={e => setField(i, 'description', e.target.value)}
+              />
+              <button
+                onClick={() => removeRow(i)}
+                className="text-text-3 hover:text-danger transition-colors text-base leading-none"
+              >×</button>
+            </div>
+          ))}
+          <button
+            onClick={addRow}
+            className="text-xs text-purple-light hover:underline"
+          >+ Lägg till förmån</button>
+          <div className="flex gap-2 pt-1">
+            <Button size="sm" loading={upsertMutation.isPending} onClick={save}>Spara</Button>
+            <Button variant="secondary" size="sm" onClick={() => setEditing(false)}>Avbryt</Button>
+          </div>
+        </div>
+      ) : !benefits?.length ? (
+        <EmptyState
+          title="Inga förmåner tillagda"
+          description={isAdmin ? 'Lägg till förmåner för den anställde.' : 'Kontakta din administratör för information om förmåner.'}
+          action={isAdmin ? <Button variant="secondary" size="sm" onClick={startEdit}>Lägg till</Button> : undefined}
+        />
+      ) : (
+        <ul className="space-y-2">
+          {(benefits as BenefitDto[]).map(b => (
+            <li key={b.id} className="flex items-center gap-2.5">
+              <span className="text-base leading-none w-5 text-center flex-shrink-0">
+                {benefitIcon(b.name)}
+              </span>
+              <span className="text-sm text-text-1 font-medium">{b.name}</span>
+              {b.description && (
+                <>
+                  <span className="text-text-3 text-xs">·</span>
+                  <span className="text-xs text-text-2">{b.description}</span>
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  )
+}
+
+// ── Contract card ─────────────────────────────────────────────
+
+function ContractCard({ employeeId, isAdmin }: { employeeId: string; isAdmin: boolean }) {
+  const { data: contract, isLoading, isError } = useContract(employeeId)
+  const uploadMutation = useUploadContract(employeeId)
+  const fileInputRef   = useRef<HTMLInputElement>(null)
+
+  const openContract = () => {
+    if (!contract?.data) return
+    const bytes  = atob(contract.data)
+    const buffer = new Uint8Array(bytes.length)
+    for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i)
+    const blob = new Blob([buffer], { type: contract.contentType ?? 'application/pdf' })
+    const url  = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    uploadMutation.mutate(file)
+    e.target.value = ''
+  }
+
+  const hasContract = !isLoading && !isError && !!contract?.data
+
+  return (
+    <Card>
+      <div className="flex items-center gap-1.5 mb-3">
+        <svg className="w-3 h-3 text-text-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <p className="section-label">Anställningsavtal</p>
+      </div>
+      {isAdmin && (
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/pdf"
+          className="hidden"
+          onChange={handleFile}
+        />
+      )}
+
+      {isLoading ? (
+        <div className="flex justify-center py-4"><Spinner size="sm" /></div>
+      ) : hasContract ? (
+        <div className="space-y-2">
+          <button
+            onClick={openContract}
+            className="w-full flex items-center gap-3 p-3 rounded-lg border border-subtle hover:border-purple/40 hover:bg-purple-bg/20 transition-colors group"
+          >
+            <div className="w-9 h-9 rounded-md bg-danger-bg border border-danger/20 flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-danger" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 3h6v1.5H8V16zm0-6h3v1.5H8V10z"/>
+              </svg>
+            </div>
+            <div className="text-left flex-1 min-w-0">
+              <p className="text-sm font-medium text-text-1 group-hover:text-purple-light transition-colors">
+                Anställningsavtal.pdf
+              </p>
+              <p className="text-xs text-text-3">Klicka för att öppna i nytt fönster</p>
+            </div>
+            <svg className="w-4 h-4 text-text-3 group-hover:text-purple-light transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </button>
+          {isAdmin && (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="text-xs text-text-3 hover:text-text-2 transition-colors"
+            >
+              {uploadMutation.isPending ? 'Uploading…' : 'Replace PDF'}
+            </button>
+          )}
+        </div>
+      ) : (
+        <EmptyState
+          title="No contract uploaded"
+          description={isAdmin ? 'Upload the employee\'s employment contract as a PDF.' : 'Contact your administrator to upload your contract.'}
+          action={isAdmin ? (
+            <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
+              Upload PDF
+            </Button>
+          ) : undefined}
+        />
+      )}
+
+      {uploadMutation.isError && (
+        <p className="text-xs text-danger mt-2">Upload failed. Please try again.</p>
+      )}
+    </Card>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────
+
+const VACATION_DAYS_TOTAL = 25
+
+function calcVacationDaysLeft(vacations: import('@/types').VacationDto[] | undefined): number {
+  if (!vacations) return VACATION_DAYS_TOTAL
+  const year = new Date().getFullYear()
+  const used = vacations
+    .filter(v => v.status === 'APPROVED' && new Date(v.startDate).getFullYear() === year)
+    .reduce((sum, v) => sum + v.daysCount, 0)
+  return Math.max(0, VACATION_DAYS_TOTAL - used)
+}
 
 export function ProfilePage() {
   const { employee: authEmployee, isAdmin } = useAuth()
   const { data: me, isLoading }             = useMe()
+  const { data: myVacations }               = useMyVacations()
 
   const [editProfile, setEditProfile] = useState(false)
   const [editBank,    setEditBank]    = useState(false)
@@ -90,6 +323,7 @@ export function ProfilePage() {
   const employee   = me ?? authEmployee
   const bankInfo   = me?.bankInfo   ?? null
   const education  = me?.education  ?? []
+  const daysLeft   = calcVacationDaysLeft(myVacations)
 
   if (isLoading && !employee) {
     return <div className="flex justify-center py-24"><Spinner size="lg" /></div>
@@ -128,6 +362,21 @@ export function ProfilePage() {
               {memberSince && (
                 <p className="text-xs text-text-3">Medlem sedan {memberSince}</p>
               )}
+
+              {/* Vacation days */}
+              <div className="w-full border-t border-subtle pt-3 mt-1">
+                <p className="text-xs text-text-3 mb-1">Semester dagar kvar</p>
+                <div className="flex items-end justify-center gap-1">
+                  <span className="text-2xl font-bold text-text-1 leading-none">{daysLeft}</span>
+                  <span className="text-xs text-text-3 mb-0.5">/ {VACATION_DAYS_TOTAL} dagar</span>
+                </div>
+                <div className="w-full bg-bg-hover rounded-full h-1.5 mt-2">
+                  <div
+                    className="bg-purple-light h-1.5 rounded-full transition-all"
+                    style={{ width: `${(daysLeft / VACATION_DAYS_TOTAL) * 100}%` }}
+                  />
+                </div>
+              </div>
             </div>
           </Card>
 
@@ -153,9 +402,9 @@ export function ProfilePage() {
               )}
             </Card>
 
-            {/* Bank info */}
+            {/* Bank info — compact */}
             <Card>
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5">
                   <svg className="w-3 h-3 text-text-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
@@ -167,10 +416,19 @@ export function ProfilePage() {
                 </Button>
               </div>
               {bankInfo ? (
-                <div className="space-y-3">
-                  <InfoRow label="Banknamn"        value={bankInfo.bankName} />
-                  <InfoRow label="Clearingnummer"  value={bankInfo.clearingNumber} />
-                  <InfoRow label="Kontonummer"     value={maskAccount(bankInfo.accountNumber)} />
+                <div className="flex flex-wrap gap-x-6 gap-y-1">
+                  <div>
+                    <span className="text-xs text-text-3">Bank · </span>
+                    <span className="text-xs text-text-1">{bankInfo.bankName}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-text-3">Clearing · </span>
+                    <span className="text-xs text-text-1">{bankInfo.clearingNumber}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-text-3">Konto · </span>
+                    <span className="text-xs text-text-1">{maskAccount(bankInfo.accountNumber)}</span>
+                  </div>
                 </div>
               ) : (
                 <EmptyState
@@ -201,6 +459,12 @@ export function ProfilePage() {
                 </ul>
               )}
             </Card>
+
+            {/* Benefits */}
+            <BenefitsCard employeeId={employee.id} isAdmin={isAdmin} />
+
+            {/* Employment contract */}
+            <ContractCard employeeId={employee.id} isAdmin={isAdmin} />
           </div>
         </div>
       </div>

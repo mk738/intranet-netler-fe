@@ -100,9 +100,9 @@ export function LoginPage() {
         <div className="text-center mb-4">
           <p className="text-6xl font-bold text-white tracking-tight leading-none">NETLER</p>
           <h1 className="text-3xl font-semibold text-text-1 mt-2">
-            intra<span className="text-purple-light">net</span>
+            intra<span className="text-purple-light">nät</span>
           </h1>
-          <p className="text-sm text-text-3 mt-2">Logga in på din arbetsyta</p>
+          <p className="text-sm text-text-3 mt-2">Logga in på företagets intranät</p>
         </div>
 
         {authError && (
