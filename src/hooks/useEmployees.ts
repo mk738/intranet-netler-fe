@@ -161,3 +161,30 @@ export function useUploadContract(employeeId: string) {
       qc.invalidateQueries({ queryKey: ['employees', employeeId, 'contract'] }),
   })
 }
+
+export function useCV(employeeId: string) {
+  return useQuery({
+    queryKey: ['employees', employeeId, 'cv'],
+    queryFn:  () =>
+      api.get<ApiResponse<{ data: string; contentType: string }>>(
+        `/api/employees/${employeeId}/cv`
+      ).then(r => r.data.data),
+    enabled: !!employeeId,
+    retry: false,
+  })
+}
+
+export function useUploadCV(employeeId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData()
+      formData.append('file', file)
+      return api.post(`/api/employees/${employeeId}/cv`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+    },
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ['employees', employeeId, 'cv'] }),
+  })
+}
