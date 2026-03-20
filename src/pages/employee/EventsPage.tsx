@@ -413,11 +413,11 @@ export function EventsPage() {
                                 key={e.id}
                                 onClick={() => setSelectedEvent(e)}
                                 className={[
-                                  'w-full text-left bg-purple-bg text-purple-light text-xs py-0.5 cursor-pointer hover:bg-purple-bg/80 transition-colors overflow-hidden',
+                                  'text-left bg-purple-bg text-purple-light text-xs py-0.5 cursor-pointer hover:bg-purple-bg/80 transition-colors overflow-hidden',
                                   roundLeft  ? 'rounded-l' : '',
                                   roundRight ? 'rounded-r' : '',
-                                  extendLeft  ? '-ml-[7px] pl-0.5' : 'pl-1.5',
-                                  extendRight ? '-mr-[7px] pr-0'   : 'pr-1.5',
+                                  extendLeft  ? '-ml-1.5 pl-0.5' : 'pl-1.5',
+                                  extendRight ? '-mr-[7px] pr-0'  : 'pr-1.5',
                                 ].join(' ')}
                               >
                                 <span className={showTitle ? 'truncate block' : 'invisible'}>
