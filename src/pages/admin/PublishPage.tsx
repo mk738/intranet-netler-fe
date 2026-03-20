@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -76,6 +76,7 @@ function NewsForm({ onDone }: { onDone: () => void }) {
   const qc            = useQueryClient()
   const mutation      = useCreateNews()
   const [coverImage, setCoverImage] = useState<CoverImage | null>(null)
+  const publishIntent = useRef(true)
 
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<NewsForm>({
     resolver: zodResolver(newsSchema),
@@ -85,19 +86,20 @@ function NewsForm({ onDone }: { onDone: () => void }) {
   const bodyValue = watch('body')
 
   const onSubmit = (data: NewsForm) => {
+    const publish = publishIntent.current
     mutation.mutate(
       {
         title:          data.title,
         body:           data.body,
         pinned:         data.pinned,
-        publish:        true,
+        publish,
         coverImageData: coverImage?.data ?? null,
         coverImageType: coverImage?.type ?? null,
       },
       {
         onSuccess: created => {
           qc.setQueryData(['news', created.id], created)
-          showToast('Inlägg publicerat', 'success')
+          showToast(publish ? 'Inlägg publicerat' : 'Inlägg sparat som utkast', 'success')
           navigate(`/news/${created.id}`)
         },
       }
@@ -110,7 +112,7 @@ function NewsForm({ onDone }: { onDone: () => void }) {
     : null
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
       {/* Title */}
       <div>
         <label className="field-label">Titel *</label>
@@ -154,7 +156,21 @@ function NewsForm({ onDone }: { onDone: () => void }) {
 
       <div className="flex items-center gap-3 pt-2">
         <Button variant="secondary" type="button" onClick={onDone}>Avbryt</Button>
-        <Button type="submit" loading={mutation.isPending}>Publicera inlägg</Button>
+        <Button
+          variant="secondary"
+          type="submit"
+          loading={mutation.isPending}
+          onClick={() => { publishIntent.current = false }}
+        >
+          Spara som utkast
+        </Button>
+        <Button
+          type="submit"
+          loading={mutation.isPending}
+          onClick={() => { publishIntent.current = true }}
+        >
+          Publicera inlägg
+        </Button>
       </div>
     </form>
   )

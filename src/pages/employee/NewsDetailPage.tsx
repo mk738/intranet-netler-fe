@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useNewsPost } from '@/hooks/useNews'
+import { useNewsPost, usePublishNews } from '@/hooks/useNews'
 import { useAuth } from '@/context/AuthContext'
 import { useReadNews } from '@/context/ReadNewsContext'
 import { Avatar } from '@/components/ui/Avatar'
@@ -38,6 +38,7 @@ export function NewsDetailPage() {
 
   const { markAsRead } = useReadNews()
   const { data: post, isLoading, isError } = useNewsPost(id ?? '')
+  const publishMutation = usePublishNews(id ?? '')
 
   useEffect(() => {
     if (id) markAsRead(id)
@@ -95,13 +96,23 @@ export function NewsDetailPage() {
 
         {/* Admin actions */}
         {isAdmin && (
-          <div className="flex items-center gap-3 pt-2">
+          <div className="flex items-center gap-3 pt-2 flex-wrap">
             <Button
               variant="secondary"
               onClick={() => navigate(`/admin/news/${post.id}/edit`)}
             >
               Redigera inlägg
             </Button>
+            {!post.publishedAt && (
+              <Button
+                loading={publishMutation.isPending}
+                onClick={() => publishMutation.mutate(undefined, {
+                  onSuccess: () => navigate(0),
+                })}
+              >
+                Publicera
+              </Button>
+            )}
             <Button variant="danger" onClick={() => setDeleteOpen(true)}>
               Ta bort inlägg
             </Button>

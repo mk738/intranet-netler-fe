@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import clsx from 'clsx'
 import { useQueryClient } from '@tanstack/react-query'
-import { useCreateNews, useUpdateNews, useNewsPost, usePublishNews } from '@/hooks/useNews'
+import { useCreateNews, useUpdateNews, useNewsPost } from '@/hooks/useNews'
 import { useToast } from '@/components/ui/Toast'
 import { ToastContainer } from '@/components/ui/Toast'
 import { Button } from '@/components/ui'
@@ -42,10 +42,8 @@ export function NewsCreatePage() {
   const { data: existing } = useNewsPost(id ?? '')
   const createMutation     = useCreateNews()
   const updateMutation     = useUpdateNews(id ?? '')
-  const publishMutation    = usePublishNews(id ?? '')
   const mutation           = isEdit ? updateMutation : createMutation
   const isPending          = mutation.isPending
-  const isDraft            = isEdit && existing?.publishedAt == null
 
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -92,15 +90,6 @@ export function NewsCreatePage() {
         },
       })
     }
-  }
-
-  const handlePublish = () => {
-    publishMutation.mutate(undefined, {
-      onSuccess: updated => {
-        showToast('Inlägg publicerat', 'success')
-        navigate(`/news/${updated.id}`)
-      },
-    })
   }
 
   return (
@@ -162,21 +151,6 @@ export function NewsCreatePage() {
               />
               <span className="text-sm text-text-2">Publicera direkt</span>
             </label>
-          )}
-
-          {/* Draft banner in edit mode */}
-          {isDraft && (
-            <div className="flex items-center justify-between bg-bg-hover border border-subtle rounded-lg px-4 py-3">
-              <p className="text-sm text-text-2">Detta inlägg är ett <span className="font-medium text-text-1">utkast</span> och syns inte för anställda.</p>
-              <Button
-                type="button"
-                size="sm"
-                loading={publishMutation.isPending}
-                onClick={handlePublish}
-              >
-                Publicera nu
-              </Button>
-            </div>
           )}
 
           {/* Body */}
