@@ -6,7 +6,7 @@ import { Modal, Button } from '@/components/ui'
 import { useUpdateMyBank } from '@/hooks/useEmployees'
 import { FieldError } from '@/components/ui/FieldError'
 import { FormError } from '@/components/ui/FormError'
-import { getApiError } from '@/lib/api'
+import { getApiError, getApiCode } from '@/lib/api'
 import type { BankInfo } from '@/types'
 
 const schema = z.object({
@@ -25,12 +25,22 @@ interface Props {
 export function EditBankModal({ onClose }: Props) {
   const mutation = useUpdateMyBank()
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, setError, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
 
   const onSubmit = (data: BankInfo) => {
-    mutation.mutate(data, { onSuccess: onClose })
+    mutation.mutate(data, {
+      onSuccess: onClose,
+      onError: (err: unknown) => {
+        const code = getApiCode(err)
+        if (code === 'BANK_INVALID_CLEARING') {
+          setError('clearingNumber', { message: 'Ogiltigt clearingnummer.' })
+        } else if (code === 'BANK_INVALID_ACCOUNT') {
+          setError('accountNumber', { message: 'Ogiltigt kontonummer.' })
+        }
+      },
+    })
   }
 
   return (
@@ -70,7 +80,9 @@ export function EditBankModal({ onClose }: Props) {
           </div>
         </div>
 
-        <FormError message={mutation.isError ? getApiError(mutation.error) : null} />
+        {mutation.isError && !getApiCode(mutation.error) && (
+          <FormError message={getApiError(mutation.error)} />
+        )}
       </form>
     </Modal>
   )

@@ -20,6 +20,7 @@ export function EmploymentContractCard({ employeeId, isAdmin }: Props) {
       isError={isError}
       isPending={upload.isPending}
       isUploadError={upload.isError}
+      uploadError={upload.error}
       onUpload={file => upload.mutate(file)}
     />
   )

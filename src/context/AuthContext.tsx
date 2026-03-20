@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { auth } from '@/lib/firebase'
-import api from '@/lib/api'
+import api, { getApiCode } from '@/lib/api'
 import type { Employee } from '@/types'
 import { LoadingScreen } from '@/components/ui/LoadingScreen'
 
@@ -43,10 +43,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (err: unknown) {
           if (currentId !== callId) return
           const status = (err as { response?: { status?: number } }).response?.status
+          const code   = getApiCode(err)
           setEmployee(null)
           if (status === 404) {
             await auth.signOut()
             setAuthError('Kontot hittades inte. Kontakta din administratör.')
+          } else if (code === 'AUTH_ACCOUNT_INACTIVE') {
+            await auth.signOut()
+            setAuthError('Ditt konto är inaktiverat. Kontakta din administratör.')
           } else {
             setAuthError('Anslutningsfel. Försök igen.')
           }

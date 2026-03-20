@@ -8,7 +8,7 @@ import { useSubmitVacation } from '@/hooks/useVacations'
 import { calculateBusinessDays, todayString } from '@/lib/dateUtils'
 import { FieldError } from '@/components/ui/FieldError'
 import { FormError } from '@/components/ui/FormError'
-import { getApiError } from '@/lib/api'
+import { getApiError, getApiCode } from '@/lib/api'
 
 const today = todayString()
 
@@ -28,7 +28,7 @@ export function RequestVacationModal({ onClose }: Props) {
   const { showToast } = useToast()
   const mutation = useSubmitVacation()
 
-  const { handleSubmit, formState: { errors }, watch, setValue } = useForm<FormData>({
+  const { handleSubmit, formState: { errors }, watch, setValue, setError } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { startDate: '', endDate: '' },
   })
@@ -46,8 +46,16 @@ export function RequestVacationModal({ onClose }: Props) {
         onClose()
       },
       onError: (err: unknown) => {
-        // error message rendered from mutation.error below
-        void err
+        const code = getApiCode(err)
+        if (code === 'VACATION_OVERLAP') {
+          setError('startDate', { message: 'Du har redan en godkänd ledighet som överlappar dessa datum.' })
+        } else if (code === 'VACATION_PAST_DATE') {
+          setError('startDate', { message: 'Startdatum kan inte vara i det förflutna.' })
+        } else if (code === 'VACATION_INSUFFICIENT_DAYS') {
+          setError('endDate', { message: 'Du har inte tillräckligt med semesterdagar kvar.' })
+        } else if (code === 'VACATION_DATE_INVALID') {
+          setError('endDate', { message: 'Ogiltiga datum. Kontrollera att slutdatum är efter startdatum.' })
+        }
       },
     })
   }
@@ -98,7 +106,9 @@ export function RequestVacationModal({ onClose }: Props) {
           </div>
         )}
 
-        <FormError message={mutation.isError ? getApiError(mutation.error) : null} />
+        {mutation.isError && !getApiCode(mutation.error) && (
+          <FormError message={getApiError(mutation.error)} />
+        )}
       </form>
     </Modal>
   )

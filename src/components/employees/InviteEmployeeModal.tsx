@@ -7,7 +7,7 @@ import { useInviteEmployee } from '@/hooks/useEmployees'
 import { useToast } from '@/components/ui/Toast'
 import { FieldError } from '@/components/ui/FieldError'
 import { FormError } from '@/components/ui/FormError'
-import { getApiError } from '@/lib/api'
+import { getApiError, getApiCode } from '@/lib/api'
 
 const schema = z.object({
   firstName: z.string().min(1, 'Förnamn krävs'),
@@ -28,7 +28,7 @@ export function InviteEmployeeModal({ onClose }: Props) {
   const { showToast } = useToast()
   const invite = useInviteEmployee()
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, setError, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { role: 'EMPLOYEE' },
   })
@@ -38,6 +38,11 @@ export function InviteEmployeeModal({ onClose }: Props) {
       onSuccess: () => {
         showToast('Anställd inbjuden', 'success')
         onClose()
+      },
+      onError: (err: unknown) => {
+        if (getApiCode(err) === 'EMPLOYEE_EMAIL_TAKEN') {
+          setError('email', { message: 'Den här e-postadressen används redan.' })
+        }
       },
     })
   }
@@ -98,7 +103,7 @@ export function InviteEmployeeModal({ onClose }: Props) {
           </div>
         </div>
 
-        <FormError message={invite.isError ? getApiError(invite.error) : null} />
+        <FormError message={invite.isError && getApiCode(invite.error) !== 'EMPLOYEE_EMAIL_TAKEN' ? getApiError(invite.error) : null} />
       </form>
     </Modal>
   )
