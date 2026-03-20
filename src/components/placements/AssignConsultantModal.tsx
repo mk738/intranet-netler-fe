@@ -11,7 +11,7 @@ import { useClients } from '@/hooks/useClients'
 import { useCreateAssignment } from '@/hooks/usePlacements'
 import { FieldError } from '@/components/ui/FieldError'
 import { FormError } from '@/components/ui/FormError'
-import { getApiError } from '@/lib/api'
+import { getApiError, getApiCode } from '@/lib/api'
 import type { UnplacedDto, ClientDto } from '@/types'
 
 // ── Form schema ───────────────────────────────────────────────
@@ -133,6 +133,14 @@ export function AssignConsultantModal({ employee, onClose }: Props) {
         onSuccess: () => {
           showToast('Uppdrag skapat', 'success')
           onClose()
+        },
+        onError: (err: unknown) => {
+          const code = getApiCode(err)
+          if (code === 'ASSIGNMENT_ALREADY_ACTIVE') {
+            setClientError('Den anställde har redan ett aktivt uppdrag.')
+          } else if (code === 'ASSIGNMENT_DATE_INVALID') {
+            setClientError('Ogiltiga datum. Kontrollera att slutdatum är efter startdatum.')
+          }
         },
       },
     )
@@ -333,7 +341,9 @@ export function AssignConsultantModal({ employee, onClose }: Props) {
           </div>
         </div>
 
-        <FormError message={mutation.isError ? getApiError(mutation.error) : null} />
+        {mutation.isError && !getApiCode(mutation.error) && (
+          <FormError message={getApiError(mutation.error)} />
+        )}
       </form>
     </Modal>
   )

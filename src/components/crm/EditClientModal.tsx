@@ -7,7 +7,7 @@ import { useUpdateClient } from '@/hooks/useClients'
 import { useToast } from '@/components/ui/Toast'
 import { FieldError } from '@/components/ui/FieldError'
 import { FormError } from '@/components/ui/FormError'
-import { getApiError } from '@/lib/api'
+import { getApiError, getApiCode } from '@/lib/api'
 import type { ClientDto } from '@/types'
 
 const schema = z.object({
@@ -30,7 +30,7 @@ export function EditClientModal({ client, onClose }: Props) {
   const { showToast } = useToast()
   const mutation = useUpdateClient(client.id)
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, setError, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       companyName:  client.companyName,
@@ -54,6 +54,11 @@ export function EditClientModal({ client, onClose }: Props) {
       onSuccess: () => {
         showToast('Kund uppdaterad', 'success')
         onClose()
+      },
+      onError: (err: unknown) => {
+        if (getApiCode(err) === 'CLIENT_ORG_NUMBER_TAKEN') {
+          setError('orgNumber', { message: 'Det här org-numret används redan av en annan kund.' })
+        }
       },
     })
   }
@@ -110,7 +115,9 @@ export function EditClientModal({ client, onClose }: Props) {
           <FieldError message={errors.contactEmail?.message} />
         </div>
 
-        <FormError message={mutation.isError ? getApiError(mutation.error) : null} />
+        {mutation.isError && getApiCode(mutation.error) !== 'CLIENT_ORG_NUMBER_TAKEN' && (
+          <FormError message={getApiError(mutation.error)} />
+        )}
       </form>
     </Modal>
   )

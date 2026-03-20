@@ -1,22 +1,24 @@
 import { useRef } from 'react'
 import { Card, Spinner, EmptyState, Button } from '@/components/ui'
+import { getApiCode } from '@/lib/api'
 
 interface Props {
-  title:        string
-  fileName:     string
-  isAdmin:      boolean
-  fileData:     { data: string; contentType: string } | null | undefined
-  isLoading:    boolean
-  isError:      boolean
-  isPending:    boolean
+  title:         string
+  fileName:      string
+  isAdmin:       boolean
+  fileData:      { data: string; contentType: string } | null | undefined
+  isLoading:     boolean
+  isError:       boolean
+  isPending:     boolean
   isUploadError: boolean
-  onUpload:     (file: File) => void
+  uploadError?:  unknown
+  onUpload:      (file: File) => void
 }
 
 export function PdfFileCard({
   title, fileName, isAdmin,
   fileData, isLoading, isError,
-  isPending, isUploadError, onUpload,
+  isPending, isUploadError, uploadError, onUpload,
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -104,9 +106,13 @@ export function PdfFileCard({
         />
       )}
 
-      {isUploadError && (
-        <p className="text-xs text-danger mt-2">Uppladdningen misslyckades. Försök igen.</p>
-      )}
+      {isUploadError && (() => {
+        const code = getApiCode(uploadError)
+        const msg  = code === 'FILE_TOO_LARGE'    ? 'Filen är för stor. Max 10 MB är tillåtet.'
+                   : code === 'FILE_INVALID_TYPE' ? 'Ogiltig filtyp. Endast PDF-filer accepteras.'
+                   : 'Uppladdningen misslyckades. Försök igen.'
+        return <p className="text-xs text-danger mt-2">{msg}</p>
+      })()}
     </Card>
   )
 }
