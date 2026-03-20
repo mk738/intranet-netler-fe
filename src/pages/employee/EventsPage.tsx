@@ -25,7 +25,33 @@ function eventDateStr(eventDate: string): string {
 
 function eventsOnDay(events: EventDto[], date: Date): EventDto[] {
   const dayStr = toDateStr(date)
-  return events.filter(e => eventDateStr(e.eventDate) === dayStr)
+  return events.filter(e => {
+    const start = eventDateStr(e.eventDate)
+    const end   = e.endDate ? eventDateStr(e.endDate) : start
+    return dayStr >= start && dayStr <= end
+  })
+}
+
+type EventPosition = 'single' | 'start' | 'middle' | 'end'
+
+function getEventPosition(event: EventDto, date: Date): EventPosition {
+  const dayStr = toDateStr(date)
+  const start  = eventDateStr(event.eventDate)
+  const end    = event.endDate ? eventDateStr(event.endDate) : start
+  if (start === end)    return 'single'
+  if (dayStr === start) return 'start'
+  if (dayStr === end)   return 'end'
+  return 'middle'
+}
+
+// Is this date a Monday (first column) in the calendar?
+function isFirstColumn(date: Date): boolean {
+  return (date.getDay() + 6) % 7 === 0
+}
+
+// Is this date a Sunday (last column)?
+function isLastColumn(date: Date): boolean {
+  return date.getDay() === 0
 }
 
 const today = new Date()
@@ -370,17 +396,36 @@ export function EventsPage() {
                           </div>
 
                           {/* Events */}
-                          {shown.map(e => (
-                            <button
-                              key={e.id}
-                              onClick={() => setSelectedEvent(e)}
-                              className="w-full text-left bg-purple-bg text-purple-light text-xs
-                                         px-1.5 py-0.5 rounded truncate cursor-pointer
-                                         hover:bg-purple-bg/80 transition-colors"
-                            >
-                              {e.title}
-                            </button>
-                          ))}
+                          {shown.map(e => {
+                            const pos          = getEventPosition(e, date)
+                            const isStart      = pos === 'start' || pos === 'single'
+                            const isEnd        = pos === 'end'   || pos === 'single'
+                            const forceStart   = pos === 'middle' && isFirstColumn(date)
+                            const forceEnd     = (pos === 'start' || pos === 'middle') && isLastColumn(date)
+                            const showTitle    = isStart || forceStart
+                            const roundLeft    = isStart || forceStart
+                            const roundRight   = isEnd   || forceEnd
+                            const extendLeft   = (pos === 'middle' || pos === 'end') && !forceStart
+                            const extendRight  = (pos === 'start'  || pos === 'middle') && !forceEnd
+
+                            return (
+                              <button
+                                key={e.id}
+                                onClick={() => setSelectedEvent(e)}
+                                className={[
+                                  'text-left bg-purple-bg text-purple-light text-xs py-0.5 cursor-pointer hover:bg-purple-bg/80 transition-colors overflow-hidden',
+                                  roundLeft  ? 'rounded-l' : '',
+                                  roundRight ? 'rounded-r' : '',
+                                  extendLeft  ? '-ml-1.5 pl-0.5' : 'pl-1.5',
+                                  extendRight ? '-mr-[7px] pr-0'  : 'pr-1.5',
+                                ].join(' ')}
+                              >
+                                <span className={showTitle ? 'truncate block' : 'invisible'}>
+                                  {e.title}
+                                </span>
+                              </button>
+                            )
+                          })}
 
                           {extra > 0 && (
                             <span className="text-xs text-text-3">+{extra} till</span>
