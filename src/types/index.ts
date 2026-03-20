@@ -255,6 +255,7 @@ export interface CreateNewsRequest {
   title:          string
   body:           string
   pinned:         boolean
+  publish:        boolean
   coverImageData: string | null
   coverImageType: string | null
 }
