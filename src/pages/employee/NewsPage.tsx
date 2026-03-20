@@ -84,7 +84,7 @@ function NewsCard({ post }: { post: NewsPostDto }) {
           <Avatar name={post.authorName} avatarUrl={null} size="sm" />
           <span className="text-xs text-text-3">{post.authorName}</span>
           <span className="text-xs text-text-3">·</span>
-          <span className="text-xs text-text-3">{formatShortDate(post.publishedAt)}</span>
+          <span className="text-xs text-text-3">{formatShortDate(post.publishedAt ?? post.createdAt)}</span>
         </div>
 
         {preview && (

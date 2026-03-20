@@ -220,7 +220,8 @@ export interface NewsPostDto {
   body:           string
   authorName:     string
   authorInitials: string
-  publishedAt:    string
+  publishedAt:    string | null
+  createdAt:      string
   pinned:         boolean
   hasCoverImage:  boolean
   coverImageType: string | null
