@@ -88,7 +88,7 @@ export function DashboardPage() {
                       {post.title}
                     </p>
                     <p className="text-xs text-text-3 mt-0.5">
-                      {post.authorName} · {format(new Date(post.publishedAt), 'MMM d')}
+                      {post.authorName} · {format(new Date(post.publishedAt ?? post.createdAt), 'MMM d')}
                     </p>
                   </button>
                 </li>

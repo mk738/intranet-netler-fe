@@ -82,7 +82,7 @@ export function NewsDetailPage() {
           <Avatar name={post.authorName} avatarUrl={null} size="sm" />
           <span className="text-sm text-text-2">{post.authorName}</span>
           <span className="text-text-3">·</span>
-          <span className="text-sm text-text-3">{formatShortDate(post.publishedAt)}</span>
+          <span className="text-sm text-text-3">{formatShortDate(post.publishedAt ?? post.createdAt)}</span>
           {post.pinned && (
             <span className="badge-active ml-1">Fäst</span>
           )}
