@@ -55,7 +55,7 @@ export function usePublishNews(id: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: () =>
-      api.put<ApiResponse<NewsPostDetailDto>>(`/api/news/${id}/publish`)
+      api.put<ApiResponse<NewsPostDetailDto>>(`/api/news/${id}/publish`, { publish: true })
          .then(r => r.data.data),
     onSuccess: (updated) => {
       qc.setQueryData(['news', updated.id], updated)
