@@ -90,6 +90,7 @@ function NewsForm({ onDone }: { onDone: () => void }) {
         title:          data.title,
         body:           data.body,
         pinned:         data.pinned,
+        publish:        true,
         coverImageData: coverImage?.data ?? null,
         coverImageType: coverImage?.type ?? null,
       },

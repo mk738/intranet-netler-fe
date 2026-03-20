@@ -51,6 +51,19 @@ export function useUpdateNews(id: string) {
   })
 }
 
+export function usePublishNews(id: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () =>
+      api.put<ApiResponse<NewsPostDetailDto>>(`/api/news/${id}/publish`)
+         .then(r => r.data.data),
+    onSuccess: (updated) => {
+      qc.setQueryData(['news', updated.id], updated)
+      qc.invalidateQueries({ queryKey: ['news'] })
+    },
+  })
+}
+
 export function useDeleteNews() {
   const qc = useQueryClient()
   return useMutation({

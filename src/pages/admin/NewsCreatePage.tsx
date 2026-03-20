@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import clsx from 'clsx'
 import { useQueryClient } from '@tanstack/react-query'
-import { useCreateNews, useUpdateNews, useNewsPost } from '@/hooks/useNews'
+import { useCreateNews, useUpdateNews, useNewsPost, usePublishNews } from '@/hooks/useNews'
 import { useToast } from '@/components/ui/Toast'
 import { ToastContainer } from '@/components/ui/Toast'
 import { Button } from '@/components/ui'
@@ -17,12 +17,13 @@ import { FormError } from '@/components/ui/FormError'
 import { getApiError } from '@/lib/api'
 
 const schema = z.object({
-  title:  z.string().min(1, 'Titel krävs').max(300, 'Titeln är för lång'),
-  body:   z.string().refine(html => {
+  title:   z.string().min(1, 'Titel krävs').max(300, 'Titeln är för lång'),
+  body:    z.string().refine(html => {
     const text = html.replace(/<[^>]*>/g, '').trim()
     return text.length > 0
   }, 'Innehåll krävs'),
-  pinned: z.boolean(),
+  pinned:  z.boolean(),
+  publish: z.boolean(),
 })
 
 type FormData = z.infer<typeof schema>
@@ -41,12 +42,14 @@ export function NewsCreatePage() {
   const { data: existing } = useNewsPost(id ?? '')
   const createMutation     = useCreateNews()
   const updateMutation     = useUpdateNews(id ?? '')
+  const publishMutation    = usePublishNews(id ?? '')
   const mutation           = isEdit ? updateMutation : createMutation
   const isPending          = mutation.isPending
+  const isDraft            = isEdit && existing?.publishedAt == null
 
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { title: '', body: '', pinned: false },
+    defaultValues: { title: '', body: '', pinned: false, publish: true },
   })
 
   // Pre-fill form when editing
@@ -67,6 +70,7 @@ export function NewsCreatePage() {
       title:          data.title,
       body:           data.body,
       pinned:         data.pinned,
+      publish:        data.publish,
       coverImageData: coverImage?.data ?? null,
       coverImageType: coverImage?.type ?? null,
     }
@@ -83,11 +87,20 @@ export function NewsCreatePage() {
       createMutation.mutate(payload, {
         onSuccess: created => {
           qc.setQueryData(['news', created.id], created)
-          showToast('Inlägg publicerat', 'success')
+          showToast(data.publish ? 'Inlägg publicerat' : 'Inlägg sparat som utkast', 'success')
           navigate(`/news/${created.id}`)
         },
       })
     }
+  }
+
+  const handlePublish = () => {
+    publishMutation.mutate(undefined, {
+      onSuccess: updated => {
+        showToast('Inlägg publicerat', 'success')
+        navigate(`/news/${updated.id}`)
+      },
+    })
   }
 
   return (
@@ -137,6 +150,35 @@ export function NewsCreatePage() {
             <span className="text-sm text-text-2">Fäst detta inlägg högst upp i flödet</span>
           </label>
 
+          {/* Publish immediately — only shown on create */}
+          {!isEdit && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                {...register('publish')}
+                className="w-4 h-4 rounded border border-mild bg-bg-input
+                           checked:bg-purple-dark checked:border-purple
+                           focus:ring-0 focus:outline-none cursor-pointer"
+              />
+              <span className="text-sm text-text-2">Publicera direkt</span>
+            </label>
+          )}
+
+          {/* Draft banner in edit mode */}
+          {isDraft && (
+            <div className="flex items-center justify-between bg-bg-hover border border-subtle rounded-lg px-4 py-3">
+              <p className="text-sm text-text-2">Detta inlägg är ett <span className="font-medium text-text-1">utkast</span> och syns inte för anställda.</p>
+              <Button
+                type="button"
+                size="sm"
+                loading={publishMutation.isPending}
+                onClick={handlePublish}
+              >
+                Publicera nu
+              </Button>
+            </div>
+          )}
+
           {/* Body */}
           <div>
             <label className="field-label">Innehåll *</label>
@@ -156,7 +198,9 @@ export function NewsCreatePage() {
               Avbryt
             </Button>
             <Button type="submit" loading={isPending}>
-              {isEdit ? 'Spara ändringar' : 'Publicera inlägg'}
+              {isEdit
+                ? 'Spara ändringar'
+                : watch('publish') ? 'Publicera inlägg' : 'Spara som utkast'}
             </Button>
           </div>
         </form>
