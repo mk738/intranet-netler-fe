@@ -55,6 +55,7 @@ function AssignmentList({ items }: { items: Assignment[] }) {
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="text-sm font-medium text-text-1">{a.projectName}</p>
+              <p className="text-xs text-text-2 mt-0.5">{a.companyName}</p>
               <p className="text-xs text-text-3 mt-0.5">
                 {format(new Date(a.startDate), 'MMM yyyy')} –{' '}
                 {a.endDate ? format(new Date(a.endDate), 'MMM yyyy') : 'pågående'}
