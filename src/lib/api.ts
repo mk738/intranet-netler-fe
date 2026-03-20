@@ -46,3 +46,10 @@ export function getApiError(error: unknown): string {
   }
   return 'Something went wrong. Please try again.'
 }
+
+export function getApiCode(error: unknown): string | null {
+  if (axios.isAxiosError(error)) {
+    return (error.response?.data as { code?: string })?.code ?? null
+  }
+  return null
+}

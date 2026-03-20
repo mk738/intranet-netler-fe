@@ -10,9 +10,9 @@ import { useMyVacations } from '@/hooks/useVacations'
 
 function greeting(): string {
   const h = new Date().getHours()
-  if (h >= 5  && h < 12) return 'Good morning'
-  if (h >= 12 && h < 18) return 'Good afternoon'
-  return 'Good evening'
+  if (h >= 5  && h < 12) return 'God morgon'
+  if (h >= 12 && h < 18) return 'God eftermiddag'
+  return 'God kväll'
 }
 
 // ── Sub-components ────────────────────────────────────────────
@@ -63,19 +63,19 @@ export function DashboardPage() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-3 gap-4">
-        <StatCard label="Events this month"  value={events?.length ?? 0}        icon="📅" />
-        <StatCard label="Pending vacation"   value={pendingVacations}            icon="🏖️" />
-        <StatCard label="News posts"         value={newsData?.totalElements ?? 0} icon="📰" />
+        <StatCard label="Evenemang denna månad" value={events?.length ?? 0}        icon="📅" />
+        <StatCard label="Väntande ledighet"    value={pendingVacations}            icon="🏖️" />
+        <StatCard label="Nyheter"              value={newsData?.totalElements ?? 0} icon="📰" />
       </div>
 
       {/* Bottom grid */}
       <div className="grid grid-cols-2 gap-6">
         {/* Latest news */}
-        <Card title="Latest news">
+        <Card title="Senaste nyheter">
           {newsLoading ? (
             <div className="flex justify-center py-8"><Spinner /></div>
           ) : !news.length ? (
-            <p className="text-sm text-text-3 px-3 py-4">No news yet.</p>
+            <p className="text-sm text-text-3 px-3 py-4">Inga nyheter ännu.</p>
           ) : (
             <ul className="space-y-1">
               {news.map(post => (
@@ -98,11 +98,11 @@ export function DashboardPage() {
         </Card>
 
         {/* Upcoming events */}
-        <Card title="Upcoming events">
+        <Card title="Kommande evenemang">
           {eventsLoading ? (
             <div className="flex justify-center py-8"><Spinner /></div>
           ) : !(events ?? []).length ? (
-            <p className="text-sm text-text-3 px-3 py-4">No upcoming events.</p>
+            <p className="text-sm text-text-3 px-3 py-4">Inga kommande evenemang.</p>
           ) : (
             <ul className="space-y-1">
               {(events ?? []).slice(0, 3).map(event => (

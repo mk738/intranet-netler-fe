@@ -11,14 +11,14 @@ import { useClients } from '@/hooks/useClients'
 import { useCreateAssignment } from '@/hooks/usePlacements'
 import { FieldError } from '@/components/ui/FieldError'
 import { FormError } from '@/components/ui/FormError'
-import { getApiError } from '@/lib/api'
+import { getApiError, getApiCode } from '@/lib/api'
 import type { UnplacedDto, ClientDto } from '@/types'
 
 // ── Form schema ───────────────────────────────────────────────
 
 const schema = z.object({
-  projectName:     z.string().min(1, 'Project name is required'),
-  startDate:       z.string().min(1, 'Start date is required'),
+  projectName:     z.string().min(1, 'Projektnamn krävs'),
+  startDate:       z.string().min(1, 'Startdatum krävs'),
   endDate:         z.string().optional(),
   // new client fields
   companyName:     z.string().optional(),
@@ -28,7 +28,7 @@ const schema = z.object({
   contactEmail:    z.string().optional(),
 }).refine(
   data => !data.endDate || !data.startDate || data.endDate >= data.startDate,
-  { message: 'End date must be after start date', path: ['endDate'] },
+  { message: 'Slutdatum måste vara efter startdatum', path: ['endDate'] },
 )
 
 type FormData = z.infer<typeof schema>
@@ -39,7 +39,7 @@ type ClientMode = 'search' | 'existing' | 'new'
 
 function ClientStatusBadge({ status }: { status: ClientDto['status'] }) {
   const cls = status === 'ACTIVE' ? 'badge-active' : 'badge-prospect'
-  return <span className={cls}>{status === 'ACTIVE' ? 'Active' : 'Prospect'}</span>
+  return <span className={cls}>{status === 'ACTIVE' ? 'Aktiv' : 'Prospect'}</span>
 }
 
 // ── Component ─────────────────────────────────────────────────
@@ -97,11 +97,11 @@ export function AssignConsultantModal({ employee, onClose }: Props) {
   const onSubmit = (data: FormData) => {
     // Validate client selection
     if (clientMode === 'search' || (clientMode === 'existing' && !selectedClient)) {
-      setClientError('Please select or create a client')
+      setClientError('Välj eller skapa en kund')
       return
     }
     if (clientMode === 'new' && !data.companyName?.trim()) {
-      setClientError('Company name is required for new client')
+      setClientError('Företagsnamn krävs för ny kund')
       return
     }
 
@@ -131,8 +131,16 @@ export function AssignConsultantModal({ employee, onClose }: Props) {
           },
       {
         onSuccess: () => {
-          showToast('Assignment created', 'success')
+          showToast('Uppdrag skapat', 'success')
           onClose()
+        },
+        onError: (err: unknown) => {
+          const code = getApiCode(err)
+          if (code === 'ASSIGNMENT_ALREADY_ACTIVE') {
+            setClientError('Den anställde har redan ett aktivt uppdrag.')
+          } else if (code === 'ASSIGNMENT_DATE_INVALID') {
+            setClientError('Ogiltiga datum. Kontrollera att slutdatum är efter startdatum.')
+          }
         },
       },
     )
@@ -140,13 +148,13 @@ export function AssignConsultantModal({ employee, onClose }: Props) {
 
   return (
     <Modal
-      title="Assign consultant"
+      title="Tilldela konsult"
       onClose={onClose}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" onClick={onClose}>Avbryt</Button>
           <Button form="assign-form" type="submit" loading={mutation.isPending}>
-            Save assignment
+            Spara uppdrag
           </Button>
         </>
       }
@@ -161,7 +169,7 @@ export function AssignConsultantModal({ employee, onClose }: Props) {
               <p className="text-xs text-text-3">{employee.jobTitle}</p>
             )}
             <p className="text-xs text-text-3">
-              Unplaced since{' '}
+              Ej placerad sedan{' '}
               {employee.lastPlacedDate
                 ? format(new Date(employee.lastPlacedDate), 'MMM yyyy')
                 : 'N/A'}
@@ -171,7 +179,7 @@ export function AssignConsultantModal({ employee, onClose }: Props) {
 
         {/* Client selector */}
         <div>
-          <label className="field-label">Client</label>
+          <label className="field-label">Kund</label>
 
           {/* Search input — hidden once 'new' mode is active and companyName is set */}
           {clientMode !== 'new' && (
@@ -187,7 +195,7 @@ export function AssignConsultantModal({ employee, onClose }: Props) {
                 onBlur={() => {
                   blurTimer.current = setTimeout(() => setShowDropdown(false), 150)
                 }}
-                placeholder="Search clients..."
+                placeholder="Sök kunder..."
                 className="field-input"
               />
 
@@ -215,7 +223,7 @@ export function AssignConsultantModal({ employee, onClose }: Props) {
                         className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-bg-hover transition-colors text-left border-t border-subtle"
                       >
                         <span className="text-sm text-purple-light font-medium">
-                          + Create new client "{searchQuery}"
+                          + Skapa ny kund "{searchQuery}"
                         </span>
                       </button>
                     </>
@@ -246,7 +254,7 @@ export function AssignConsultantModal({ employee, onClose }: Props) {
           {clientMode === 'new' && (
             <div className="bg-bg-input border border-purple/25 rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <p className="section-label">New client</p>
+                <p className="section-label">Ny kund</p>
                 <div className="flex items-center gap-2">
                   <span className="badge-prospect">creating</span>
                   <button
@@ -260,7 +268,7 @@ export function AssignConsultantModal({ employee, onClose }: Props) {
               </div>
 
               <div>
-                <label className="field-label">Company name *</label>
+                <label className="field-label">Företagsnamn *</label>
                 <input
                   {...register('companyName')}
                   defaultValue={searchQuery}
@@ -270,13 +278,13 @@ export function AssignConsultantModal({ employee, onClose }: Props) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="field-label">Org number</label>
+                  <label className="field-label">Org-nummer</label>
                   <input {...register('orgNumber')} className="field-input" placeholder="556000-0000" />
                 </div>
                 <div>
                   <label className="field-label">Status</label>
                   <select {...register('newClientStatus')} className="field-input">
-                    <option value="ACTIVE">Active</option>
+                    <option value="ACTIVE">Aktiv</option>
                     <option value="PROSPECT">Prospect</option>
                   </select>
                 </div>
@@ -284,11 +292,11 @@ export function AssignConsultantModal({ employee, onClose }: Props) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="field-label">Contact name</label>
+                  <label className="field-label">Kontaktperson</label>
                   <input {...register('contactName')} className="field-input" />
                 </div>
                 <div>
-                  <label className="field-label">Contact email</label>
+                  <label className="field-label">Kontakt-e-post</label>
                   <input {...register('contactEmail')} type="email" className="field-input" />
                 </div>
               </div>
@@ -301,20 +309,20 @@ export function AssignConsultantModal({ employee, onClose }: Props) {
         {/* Divider */}
         <div className="flex items-center gap-3">
           <div className="flex-1 h-px bg-subtle" />
-          <p className="section-label">Project details</p>
+          <p className="section-label">Projektdetaljer</p>
           <div className="flex-1 h-px bg-subtle" />
         </div>
 
         {/* Project fields */}
         <div>
-          <label className="field-label">Project name *</label>
+          <label className="field-label">Projektnamn *</label>
           <input {...register('projectName')} className="field-input" />
           <FieldError message={errors.projectName?.message} />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="field-label">Start date *</label>
+            <label className="field-label">Startdatum *</label>
             <DatePicker
               value={watch('startDate') ?? ''}
               onChange={v => setValue('startDate', v, { shouldValidate: true })}
@@ -322,18 +330,20 @@ export function AssignConsultantModal({ employee, onClose }: Props) {
             <FieldError message={errors.startDate?.message} />
           </div>
           <div>
-            <label className="field-label">End date</label>
+            <label className="field-label">Slutdatum</label>
             <DatePicker
               value={watch('endDate') ?? ''}
               onChange={v => setValue('endDate', v, { shouldValidate: true })}
               min={watch('startDate')}
-              placeholder="No end date"
+              placeholder="Inget slutdatum"
             />
             <FieldError message={errors.endDate?.message} />
           </div>
         </div>
 
-        <FormError message={mutation.isError ? getApiError(mutation.error) : null} />
+        {mutation.isError && !getApiCode(mutation.error) && (
+          <FormError message={getApiError(mutation.error)} />
+        )}
       </form>
     </Modal>
   )

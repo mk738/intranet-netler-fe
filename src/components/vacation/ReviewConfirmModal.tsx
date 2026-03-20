@@ -21,7 +21,7 @@ export function ReviewConfirmModal({ vacation, action, onClose }: Props) {
       { id: vacation.id, data: { approved: isApprove } },
       {
         onSuccess: () => {
-          showToast(isApprove ? 'Request approved' : 'Request rejected', 'success')
+          showToast(isApprove ? 'Ansökan godkänd' : 'Ansökan avvisad', 'success')
           onClose()
         },
       },
@@ -30,28 +30,28 @@ export function ReviewConfirmModal({ vacation, action, onClose }: Props) {
 
   return (
     <Modal
-      title={isApprove ? 'Approve vacation request?' : 'Reject vacation request?'}
+      title={isApprove ? 'Godkänn ledighetsansökan?' : 'Avvisa ledighetsansökan?'}
       onClose={onClose}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" onClick={onClose}>Avbryt</Button>
           {isApprove ? (
             <Button loading={mutation.isPending} onClick={handleSubmit}>
-              Approve
+              Godkänn
             </Button>
           ) : (
             <Button variant="danger" loading={mutation.isPending} onClick={handleSubmit}>
-              Reject
+              Avvisa
             </Button>
           )}
         </>
       }
     >
       <p className="text-sm text-text-2">
-        <span className="text-text-1 font-medium">{vacation.employeeName}</span> has
-        requested{' '}
-        <span className="text-text-1 font-medium">{vacation.daysCount} business day{vacation.daysCount !== 1 ? 's' : ''}</span>
-        {' '}off from{' '}
+        <span className="text-text-1 font-medium">{vacation.employeeName}</span> har
+        ansökt om{' '}
+        <span className="text-text-1 font-medium">{vacation.daysCount} arbetsdag{vacation.daysCount !== 1 ? 'ar' : ''}</span>
+        {' '}ledigt från{' '}
         <span className="text-text-1 font-medium">
           {formatDateRange(vacation.startDate, vacation.endDate)}
         </span>
@@ -60,7 +60,7 @@ export function ReviewConfirmModal({ vacation, action, onClose }: Props) {
 
       {mutation.isError && (
         <p className="text-xs text-danger bg-danger-bg border border-danger/20 rounded px-3 py-2 mt-4">
-          Failed to {action} request. Please try again.
+          Det gick inte att {action === 'approve' ? 'godkänna' : 'avvisa'} ansökan. Försök igen.
         </p>
       )}
     </Modal>

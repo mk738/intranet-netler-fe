@@ -19,13 +19,13 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="min-h-screen bg-bg flex items-center justify-center px-4">
           <div className="card max-w-sm w-full text-center">
-            <p className="text-sm font-semibold text-text-1 mb-1">Something went wrong</p>
+            <p className="text-sm font-semibold text-text-1 mb-1">Något gick fel</p>
             <p className="text-xs text-text-3 mb-5 font-mono">{this.state.error.message}</p>
             <button
               onClick={() => window.location.reload()}
               className="btn-primary"
             >
-              Reload page
+              Ladda om sidan
             </button>
           </div>
         </div>

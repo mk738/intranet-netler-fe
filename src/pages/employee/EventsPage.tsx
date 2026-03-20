@@ -48,7 +48,7 @@ function buildCalendarCells(month: Date): Date[] {
   )
 }
 
-const DOW_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const DOW_LABELS = ['Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör', 'Sön']
 
 // ── RSVP section ──────────────────────────────────────────────
 
@@ -245,7 +245,7 @@ function MobileEventList({ events, onSelect }: { events: EventDto[]; onSelect: (
   }, {})
 
   if (!sorted.length) {
-    return <p className="text-sm text-text-3 text-center py-8">No events this month.</p>
+    return <p className="text-sm text-text-3 text-center py-8">Inga evenemang denna månad.</p>
   }
 
   return (
@@ -308,17 +308,17 @@ export function EventsPage() {
         {/* Calendar header */}
         <div className="flex items-center gap-3">
           <Button variant="secondary" onClick={() => setCurrentMonth(m => subMonths(m, 1))}>
-            ← Prev
+            ← Föregående
           </Button>
           <h1 className="text-lg font-medium text-text-1 flex-1 text-center">
             {format(currentMonth, 'MMMM yyyy')}
           </h1>
           <Button variant="secondary" onClick={() => setCurrentMonth(m => addMonths(m, 1))}>
-            Next →
+            Nästa →
           </Button>
           {isAdmin && (
             <Button onClick={() => navigate('/admin/events/new')}>
-              Add event
+              Lägg till evenemang
             </Button>
           )}
         </div>
@@ -383,7 +383,7 @@ export function EventsPage() {
                           ))}
 
                           {extra > 0 && (
-                            <span className="text-xs text-text-3">+{extra} more</span>
+                            <span className="text-xs text-text-3">+{extra} till</span>
                           )}
                         </div>
                       )
@@ -404,14 +404,14 @@ export function EventsPage() {
             {!isLoading && (events ?? []).length === 0 && (
               <div className="text-center py-8">
                 <p className="text-sm text-text-3">
-                  No events scheduled for {format(currentMonth, 'MMMM yyyy')}
+                  Inga evenemang planerade för {format(currentMonth, 'MMMM yyyy')}
                 </p>
                 {isAdmin && (
                   <button
                     onClick={() => navigate('/admin/events/new')}
                     className="text-xs text-purple-light mt-2 hover:underline"
                   >
-                    Add an event
+                    Lägg till ett evenemang
                   </button>
                 )}
               </div>

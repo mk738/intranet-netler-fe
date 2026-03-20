@@ -109,6 +109,7 @@ export interface Assignment {
   id:          string
   employeeId:  string
   clientId:    string
+  companyName: string
   projectName: string
   startDate:   string
   endDate:     string | null

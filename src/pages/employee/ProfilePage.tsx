@@ -1,14 +1,17 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { format } from 'date-fns'
 import { useAuth } from '@/context/AuthContext'
-import { useMe, useDeleteEducation, useContract, useUploadContract, useBenefits, useUpsertBenefits } from '@/hooks/useEmployees'
+import { useMe, useDeleteEducation } from '@/hooks/useEmployees'
 import { useMyVacations } from '@/hooks/useVacations'
 import { Avatar } from '@/components/ui/Avatar'
 import { Card, Spinner, EmptyState, Button } from '@/components/ui'
 import { EditProfileModal } from '@/components/employees/EditProfileModal'
 import { EditBankModal } from '@/components/employees/EditBankModal'
 import { AddEducationModal } from '@/components/employees/AddEducationModal'
-import type { Education, BenefitDto } from '@/types'
+import { BenefitsCard } from '@/components/employees/BenefitsCard'
+import { EmploymentContractCard } from '@/components/employees/EmploymentContractCard'
+import { CvCard } from '@/components/employees/CvCard'
+import type { Education } from '@/types'
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -37,7 +40,7 @@ function EducationEntry({ entry }: { entry: Education }) {
   if (confirming) {
     return (
       <li className="border-b border-subtle last:border-0 pb-3 last:pb-0">
-        <p className="text-xs text-text-2 mb-2">Remove this education entry?</p>
+        <p className="text-xs text-text-2 mb-2">Ta bort den här utbildningsposten?</p>
         <div className="flex gap-2">
           <Button
             variant="danger"
@@ -45,10 +48,10 @@ function EducationEntry({ entry }: { entry: Education }) {
             loading={deleteMutation.isPending}
             onClick={() => deleteMutation.mutate(entry.id, { onSuccess: () => setConfirming(false) })}
           >
-            Remove
+            Ta bort
           </Button>
           <Button variant="secondary" size="sm" onClick={() => setConfirming(false)}>
-            Cancel
+            Avbryt
           </Button>
         </div>
       </li>
@@ -62,7 +65,7 @@ function EducationEntry({ entry }: { entry: Education }) {
           <p className="text-sm font-medium text-text-1">{entry.institution}</p>
           <p className="text-sm text-text-2">{entry.degree} · {entry.field}</p>
           <p className="text-xs text-text-3 mt-0.5">
-            {entry.startYear} – {entry.endYear ?? 'present'}
+            {entry.startYear} – {entry.endYear ?? 'pågående'}
           </p>
         </div>
         <button
@@ -74,226 +77,6 @@ function EducationEntry({ entry }: { entry: Education }) {
         </button>
       </div>
     </li>
-  )
-}
-
-// ── Benefits card ─────────────────────────────────────────────
-
-const BENEFIT_ICONS: Record<string, string> = {
-  friskvård:   '🏃',
-  telefon:     '📱',
-  hörlurar:    '🎧',
-  försäkring:  '🛡️',
-  dator:       '💻',
-  pension:     '🏦',
-}
-
-function benefitIcon(name: string): string {
-  const key = name.toLowerCase()
-  for (const [k, v] of Object.entries(BENEFIT_ICONS)) {
-    if (key.includes(k)) return v
-  }
-  return '✦'
-}
-
-function BenefitsCard({ employeeId, isAdmin }: { employeeId: string; isAdmin: boolean }) {
-  const { data: benefits, isLoading } = useBenefits(employeeId)
-  const upsertMutation = useUpsertBenefits(employeeId)
-
-  const [editing,  setEditing]  = useState(false)
-  const [editList, setEditList] = useState<Array<{ name: string; description: string }>>([])
-
-  const startEdit = () => {
-    setEditList(
-      (benefits ?? []).map(b => ({ name: b.name, description: b.description ?? '' }))
-    )
-    setEditing(true)
-  }
-
-  const addRow    = () => setEditList(l => [...l, { name: '', description: '' }])
-  const removeRow = (i: number) => setEditList(l => l.filter((_, idx) => idx !== i))
-  const setField  = (i: number, field: 'name' | 'description', val: string) =>
-    setEditList(l => l.map((r, idx) => idx === i ? { ...r, [field]: val } : r))
-
-  const save = () => {
-    upsertMutation.mutate(
-      editList
-        .filter(r => r.name.trim())
-        .map(r => ({ name: r.name.trim(), description: r.description.trim() || null })),
-      { onSuccess: () => setEditing(false) }
-    )
-  }
-
-  return (
-    <Card>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-1.5">
-          <svg className="w-3 h-3 text-text-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v13m0-13V6a4 4 0 00-4-4H5.45a4 4 0 00-3.971 3.545L1 9h22l-.48-3.455A4 4 0 0019.55 2H16a4 4 0 00-4 4zM1 9h22v2a6 6 0 01-6 6H7a6 6 0 01-6-6V9z" />
-          </svg>
-          <p className="section-label">Förmåner</p>
-        </div>
-        {isAdmin && !editing && (
-          <Button variant="secondary" size="sm" onClick={startEdit}>
-            {(benefits?.length ?? 0) > 0 ? 'Edit' : 'Add'}
-          </Button>
-        )}
-      </div>
-
-      {isLoading ? (
-        <div className="flex justify-center py-4"><Spinner size="sm" /></div>
-      ) : editing ? (
-        <div className="space-y-2">
-          {editList.map((row, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <input
-                className="field-input flex-1 text-xs py-1.5"
-                placeholder="Förmån (t.ex. Friskvårdsbidrag)"
-                value={row.name}
-                onChange={e => setField(i, 'name', e.target.value)}
-              />
-              <input
-                className="field-input flex-1 text-xs py-1.5"
-                placeholder="Värde (t.ex. 5 000 kr / år)"
-                value={row.description}
-                onChange={e => setField(i, 'description', e.target.value)}
-              />
-              <button
-                onClick={() => removeRow(i)}
-                className="text-text-3 hover:text-danger transition-colors text-base leading-none"
-              >×</button>
-            </div>
-          ))}
-          <button
-            onClick={addRow}
-            className="text-xs text-purple-light hover:underline"
-          >+ Lägg till förmån</button>
-          <div className="flex gap-2 pt-1">
-            <Button size="sm" loading={upsertMutation.isPending} onClick={save}>Spara</Button>
-            <Button variant="secondary" size="sm" onClick={() => setEditing(false)}>Avbryt</Button>
-          </div>
-        </div>
-      ) : !benefits?.length ? (
-        <EmptyState
-          title="Inga förmåner tillagda"
-          description={isAdmin ? 'Lägg till förmåner för den anställde.' : 'Kontakta din administratör för information om förmåner.'}
-          action={isAdmin ? <Button variant="secondary" size="sm" onClick={startEdit}>Lägg till</Button> : undefined}
-        />
-      ) : (
-        <ul className="space-y-2">
-          {(benefits as BenefitDto[]).map(b => (
-            <li key={b.id} className="flex items-center gap-2.5">
-              <span className="text-base leading-none w-5 text-center flex-shrink-0">
-                {benefitIcon(b.name)}
-              </span>
-              <span className="text-sm text-text-1 font-medium">{b.name}</span>
-              {b.description && (
-                <>
-                  <span className="text-text-3 text-xs">·</span>
-                  <span className="text-xs text-text-2">{b.description}</span>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-    </Card>
-  )
-}
-
-// ── Contract card ─────────────────────────────────────────────
-
-function ContractCard({ employeeId, isAdmin }: { employeeId: string; isAdmin: boolean }) {
-  const { data: contract, isLoading, isError } = useContract(employeeId)
-  const uploadMutation = useUploadContract(employeeId)
-  const fileInputRef   = useRef<HTMLInputElement>(null)
-
-  const openContract = () => {
-    if (!contract?.data) return
-    const bytes  = atob(contract.data)
-    const buffer = new Uint8Array(bytes.length)
-    for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i)
-    const blob = new Blob([buffer], { type: contract.contentType ?? 'application/pdf' })
-    const url  = URL.createObjectURL(blob)
-    window.open(url, '_blank', 'noopener,noreferrer')
-  }
-
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    uploadMutation.mutate(file)
-    e.target.value = ''
-  }
-
-  const hasContract = !isLoading && !isError && !!contract?.data
-
-  return (
-    <Card>
-      <div className="flex items-center gap-1.5 mb-3">
-        <svg className="w-3 h-3 text-text-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-          <path strokeLinecap="round" strokeLinejoin="round"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-        <p className="section-label">Anställningsavtal</p>
-      </div>
-      {isAdmin && (
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="application/pdf"
-          className="hidden"
-          onChange={handleFile}
-        />
-      )}
-
-      {isLoading ? (
-        <div className="flex justify-center py-4"><Spinner size="sm" /></div>
-      ) : hasContract ? (
-        <div className="space-y-2">
-          <button
-            onClick={openContract}
-            className="w-full flex items-center gap-3 p-3 rounded-lg border border-subtle hover:border-purple/40 hover:bg-purple-bg/20 transition-colors group"
-          >
-            <div className="w-9 h-9 rounded-md bg-danger-bg border border-danger/20 flex items-center justify-center flex-shrink-0">
-              <svg className="w-4 h-4 text-danger" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 3h6v1.5H8V16zm0-6h3v1.5H8V10z"/>
-              </svg>
-            </div>
-            <div className="text-left flex-1 min-w-0">
-              <p className="text-sm font-medium text-text-1 group-hover:text-purple-light transition-colors">
-                Anställningsavtal.pdf
-              </p>
-              <p className="text-xs text-text-3">Klicka för att öppna i nytt fönster</p>
-            </div>
-            <svg className="w-4 h-4 text-text-3 group-hover:text-purple-light transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-          </button>
-          {isAdmin && (
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="text-xs text-text-3 hover:text-text-2 transition-colors"
-            >
-              {uploadMutation.isPending ? 'Uploading…' : 'Replace PDF'}
-            </button>
-          )}
-        </div>
-      ) : (
-        <EmptyState
-          title="No contract uploaded"
-          description={isAdmin ? 'Upload the employee\'s employment contract as a PDF.' : 'Contact your administrator to upload your contract.'}
-          action={isAdmin ? (
-            <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
-              Upload PDF
-            </Button>
-          ) : undefined}
-        />
-      )}
-
-      {uploadMutation.isError && (
-        <p className="text-xs text-danger mt-2">Upload failed. Please try again.</p>
-      )}
-    </Card>
   )
 }
 
@@ -360,7 +143,7 @@ export function ProfilePage() {
                 {employee.role}
               </span>
               {memberSince && (
-                <p className="text-xs text-text-3">Member since {memberSince}</p>
+                <p className="text-xs text-text-3">Medlem sedan {memberSince}</p>
               )}
 
               {/* Vacation days */}
@@ -385,19 +168,19 @@ export function ProfilePage() {
             {/* Personal info */}
             <Card>
               <div className="flex items-center justify-between mb-3">
-                <p className="section-label">Personal info</p>
+                <p className="section-label">Personlig information</p>
                 <Button variant="secondary" size="sm" onClick={() => setEditProfile(true)}>
-                  Edit
+                  Redigera
                 </Button>
               </div>
               {personalEmpty ? (
-                <EmptyState title="No personal info added yet" />
+                <EmptyState title="Ingen personlig information tillagd ännu" />
               ) : (
                 <div className="grid grid-cols-2 gap-4">
-                  <InfoRow label="Phone"             value={p?.phone} />
-                  <InfoRow label="Birth date"        value={p?.birthDate ? format(new Date(p.birthDate), 'MMM d, yyyy') : null} />
-                  <InfoRow label="Address"           value={p?.address} />
-                  <InfoRow label="Emergency contact" value={p?.emergencyContact} />
+                  <InfoRow label="Telefon"    value={p?.phone} />
+                  <InfoRow label="Födelsedatum" value={p?.birthDate ? format(new Date(p.birthDate), 'MMM d, yyyy') : null} />
+                  <InfoRow label="Adress"     value={p?.address} />
+                  <InfoRow label="Nödkontakt" value={p?.emergencyContact} />
                 </div>
               )}
             </Card>
@@ -409,10 +192,10 @@ export function ProfilePage() {
                   <svg className="w-3 h-3 text-text-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                   </svg>
-                  <p className="section-label">Bank info</p>
+                  <p className="section-label">Bankinformation</p>
                 </div>
                 <Button variant="secondary" size="sm" onClick={() => setEditBank(true)}>
-                  Edit
+                  Redigera
                 </Button>
               </div>
               {bankInfo ? (
@@ -426,15 +209,15 @@ export function ProfilePage() {
                     <span className="text-xs text-text-1">{bankInfo.clearingNumber}</span>
                   </div>
                   <div>
-                    <span className="text-xs text-text-3">Account · </span>
+                    <span className="text-xs text-text-3">Konto · </span>
                     <span className="text-xs text-text-1">{maskAccount(bankInfo.accountNumber)}</span>
                   </div>
                 </div>
               ) : (
                 <EmptyState
-                  title="No bank info added"
-                  description="Add your bank details for payroll."
-                  action={<Button variant="secondary" size="sm" onClick={() => setEditBank(true)}>Add bank info</Button>}
+                  title="Ingen bankinformation tillagd"
+                  description="Lägg till dina bankuppgifter för löneutbetalning."
+                  action={<Button variant="secondary" size="sm" onClick={() => setEditBank(true)}>Lägg till bankinformation</Button>}
                 />
               )}
             </Card>
@@ -442,14 +225,14 @@ export function ProfilePage() {
             {/* Education */}
             <Card>
               <div className="flex items-center justify-between mb-3">
-                <p className="section-label">Education</p>
-                <Button size="sm" onClick={() => setAddEdu(true)}>Add education</Button>
+                <p className="section-label">Utbildning</p>
+                <Button size="sm" onClick={() => setAddEdu(true)}>Lägg till utbildning</Button>
               </div>
               {!education.length ? (
                 <EmptyState
-                  title="No education added"
-                  description="Add your qualifications to your profile."
-                  action={<Button size="sm" onClick={() => setAddEdu(true)}>Add education</Button>}
+                  title="Ingen utbildning tillagd"
+                  description="Lägg till dina kvalifikationer i din profil."
+                  action={<Button size="sm" onClick={() => setAddEdu(true)}>Lägg till utbildning</Button>}
                 />
               ) : (
                 <ul className="space-y-3">
@@ -463,8 +246,11 @@ export function ProfilePage() {
             {/* Benefits */}
             <BenefitsCard employeeId={employee.id} isAdmin={isAdmin} />
 
+            {/* CV */}
+            <CvCard employeeId={employee.id} isAdmin={isAdmin} />
+
             {/* Employment contract */}
-            <ContractCard employeeId={employee.id} isAdmin={isAdmin} />
+            <EmploymentContractCard employeeId={employee.id} isAdmin={isAdmin} />
           </div>
         </div>
       </div>

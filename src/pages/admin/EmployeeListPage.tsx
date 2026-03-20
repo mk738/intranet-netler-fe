@@ -62,8 +62,8 @@ export function EmployeeListPage() {
       <div className="space-y-5">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-text-1">Employees</h1>
-          <Button onClick={() => setModal(true)}>Invite employee</Button>
+          <h1 className="text-xl font-semibold text-text-1">Anställda</h1>
+          <Button onClick={() => setModal(true)}>Bjud in anställd</Button>
         </div>
 
         {/* Search */}
@@ -77,7 +77,7 @@ export function EmployeeListPage() {
           <input
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search by name or email..."
+            placeholder="Sök på namn eller e-post..."
             className="field-input pl-9"
           />
         </div>
@@ -89,22 +89,22 @@ export function EmployeeListPage() {
           </table>
         ) : !employees?.length ? (
           <EmptyState
-            title="No employees yet"
-            description="Invite your first team member to get started."
-            action={<Button onClick={() => setModal(true)}>Invite employee</Button>}
+            title="Inga anställda ännu"
+            description="Bjud in din första teammedlem för att komma igång."
+            action={<Button onClick={() => setModal(true)}>Bjud in anställd</Button>}
           />
         ) : !filtered.length && query ? (
           <EmptyState
-            title={`No results for "${query}"`}
-            description="Try a different name or email address."
-            action={<Button variant="secondary" size="sm" onClick={() => setQuery('')}>Clear search</Button>}
+            title={`Inga resultat för "${query}"`}
+            description="Prova ett annat namn eller en annan e-postadress."
+            action={<Button variant="secondary" size="sm" onClick={() => setQuery('')}>Rensa sökning</Button>}
           />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-subtle">
-                  {['Employee', 'Role', 'Status', 'Job title', 'Start date', ''].map(col => (
+                  {['Anställd', 'Roll', 'Status', 'Jobbtitel', 'Startdatum', ''].map(col => (
                     <th key={col} className="section-label px-4 pb-2 text-left font-semibold">
                       {col}
                     </th>
@@ -151,7 +151,7 @@ export function EmployeeListPage() {
                       {/* Status */}
                       <td className="px-4 py-3">
                         <span className={emp.isActive ? 'badge-active' : 'badge-unplaced'}>
-                          {emp.isActive ? 'Active' : 'Inactive'}
+                          {emp.isActive ? 'Aktiv' : 'Inaktiv'}
                         </span>
                       </td>
 
@@ -168,7 +168,7 @@ export function EmployeeListPage() {
                           size="sm"
                           onClick={() => navigate(`/admin/employees/${emp.id}`)}
                         >
-                          View
+                          Visa
                         </Button>
                       </td>
                     </motion.tr>

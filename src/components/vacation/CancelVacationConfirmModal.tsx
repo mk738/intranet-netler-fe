@@ -16,7 +16,7 @@ export function CancelVacationConfirmModal({ vacation, onClose }: Props) {
   const handleCancel = () => {
     mutation.mutate(vacation.id, {
       onSuccess: () => {
-        showToast('Vacation request cancelled', 'success')
+        showToast('Ledighetsansökan avbruten', 'success')
         onClose()
       },
     })
@@ -24,28 +24,28 @@ export function CancelVacationConfirmModal({ vacation, onClose }: Props) {
 
   return (
     <Modal
-      title="Cancel vacation request?"
+      title="Avbryt ledighetsansökan?"
       onClose={onClose}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>Keep request</Button>
+          <Button variant="secondary" onClick={onClose}>Behåll ansökan</Button>
           <Button variant="danger" loading={mutation.isPending} onClick={handleCancel}>
-            Cancel request
+            Avbryt ansökan
           </Button>
         </>
       }
     >
       <p className="text-sm text-text-2">
-        This will cancel your request for{' '}
+        Din ansökan för{' '}
         <span className="text-text-1 font-medium">
           {formatDateRange(vacation.startDate, vacation.endDate)}
         </span>
-        . This cannot be undone.
+        {' '}avbryts. Det går inte att ångra.
       </p>
 
       {mutation.isError && (
         <p className="text-xs text-danger bg-danger-bg border border-danger/20 rounded px-3 py-2 mt-4">
-          Failed to cancel request. Please try again.
+          Det gick inte att avbryta ansökan. Försök igen.
         </p>
       )}
     </Modal>

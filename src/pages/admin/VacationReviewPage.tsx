@@ -24,16 +24,16 @@ const tbodyVariants = {
 type Filter = 'all' | 'PENDING' | 'APPROVED' | 'REJECTED'
 
 const FILTERS: { key: Filter; label: string }[] = [
-  { key: 'all',      label: 'All'      },
-  { key: 'PENDING',  label: 'Pending'  },
-  { key: 'APPROVED', label: 'Approved' },
-  { key: 'REJECTED', label: 'Rejected' },
+  { key: 'all',      label: 'Alla'      },
+  { key: 'PENDING',  label: 'Väntar'    },
+  { key: 'APPROVED', label: 'Godkänd'   },
+  { key: 'REJECTED', label: 'Avvisad'   },
 ]
 
 function StatusBadge({ status }: { status: VacationDto['status'] }) {
-  if (status === 'PENDING')  return <span className="badge-pending">Pending</span>
-  if (status === 'APPROVED') return <span className="badge-active">Approved</span>
-  return <span className="badge-unplaced">Rejected</span>
+  if (status === 'PENDING')  return <span className="badge-pending">Väntar</span>
+  if (status === 'APPROVED') return <span className="badge-active">Godkänd</span>
+  return <span className="badge-unplaced">Avvisad</span>
 }
 
 function SkeletonRow() {
@@ -92,26 +92,26 @@ export function VacationReviewPage() {
 
       <div className="space-y-6">
         {/* Header */}
-        <h1 className="text-xl font-semibold text-text-1">Vacation requests</h1>
+        <h1 className="text-xl font-semibold text-text-1">Ledighetsansökningar</h1>
 
         {/* Stat cards — clickable to filter */}
         <div className="grid grid-cols-3 gap-3">
           <StatCard
-            label="Pending"
+            label="Väntar"
             value={summary?.pending}
             valueClass="text-warning"
             active={filter === 'PENDING'}
             onClick={() => handleStatClick('PENDING')}
           />
           <StatCard
-            label="Approved"
+            label="Godkänd"
             value={summary?.approved}
             valueClass="text-success"
             active={filter === 'APPROVED'}
             onClick={() => handleStatClick('APPROVED')}
           />
           <StatCard
-            label="Rejected"
+            label="Avvisad"
             value={summary?.rejected}
             valueClass="text-danger"
             active={filter === 'REJECTED'}
@@ -138,20 +138,20 @@ export function VacationReviewPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-subtle text-left">
-                  <th className="px-4 py-3 text-xs font-medium text-text-3">Employee</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-3">Anställd</th>
                   <th className="px-4 py-3 text-xs font-medium text-text-3">Period</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-3">Days</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-3">Dagar</th>
                   <th className="px-4 py-3 text-xs font-medium text-text-3">
                     <button
                       onClick={() => setSortDir(d => d === 'desc' ? 'asc' : 'desc')}
                       className="flex items-center gap-1 hover:text-text-1 transition-colors"
                     >
-                      Submitted
+                      Inskickad
                       <span>{sortDir === 'desc' ? '↓' : '↑'}</span>
                     </button>
                   </th>
                   <th className="px-4 py-3 text-xs font-medium text-text-3">Status</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-3">Actions</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-3">Åtgärder</th>
                 </tr>
               </thead>
               <tbody>
@@ -161,28 +161,28 @@ export function VacationReviewPage() {
           </div>
         ) : !vacations?.length ? (
           <EmptyState
-            title={filter === 'all' ? 'No vacation requests' : `No ${filter.toLowerCase()} requests`}
-            description={filter === 'all' ? 'Requests submitted by employees will appear here.' : 'Nothing here right now.'}
+            title={filter === 'all' ? 'Inga ledighetsansökningar' : `Inga ${filter === 'PENDING' ? 'väntande' : filter === 'APPROVED' ? 'godkända' : 'avvisade'} ansökningar`}
+            description={filter === 'all' ? 'Ansökningar från anställda visas här.' : 'Inget här just nu.'}
           />
         ) : (
           <div className="card p-0 overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-subtle text-left">
-                  <th className="px-4 py-3 text-xs font-medium text-text-3">Employee</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-3">Anställd</th>
                   <th className="px-4 py-3 text-xs font-medium text-text-3">Period</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-3">Days</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-3">Dagar</th>
                   <th className="px-4 py-3 text-xs font-medium text-text-3">
                     <button
                       onClick={() => setSortDir(d => d === 'desc' ? 'asc' : 'desc')}
                       className="flex items-center gap-1 hover:text-text-1 transition-colors"
                     >
-                      Submitted
+                      Inskickad
                       <span>{sortDir === 'desc' ? '↓' : '↑'}</span>
                     </button>
                   </th>
                   <th className="px-4 py-3 text-xs font-medium text-text-3">Status</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-3">Actions</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-3">Åtgärder</th>
                 </tr>
               </thead>
               <motion.tbody variants={tbodyVariants} initial="hidden" animate="show">
@@ -203,7 +203,7 @@ export function VacationReviewPage() {
 
                     {/* Days */}
                     <td className="px-4 py-3 text-text-2">
-                      {v.daysCount} day{v.daysCount !== 1 ? 's' : ''}
+                      {v.daysCount} dag{v.daysCount !== 1 ? 'ar' : ''}
                     </td>
 
                     {/* Submitted */}
@@ -224,14 +224,14 @@ export function VacationReviewPage() {
                             onClick={() => setReviewTarget({ vacation: v, action: 'approve' })}
                             className="text-xs font-medium text-success hover:underline"
                           >
-                            Approve
+                            Godkänn
                           </button>
                           <span className="text-text-3">·</span>
                           <button
                             onClick={() => setReviewTarget({ vacation: v, action: 'reject' })}
                             className="text-xs font-medium text-danger hover:underline"
                           >
-                            Reject
+                            Avvisa
                           </button>
                         </div>
                       ) : (
