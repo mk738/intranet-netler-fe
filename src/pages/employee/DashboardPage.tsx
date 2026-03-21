@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom'
-import { format, endOfMonth } from 'date-fns'
+import { format, startOfMonth, endOfMonth } from 'date-fns'
+import { sv } from 'date-fns/locale'
 import { useAuth } from '@/context/AuthContext'
 import { Card, Spinner } from '@/components/ui'
 import { useNewsFeed } from '@/hooks/useNews'
 import { useEvents } from '@/hooks/useEvents'
 import { useMyVacations } from '@/hooks/useVacations'
+import { useReadNews } from '@/context/ReadNewsContext'
 
 // ── Greeting ──────────────────────────────────────────────────
 
@@ -39,15 +41,20 @@ export function DashboardPage() {
   const now          = new Date()
   const firstName    = employee?.profile?.firstName ?? 'there'
 
-  const today    = format(now, 'yyyy-MM-dd')
-  const monthEnd = format(endOfMonth(now), 'yyyy-MM-dd')
+  const today      = format(now, 'yyyy-MM-dd')
+  const monthStart = format(startOfMonth(now), 'yyyy-MM-dd')
+  const monthEnd   = format(endOfMonth(now), 'yyyy-MM-dd')
 
-  const { data: newsData,  isLoading: newsLoading  } = useNewsFeed(0, 3)
-  const { data: events,    isLoading: eventsLoading } = useEvents(today, monthEnd)
+  const { data: newsData,  isLoading: newsLoading  } = useNewsFeed(0, 10)
+  const { data: events,    isLoading: eventsLoading } = useEvents(monthStart, monthEnd)
   const { data: vacations }                           = useMyVacations()
+  const { isRead }                                    = useReadNews()
 
-  const news             = newsData?.content ?? []
+  const news             = (newsData?.content ?? []).slice(0, 3)
+  const unreadCount      = (newsData?.content ?? []).filter(p => !isRead(p.id)).length
   const pendingVacations = (vacations ?? []).filter(v => v.status === 'PENDING').length
+  const monthEvents      = (events ?? []).filter(e => e.eventDate >= monthStart && e.eventDate <= monthEnd)
+  const upcomingEvents   = monthEvents.filter(e => e.eventDate >= today)
 
   return (
     <div className="max-w-4xl space-y-8">
@@ -57,15 +64,15 @@ export function DashboardPage() {
           {greeting()}, {firstName}
         </h1>
         <p className="text-sm text-text-3 mt-1">
-          {format(now, 'EEEE, MMMM d')}
+          {format(now, 'EEEE, d MMMM', { locale: sv })}
         </p>
       </div>
 
       {/* Stat cards */}
       <div className="grid grid-cols-3 gap-4">
-        <StatCard label="Evenemang denna månad" value={events?.length ?? 0}        icon="📅" />
-        <StatCard label="Väntande ledighet"    value={pendingVacations}            icon="🏖️" />
-        <StatCard label="Nyheter"              value={newsData?.totalElements ?? 0} icon="📰" />
+        <StatCard label="Evenemang denna månad" value={monthEvents.length} icon="📅" />
+        <StatCard label="Väntande ledighet"     value={pendingVacations}    icon="🏖️" />
+        <StatCard label="Olästa nyheter"        value={unreadCount}         icon="📰" />
       </div>
 
       {/* Bottom grid */}
@@ -101,11 +108,11 @@ export function DashboardPage() {
         <Card title="Kommande evenemang">
           {eventsLoading ? (
             <div className="flex justify-center py-8"><Spinner /></div>
-          ) : !(events ?? []).length ? (
+          ) : !upcomingEvents.length ? (
             <p className="text-sm text-text-3 px-3 py-4">Inga kommande evenemang.</p>
           ) : (
             <ul className="space-y-1">
-              {(events ?? []).slice(0, 3).map(event => (
+              {upcomingEvents.slice(0, 3).map(event => (
                 <li key={event.id} className="px-3 py-2.5 rounded-lg hover:bg-bg-hover transition-colors">
                   <p className="text-sm text-text-1 line-clamp-1">{event.title}</p>
                   <div className="flex items-center gap-2 mt-0.5">

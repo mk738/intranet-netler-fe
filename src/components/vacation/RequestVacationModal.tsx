@@ -55,6 +55,8 @@ export function RequestVacationModal({ onClose }: Props) {
           setError('endDate', { message: 'Du har inte tillräckligt med semesterdagar kvar.' })
         } else if (code === 'VACATION_DATE_INVALID') {
           setError('endDate', { message: 'Ogiltiga datum. Kontrollera att slutdatum är efter startdatum.' })
+        } else {
+          showToast('Något gick fel', 'error')
         }
       },
     })
