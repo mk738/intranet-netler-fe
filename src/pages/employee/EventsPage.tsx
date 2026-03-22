@@ -150,8 +150,8 @@ interface PopoverProps {
 }
 
 function EventPopover({ event, isAdmin, onClose, onEdit, onDelete }: PopoverProps) {
-  const startTimeStr = !event.allDay && event.eventDate.length > 10 ? event.eventDate.slice(11, 16) : null
-  const endTimeStr   = !event.allDay && event.endDate && event.endDate.length > 10 ? event.endDate.slice(11, 16) : null
+  const startTimeStr = event.allDay ? '08:00' : (event.eventDate.length > 10 ? event.eventDate.slice(11, 16) : null)
+  const endTimeStr   = event.allDay ? '17:00' : (event.endDate && event.endDate.length > 10 ? event.endDate.slice(11, 16) : null)
 
   const dateLabel = (() => {
     const start = eventDateStr(event.eventDate)
