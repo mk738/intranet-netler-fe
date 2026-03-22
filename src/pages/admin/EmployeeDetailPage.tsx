@@ -4,7 +4,7 @@ import { format } from 'date-fns'
 import { sv } from 'date-fns/locale'
 import { useEmployee } from '@/hooks/useEmployees'
 import { useSkills, useEmployeeSkills, useSetEmployeeSkills } from '@/hooks/useSkills'
-import { Avatar } from '@/components/ui/Avatar'
+import { AvatarUpload } from '@/components/employees/AvatarUpload'
 import { Card, Spinner, EmptyState, Button } from '@/components/ui'
 import { EditProfileModal } from '@/components/employees/EditProfileModal'
 import { EditBankModal } from '@/components/employees/EditBankModal'
@@ -287,7 +287,7 @@ export function EmployeeDetailPage() {
           <div className="space-y-4">
             <Card>
               <div className="flex flex-col items-center text-center gap-3">
-                <Avatar name={name} avatarUrl={p?.avatarUrl ?? null} size="lg" />
+                <AvatarUpload employeeId={data.id} name={name} avatarUrl={p?.avatarUrl ?? null} />
                 <div>
                   <h2 className="text-base font-semibold text-text-1">{name}</h2>
                   {p?.jobTitle && <p className="text-sm text-text-2 mt-0.5">{p.jobTitle}</p>}
