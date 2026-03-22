@@ -17,7 +17,11 @@ export function DeleteEventConfirmModal({ eventId, onClose }: Props) {
     mutation.mutate(eventId, {
       onSuccess: () => {
         showToast('Evenemang borttaget', 'success')
+        onClose()
         navigate('/events')
+      },
+      onError: () => {
+        showToast('Det gick inte att ta bort evenemanget', 'error')
       },
     })
   }
@@ -39,11 +43,6 @@ export function DeleteEventConfirmModal({ eventId, onClose }: Props) {
         Det här evenemanget tas bort permanent. Det visas inte längre i kalendern.
       </p>
 
-      {mutation.isError && (
-        <p className="text-xs text-danger bg-danger-bg border border-danger/20 rounded px-3 py-2 mt-4">
-          Det gick inte att ta bort evenemanget. Försök igen.
-        </p>
-      )}
     </Modal>
   )
 }
