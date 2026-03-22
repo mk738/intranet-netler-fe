@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
+import { sv } from 'date-fns/locale'
 import { motion } from 'framer-motion'
 import { useEmployees } from '@/hooks/useEmployees'
 import { Avatar } from '@/components/ui/Avatar'
@@ -118,6 +119,11 @@ export function EmployeeListPage() {
                   const start = emp.profile?.startDate
                     ? format(new Date(emp.profile.startDate), 'MMM yyyy')
                     : '—'
+                  const today             = format(new Date(), 'yyyy-MM-dd')
+                  const isEffectiveActive = emp.isActive ||
+                    (!!emp.terminationDate && emp.terminationDate >= today)
+                  const pendingEnd = emp.terminationDate && emp.terminationDate >= today
+                    ? emp.terminationDate : null
 
                   return (
                     <motion.tr
@@ -150,9 +156,14 @@ export function EmployeeListPage() {
 
                       {/* Status */}
                       <td className="px-4 py-3">
-                        <span className={emp.isActive ? 'badge-active' : 'badge-unplaced'}>
-                          {emp.isActive ? 'Aktiv' : 'Inaktiv'}
+                        <span className={isEffectiveActive ? 'badge-active' : 'badge-unplaced'}>
+                          {isEffectiveActive ? 'Aktiv' : 'Inaktiv'}
                         </span>
+                        {pendingEnd && (
+                          <p className="text-xs text-warning mt-0.5">
+                            Slutar {format(new Date(pendingEnd + 'T00:00:00'), 'd MMM yyyy', { locale: sv })}
+                          </p>
+                        )}
                       </td>
 
                       {/* Job title */}
