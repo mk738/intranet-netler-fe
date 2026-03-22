@@ -75,7 +75,7 @@ function NewsCard({ post }: { post: NewsPostDto }) {
           </button>
           {unread && (
             <span className="mt-0.5 shrink-0 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-purple-bg text-purple-light border border-purple/30">
-              New
+              Ny
             </span>
           )}
         </div>
@@ -136,7 +136,7 @@ export function NewsPage() {
             {/* Pinned section */}
             {pinned.length > 0 && (
               <div>
-                <p className="section-label mb-3">Fästa</p>
+                <p className="section-label mb-3">Fästa inlägg</p>
                 <AnimatedList className="space-y-3">
                   {pinned.map(p => (
                     <AnimatedListItem key={p.id}>

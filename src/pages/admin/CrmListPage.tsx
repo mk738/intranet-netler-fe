@@ -23,7 +23,7 @@ const tbodyVariants = {
 
 function StatusBadge({ status }: { status: ClientDto['status'] }) {
   if (status === 'ACTIVE')   return <span className="badge-active">Aktiv</span>
-  if (status === 'PROSPECT') return <span className="badge-prospect">Prospect</span>
+  if (status === 'PROSPECT') return <span className="badge-prospect">Prospekt</span>
   return <span className="badge-ended">Inaktiv</span>
 }
 
@@ -76,7 +76,7 @@ export function CrmListPage() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
           <StatCard label="Aktiva kunder" value={activeCount} />
-          <StatCard label="Prospects"     value={prospectCount} />
+          <StatCard label="Prospekt"      value={prospectCount} />
           <StatCard label="Totalt"        value={clients?.length ?? 0} />
         </div>
 

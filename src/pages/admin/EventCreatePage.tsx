@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import clsx from 'clsx'
@@ -16,7 +16,9 @@ import { getApiError } from '@/lib/api'
 const schema = z.object({
   title:       z.string().min(1, 'Titel krävs'),
   eventDate:   z.string().min(1, 'Datum krävs'),
+  startTime:   z.string().optional(),
   endDate:     z.string().optional(),
+  endTime:     z.string().optional(),
   location:    z.string().optional(),
   allDay:      z.boolean(),
   description: z.string().optional(),
@@ -43,10 +45,11 @@ export function EventCreatePage() {
   const updateMutation = useUpdateEvent(id ?? '')
   const mutation       = isEdit ? updateMutation : createMutation
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors }, reset, control } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { title: '', eventDate: '', endDate: '', location: '', allDay: true, description: '' },
+    defaultValues: { title: '', eventDate: '', startTime: '', endDate: '', endTime: '', location: '', allDay: true, description: '' },
   })
+  const allDay = useWatch({ control, name: 'allDay' })
 
   // Pre-fill form when editing
   useEffect(() => {
@@ -54,7 +57,9 @@ export function EventCreatePage() {
     reset({
       title:       existing.title,
       eventDate:   existing.eventDate.slice(0, 10),
+      startTime:   !existing.allDay && existing.eventDate.length > 10 ? existing.eventDate.slice(11, 16) : '',
       endDate:     existing.endDate?.slice(0, 10) ?? '',
+      endTime:     !existing.allDay && existing.endDate && existing.endDate.length > 10 ? existing.endDate.slice(11, 16) : '',
       location:    existing.location ?? '',
       allDay:      existing.allDay,
       description: existing.description ?? '',
@@ -66,8 +71,10 @@ export function EventCreatePage() {
       title:       data.title,
       description: data.description || null,
       location:    data.location    || null,
-      eventDate:   data.eventDate,
-      endDate:     data.endDate     || null,
+      eventDate:   data.allDay || !data.startTime ? data.eventDate : `${data.eventDate}T${data.startTime}`,
+      endDate:     data.endDate
+        ? (data.allDay || !data.endTime ? data.endDate : `${data.endDate}T${data.endTime}`)
+        : null,
       allDay:      data.allDay,
     }
 
@@ -159,6 +166,28 @@ export function EventCreatePage() {
             />
             <span className="text-sm text-text-2">Heldag</span>
           </label>
+
+          {/* Time pickers — shown when not all-day */}
+          {!allDay && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="field-label">Starttid</label>
+                <input
+                  {...register('startTime')}
+                  type="time"
+                  className="field-input"
+                />
+              </div>
+              <div>
+                <label className="field-label">Sluttid</label>
+                <input
+                  {...register('endTime')}
+                  type="time"
+                  className="field-input"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Description */}
           <div>

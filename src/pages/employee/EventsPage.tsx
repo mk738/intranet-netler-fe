@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { format, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns'
+import { sv } from 'date-fns/locale'
 import { useEvents } from '@/hooks/useEvents'
 import { useEventRsvp, useSubmitRsvp } from '@/hooks/useRsvp'
 import { useAuth } from '@/context/AuthContext'
@@ -149,12 +150,16 @@ interface PopoverProps {
 }
 
 function EventPopover({ event, isAdmin, onClose, onEdit, onDelete }: PopoverProps) {
+  const startTimeStr = !event.allDay && event.eventDate.length > 10 ? event.eventDate.slice(11, 16) : null
+  const endTimeStr   = !event.allDay && event.endDate && event.endDate.length > 10 ? event.endDate.slice(11, 16) : null
+
   const dateLabel = (() => {
     const start = eventDateStr(event.eventDate)
-    if (!event.endDate) return format(new Date(start + 'T00:00:00'), 'MMMM d, yyyy')
+    const opts  = { locale: sv }
+    if (!event.endDate) return format(new Date(start + 'T00:00:00'), 'd MMMM yyyy', opts)
     const end = eventDateStr(event.endDate)
-    if (start === end)  return format(new Date(start + 'T00:00:00'), 'MMMM d, yyyy')
-    return `${format(new Date(start + 'T00:00:00'), 'MMM d')} – ${format(new Date(end + 'T00:00:00'), 'MMM d, yyyy')}`
+    if (start === end)  return format(new Date(start + 'T00:00:00'), 'd MMMM yyyy', opts)
+    return `${format(new Date(start + 'T00:00:00'), 'd MMM', opts)} – ${format(new Date(end + 'T00:00:00'), 'd MMM yyyy', opts)}`
   })()
 
   return createPortal(
@@ -177,7 +182,7 @@ function EventPopover({ event, isAdmin, onClose, onEdit, onDelete }: PopoverProp
         {/* Title */}
         <p className="text-base font-medium text-text-1 pr-6">{event.title}</p>
 
-        {/* Date */}
+        {/* Date + time */}
         <div className="flex items-center gap-2 mt-3">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                strokeWidth="2" className="text-text-3 flex-shrink-0">
@@ -186,7 +191,14 @@ function EventPopover({ event, isAdmin, onClose, onEdit, onDelete }: PopoverProp
             <line x1="8"  y1="2" x2="8"  y2="6"/>
             <line x1="3"  y1="10" x2="21" y2="10"/>
           </svg>
-          <span className="text-sm text-text-2">{dateLabel}</span>
+          <span className="text-sm text-text-2">
+            {dateLabel}
+            {startTimeStr && (
+              <span className="ml-1 text-text-3">
+                · {startTimeStr}{endTimeStr ? `–${endTimeStr}` : ''}
+              </span>
+            )}
+          </span>
         </div>
 
         {/* Location */}
@@ -279,7 +291,7 @@ function MobileEventList({ events, onSelect }: { events: EventDto[]; onSelect: (
       {Object.entries(grouped).map(([dateStr, dayEvents]) => (
         <div key={dateStr}>
           <p className="section-label mb-2">
-            {format(new Date(dateStr + 'T00:00:00'), 'EEEE, MMMM d')}
+            {format(new Date(dateStr + 'T00:00:00'), 'EEEE d MMMM', { locale: sv })}
           </p>
           <div className="space-y-2">
             {dayEvents.map(e => (
@@ -336,7 +348,7 @@ export function EventsPage() {
             ← Föregående
           </Button>
           <h1 className="text-lg font-medium text-text-1 flex-1 text-center">
-            {format(currentMonth, 'MMMM yyyy')}
+            {format(currentMonth, 'MMMM yyyy', { locale: sv })}
           </h1>
           <Button variant="secondary" onClick={() => setCurrentMonth(m => addMonths(m, 1))}>
             Nästa →
