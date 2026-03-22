@@ -359,6 +359,29 @@ export function EmployeeDetailPage() {
               <EducationList entries={data.education ?? []} />
             </Card>
 
+            {/* Current assignment */}
+            {(() => {
+              const active = (data.assignments ?? []).find(a => a.status === 'ACTIVE')
+              return (
+                <Card title="Nuvarande uppdrag">
+                  {active ? (
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-medium text-text-1">{active.projectName}</p>
+                        <p className="text-xs text-text-2 mt-0.5">{active.companyName}</p>
+                        <p className="text-xs text-text-3 mt-0.5">
+                          Startade {format(new Date(active.startDate), 'MMM yyyy', { locale: sv })}
+                        </p>
+                      </div>
+                      <span className="badge-active">Aktiv</span>
+                    </div>
+                  ) : (
+                    <EmptyState title="Ingen aktiv placering" />
+                  )}
+                </Card>
+              )
+            })()}
+
             {/* Assignments */}
             <Card title="Uppdragshistorik">
               <AssignmentList items={data.assignments ?? []} />
