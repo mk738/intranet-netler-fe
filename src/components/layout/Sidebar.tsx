@@ -113,6 +113,17 @@ function IconCRM() {
   )
 }
 
+function IconCompetency() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8"/>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      <line x1="11" y1="8" x2="11" y2="14"/>
+      <line x1="8" y1="11" x2="14" y2="11"/>
+    </svg>
+  )
+}
+
 function IconPostNews() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -161,12 +172,13 @@ const employeeLinks = [
 ]
 
 const adminLinks = [
-  { to: '/admin',              label: 'Översikt',     icon: <IconOverview />      },
-  { to: '/admin/employees',    label: 'Anställda',    icon: <IconEmployees />     },
-  { to: '/admin/placements',   label: 'Placeringar',  icon: <IconPlacements />    },
-  { to: '/admin/vacations',    label: 'Ledighet',   icon: <IconVacationAdmin /> },
-  { to: '/admin/crm',          label: 'CRM',          icon: <IconCRM />           },
-  { to: '/admin/publish',      label: 'Publicera',    icon: <IconPostNews />      },
+  { to: '/admin',                  label: 'Översikt',          icon: <IconOverview />      },
+  { to: '/admin/employees',        label: 'Anställda',         icon: <IconEmployees />     },
+  { to: '/admin/placements',       label: 'Placeringar',       icon: <IconPlacements />    },
+  { to: '/admin/competencies',     label: 'Kompetenssökning',  icon: <IconCompetency />    },
+  { to: '/admin/vacations',        label: 'Ledighet',          icon: <IconVacationAdmin /> },
+  { to: '/admin/crm',              label: 'CRM',               icon: <IconCRM />           },
+  { to: '/admin/publish',          label: 'Publicera',         icon: <IconPostNews />      },
 ]
 
 // ── Sidebar ────────────────────────────────────────────────────

@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useRef, KeyboardEvent } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { useEmployee } from '@/hooks/useEmployees'
+import { useSkills, useEmployeeSkills, useSetEmployeeSkills } from '@/hooks/useSkills'
 import { Avatar } from '@/components/ui/Avatar'
 import { Card, Spinner, EmptyState, Button } from '@/components/ui'
 import { EditProfileModal } from '@/components/employees/EditProfileModal'
@@ -68,6 +69,137 @@ function AssignmentList({ items }: { items: Assignment[] }) {
         </li>
       ))}
     </ul>
+  )
+}
+
+function SkillsCard({ employeeId }: { employeeId: string }) {
+  const [adding, setAdding] = useState(false)
+  const [draft,  setDraft]  = useState<string[]>([])
+  const [input,  setInput]  = useState('')
+  const [error,  setError]  = useState<string | null>(null)
+  const inputRef            = useRef<HTMLInputElement>(null)
+
+  const { data: catalog = [] }      = useSkills()
+  const { data: empSkills = [] }    = useEmployeeSkills(employeeId)
+  const mutation                    = useSetEmployeeSkills(employeeId)
+
+  const currentNames = empSkills.map(s => s.name)
+
+  const suggestions = input.trim()
+    ? catalog
+        .map(s => s.name)
+        .filter(n => n.includes(input.trim().toLowerCase()) && !draft.includes(n))
+        .slice(0, 5)
+    : []
+
+  function openAdd() {
+    setDraft(currentNames)
+    setInput('')
+    setError(null)
+    setAdding(true)
+    setTimeout(() => inputRef.current?.focus(), 50)
+  }
+
+  function cancel() {
+    setAdding(false)
+    setInput('')
+    setDraft([])
+  }
+
+  function addToDraft(name?: string) {
+    const val = (name ?? input).trim().toLowerCase()
+    setInput('')
+    if (!val || draft.includes(val)) return
+    setDraft(prev => [...prev, val])
+    inputRef.current?.focus()
+  }
+
+  function removeFromDraft(s: string) {
+    setDraft(prev => prev.filter(x => x !== s))
+  }
+
+  function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter')  { e.preventDefault(); addToDraft() }
+    if (e.key === 'Escape') { cancel() }
+  }
+
+  function save() {
+    setError(null)
+    const pending = input.trim().toLowerCase()
+    const next    = pending && !draft.includes(pending) ? [...draft, pending] : draft
+    mutation.mutate(next, {
+      onSuccess: () => { setAdding(false); setInput(''); setDraft([]) },
+      onError:   () => setError('Kunde inte spara kompetenserna. Försök igen.'),
+    })
+  }
+
+  const displayed = adding ? draft : currentNames
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between mb-3">
+        <p className="section-label">Kompetenser</p>
+        {!adding && (
+          <Button variant="secondary" size="sm" onClick={openAdd}>Lägg till</Button>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-1.5">
+        {displayed.map(s => (
+          <span key={s} className="flex items-center gap-1 pl-2.5 pr-1.5 py-0.5 rounded-full text-xs font-medium bg-purple-bg text-purple-light border border-purple/20">
+            {s}
+            {adding && (
+              <button
+                onClick={() => removeFromDraft(s)}
+                className="hover:text-danger transition-colors leading-none"
+              >
+                ×
+              </button>
+            )}
+          </span>
+        ))}
+
+        {adding && (
+          <div className="relative">
+            <input
+              ref={inputRef}
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={onKeyDown}
+              placeholder="kompetens + Enter"
+              className="px-2.5 py-0.5 rounded-full text-xs bg-bg-hover border border-subtle text-text-1 placeholder:text-text-3 outline-none w-40"
+            />
+            {suggestions.length > 0 && (
+              <ul className="absolute top-full left-0 mt-1 z-10 bg-bg border border-subtle rounded-lg shadow-modal overflow-hidden min-w-[160px]">
+                {suggestions.map(s => (
+                  <li key={s}>
+                    <button
+                      onMouseDown={e => { e.preventDefault(); addToDraft(s) }}
+                      className="w-full text-left px-3 py-1.5 text-xs text-text-1 hover:bg-bg-hover transition-colors"
+                    >
+                      {s}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {displayed.length === 0 && !adding && (
+          <p className="text-sm text-text-3">Inga kompetenser tillagda ännu</p>
+        )}
+      </div>
+
+      {adding && (
+        <div className="flex gap-2 mt-3">
+          <Button size="sm" onClick={save} loading={mutation.isPending}>Spara</Button>
+          <Button size="sm" variant="secondary" onClick={cancel}>Avbryt</Button>
+        </div>
+      )}
+
+      {error && <p className="text-xs text-danger mt-2">{error}</p>}
+    </Card>
   )
 }
 
@@ -208,6 +340,9 @@ export function EmployeeDetailPage() {
             <Card title="Uppdragshistorik">
               <AssignmentList items={data.assignments ?? []} />
             </Card>
+
+            {/* Skills */}
+            <SkillsCard employeeId={data.id} />
 
             {/* Benefits */}
             <BenefitsCard employeeId={data.id} isAdmin={true} />
