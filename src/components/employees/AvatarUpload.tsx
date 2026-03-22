@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Avatar } from '@/components/ui/Avatar'
 import { useUploadAvatar } from '@/hooks/useEmployees'
 
@@ -9,21 +9,23 @@ interface Props {
 }
 
 export function AvatarUpload({ employeeId, name, avatarUrl }: Props) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const upload   = useUploadAvatar(employeeId)
+  const inputRef              = useRef<HTMLInputElement>(null)
+  const upload                = useUploadAvatar(employeeId)
+  const [version, setVersion] = useState(0)
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    upload.mutate(file)
+    upload.mutate(file, { onSuccess: () => setVersion(v => v + 1) })
     e.target.value = ''
   }
 
-  const hasPhoto = !!avatarUrl
+  const hasPhoto      = !!avatarUrl
+  const versionedUrl  = avatarUrl ? `${avatarUrl}?v=${version}` : null
 
   return (
     <div className="relative group w-16 h-16">
-      <Avatar name={name} avatarUrl={avatarUrl} size="lg" />
+      <Avatar name={name} avatarUrl={versionedUrl} size="lg" />
 
       {/* Overlay */}
       <button
