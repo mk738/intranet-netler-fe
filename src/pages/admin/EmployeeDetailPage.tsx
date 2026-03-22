@@ -7,6 +7,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Card, Spinner, EmptyState, Button } from '@/components/ui'
 import { EditProfileModal } from '@/components/employees/EditProfileModal'
 import { EditBankModal } from '@/components/employees/EditBankModal'
+import { TerminateEmploymentModal } from '@/components/employees/TerminateEmploymentModal'
 import { BenefitsCard } from '@/components/employees/BenefitsCard'
 import { EmploymentContractCard } from '@/components/employees/EmploymentContractCard'
 import { CvCard } from '@/components/employees/CvCard'
@@ -235,6 +236,7 @@ export function EmployeeDetailPage() {
   const navigate     = useNavigate()
   const [editProfile, setEditProfile] = useState(false)
   const [editBank,    setEditBank]    = useState(false)
+  const [terminate,   setTerminate]   = useState(false)
 
   const { data, isLoading, error } = useEmployee(id ?? '')
 
@@ -310,6 +312,16 @@ export function EmployeeDetailPage() {
             >
               Redigera profil
             </Button>
+
+            {data.isActive && (
+              <Button
+                variant="danger"
+                className="w-full justify-center"
+                onClick={() => setTerminate(true)}
+              >
+                Avsluta anställning
+              </Button>
+            )}
           </div>
 
           {/* Right column */}
@@ -365,6 +377,14 @@ export function EmployeeDetailPage() {
       )}
 
       {editBank && <EditBankModal onClose={() => setEditBank(false)} employeeId={data.id} />}
+
+      {terminate && (
+        <TerminateEmploymentModal
+          employeeId={data.id}
+          employeeName={name}
+          onClose={() => setTerminate(false)}
+        />
+      )}
     </>
   )
 }

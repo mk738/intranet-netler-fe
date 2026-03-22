@@ -99,6 +99,19 @@ export function useInviteEmployee() {
 }
 
 
+export function useTerminateEmployee(id: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (terminationDate: string) =>
+      api.put<ApiResponse<Employee>>(`/api/employees/${id}/terminate`, { terminationDate })
+         .then(r => r.data.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['employees', id] })
+      qc.invalidateQueries({ queryKey: ['employees'] })
+    },
+  })
+}
+
 export function useUpdateEmployeeProfile(id: string) {
   const qc = useQueryClient()
   return useMutation({
