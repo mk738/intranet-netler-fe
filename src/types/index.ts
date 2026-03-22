@@ -254,6 +254,8 @@ export interface EventDto {
   location:    string | null
   eventDate:   string
   endDate:     string | null
+  startTime:   string | null
+  endTime:     string | null
   allDay:      boolean
   createdBy:   string
   authorName:  string | null
@@ -274,6 +276,8 @@ export interface CreateEventRequest {
   location:    string | null
   eventDate:   string
   endDate:     string | null
+  startTime:   string | null
+  endTime:     string | null
   allDay:      boolean
 }
 

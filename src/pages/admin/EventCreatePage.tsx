@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import clsx from 'clsx'
@@ -8,6 +8,8 @@ import { useCreateEvent, useUpdateEvent, useEvents } from '@/hooks/useEvents'
 import { useToast } from '@/components/ui/Toast'
 
 import { Button } from '@/components/ui'
+import { TimePicker } from '@/components/ui/TimePicker'
+import { DatePicker } from '@/components/ui/DatePicker'
 import { DeleteEventConfirmModal } from '@/components/hub/DeleteEventConfirmModal'
 import { FieldError } from '@/components/ui/FieldError'
 import { FormError } from '@/components/ui/FormError'
@@ -16,7 +18,9 @@ import { getApiError } from '@/lib/api'
 const schema = z.object({
   title:       z.string().min(1, 'Titel krävs'),
   eventDate:   z.string().min(1, 'Datum krävs'),
+  startTime:   z.string().optional(),
   endDate:     z.string().optional(),
+  endTime:     z.string().optional(),
   location:    z.string().optional(),
   allDay:      z.boolean(),
   description: z.string().optional(),
@@ -43,10 +47,11 @@ export function EventCreatePage() {
   const updateMutation = useUpdateEvent(id ?? '')
   const mutation       = isEdit ? updateMutation : createMutation
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors }, reset, control } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { title: '', eventDate: '', endDate: '', location: '', allDay: true, description: '' },
+    defaultValues: { title: '', eventDate: '', startTime: '', endDate: '', endTime: '', location: '', allDay: true, description: '' },
   })
+  const allDay = useWatch({ control, name: 'allDay' })
 
   // Pre-fill form when editing
   useEffect(() => {
@@ -54,7 +59,9 @@ export function EventCreatePage() {
     reset({
       title:       existing.title,
       eventDate:   existing.eventDate.slice(0, 10),
+      startTime:   existing.startTime ?? '',
       endDate:     existing.endDate?.slice(0, 10) ?? '',
+      endTime:     existing.endTime ?? '',
       location:    existing.location ?? '',
       allDay:      existing.allDay,
       description: existing.description ?? '',
@@ -67,7 +74,9 @@ export function EventCreatePage() {
       description: data.description || null,
       location:    data.location    || null,
       eventDate:   data.eventDate,
-      endDate:     data.endDate     || null,
+      endDate:     data.endDate || null,
+      startTime:   !data.allDay && data.startTime ? data.startTime : null,
+      endTime:     !data.allDay && data.endTime   ? data.endTime   : null,
       allDay:      data.allDay,
     }
 
@@ -120,19 +129,33 @@ export function EventCreatePage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="field-label">Datum *</label>
-              <input
-                {...register('eventDate')}
-                type="date"
-                className={clsx('field-input', errors.eventDate && 'field-input-error')}
+              <Controller
+                control={control}
+                name="eventDate"
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                    placeholder="Välj startdatum"
+                    className={clsx(errors.eventDate && 'ring-1 ring-danger rounded')}
+                  />
+                )}
               />
               <FieldError message={errors.eventDate?.message} />
             </div>
             <div>
               <label className="field-label">Slutdatum</label>
-              <input
-                {...register('endDate')}
-                type="date"
-                className={clsx('field-input', errors.endDate && 'field-input-error')}
+              <Controller
+                control={control}
+                name="endDate"
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                    placeholder="Välj slutdatum"
+                    className={clsx(errors.endDate && 'ring-1 ring-danger rounded')}
+                  />
+                )}
               />
               <FieldError message={errors.endDate?.message} />
             </div>
@@ -159,6 +182,38 @@ export function EventCreatePage() {
             />
             <span className="text-sm text-text-2">Heldag</span>
           </label>
+
+          {/* Time pickers — shown when not all-day */}
+          {!allDay && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="field-label">Starttid</label>
+                <Controller
+                  control={control}
+                  name="startTime"
+                  render={({ field }) => (
+                    <TimePicker
+                      value={field.value ?? '08:00'}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+              </div>
+              <div>
+                <label className="field-label">Sluttid</label>
+                <Controller
+                  control={control}
+                  name="endTime"
+                  render={({ field }) => (
+                    <TimePicker
+                      value={field.value ?? '17:00'}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Description */}
           <div>

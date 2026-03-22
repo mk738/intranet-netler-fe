@@ -13,7 +13,7 @@ import type { ClientDto, AssignmentDto } from '@/types'
 
 function StatusBadge({ status }: { status: ClientDto['status'] }) {
   if (status === 'ACTIVE')   return <span className="badge-active">Aktiv</span>
-  if (status === 'PROSPECT') return <span className="badge-prospect">Prospect</span>
+  if (status === 'PROSPECT') return <span className="badge-prospect">Prospekt</span>
   return <span className="badge-ended">Inaktiv</span>
 }
 
