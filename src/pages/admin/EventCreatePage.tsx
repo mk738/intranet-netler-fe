@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useForm, useWatch } from 'react-hook-form'
+import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import clsx from 'clsx'
@@ -8,6 +8,7 @@ import { useCreateEvent, useUpdateEvent, useEvents } from '@/hooks/useEvents'
 import { useToast } from '@/components/ui/Toast'
 
 import { Button } from '@/components/ui'
+import { TimePicker } from '@/components/ui/TimePicker'
 import { DeleteEventConfirmModal } from '@/components/hub/DeleteEventConfirmModal'
 import { FieldError } from '@/components/ui/FieldError'
 import { FormError } from '@/components/ui/FormError'
@@ -172,18 +173,28 @@ export function EventCreatePage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="field-label">Starttid</label>
-                <input
-                  {...register('startTime')}
-                  type="time"
-                  className="field-input"
+                <Controller
+                  control={control}
+                  name="startTime"
+                  render={({ field }) => (
+                    <TimePicker
+                      value={field.value ?? '08:00'}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
               <div>
                 <label className="field-label">Sluttid</label>
-                <input
-                  {...register('endTime')}
-                  type="time"
-                  className="field-input"
+                <Controller
+                  control={control}
+                  name="endTime"
+                  render={({ field }) => (
+                    <TimePicker
+                      value={field.value ?? '17:00'}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
             </div>
