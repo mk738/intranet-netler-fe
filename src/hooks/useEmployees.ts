@@ -99,6 +99,25 @@ export function useInviteEmployee() {
 }
 
 
+export function useUploadAvatar(id: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData()
+      formData.append('file', file)
+      return api.post<ApiResponse<Employee>>(
+        `/api/employees/${id}/avatar`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      ).then(r => r.data.data)
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['employees', id] })
+      qc.invalidateQueries({ queryKey: ['employees'] })
+    },
+  })
+}
+
 export function useTerminateEmployee(id: string) {
   const qc = useQueryClient()
   return useMutation({
