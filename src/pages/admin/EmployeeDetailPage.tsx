@@ -74,6 +74,28 @@ function AssignmentList({ items }: { items: Assignment[] }) {
   )
 }
 
+function CurrentAssignmentCard({ assignments }: { assignments: Assignment[] }) {
+  const active = assignments.find(a => a.status === 'ACTIVE')
+  return (
+    <Card title="Nuvarande uppdrag">
+      {active ? (
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <p className="text-sm font-medium text-text-1">{active.projectName}</p>
+            <p className="text-xs text-text-2 mt-0.5">{active.companyName}</p>
+            <p className="text-xs text-text-3 mt-0.5">
+              Startade {format(new Date(active.startDate), 'MMM yyyy', { locale: sv })}
+            </p>
+          </div>
+          <span className="badge-active">Aktiv</span>
+        </div>
+      ) : (
+        <p className="text-sm text-text-3">Ingen aktiv placering</p>
+      )}
+    </Card>
+  )
+}
+
 function SkillsCard({ employeeId }: { employeeId: string }) {
   const [adding, setAdding] = useState(false)
   const [draft,  setDraft]  = useState<string[]>([])
@@ -358,6 +380,9 @@ export function EmployeeDetailPage() {
             <Card title="Utbildning">
               <EducationList entries={data.education ?? []} />
             </Card>
+
+            {/* Current assignment */}
+            <CurrentAssignmentCard assignments={data.assignments ?? []} />
 
             {/* Assignments */}
             <Card title="Uppdragshistorik">

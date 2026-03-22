@@ -3,6 +3,7 @@ import { useAuth } from '@/context/AuthContext'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { PageTransition } from '@/components/ui/PageTransition'
+import { ToastContainer } from '@/components/ui/Toast'
 
 // Guards: must be logged in
 export function ProtectedLayout() {
@@ -22,6 +23,7 @@ export function ProtectedLayout() {
           </PageTransition>
         </main>
       </div>
+      <ToastContainer />
     </div>
   )
 }

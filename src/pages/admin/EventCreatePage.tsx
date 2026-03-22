@@ -6,7 +6,7 @@ import { z } from 'zod'
 import clsx from 'clsx'
 import { useCreateEvent, useUpdateEvent, useEvents } from '@/hooks/useEvents'
 import { useToast } from '@/components/ui/Toast'
-import { ToastContainer } from '@/components/ui/Toast'
+
 import { Button } from '@/components/ui'
 import { DeleteEventConfirmModal } from '@/components/hub/DeleteEventConfirmModal'
 import { FieldError } from '@/components/ui/FieldError'
@@ -90,7 +90,6 @@ export function EventCreatePage() {
 
   return (
     <>
-      <ToastContainer />
 
       <div className="max-w-lg space-y-6">
         {/* Header */}

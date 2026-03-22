@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useClients } from '@/hooks/useClients'
 import { EmptyState, Button } from '@/components/ui'
-import { ToastContainer } from '@/components/ui/Toast'
+
 import { AddClientModal } from '@/components/crm/AddClientModal'
 import { EditClientModal } from '@/components/crm/EditClientModal'
 import type { ClientDto } from '@/types'
@@ -65,7 +65,6 @@ export function CrmListPage() {
 
   return (
     <>
-      <ToastContainer />
 
       <div className="space-y-5">
         {/* Header */}

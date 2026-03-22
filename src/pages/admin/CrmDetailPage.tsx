@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { useClient } from '@/hooks/useClients'
-import { usePlacements } from '@/hooks/usePlacements'
+import { usePlacements, useCreateAssignment } from '@/hooks/usePlacements'
+import { useEmployees } from '@/hooks/useEmployees'
+import { useToast } from '@/components/ui/Toast'
 import { Avatar } from '@/components/ui/Avatar'
 import { Card, Spinner, EmptyState, Button } from '@/components/ui'
 import { EditClientModal } from '@/components/crm/EditClientModal'
-import { ToastContainer } from '@/components/ui/Toast'
+
 import type { ClientDto, AssignmentDto } from '@/types'
 
 function StatusBadge({ status }: { status: ClientDto['status'] }) {
@@ -33,10 +35,51 @@ function InfoRow({ label, value }: { label: string; value: string | null | undef
 export function CrmDetailPage() {
   const { id }    = useParams<{ id: string }>()
   const navigate  = useNavigate()
-  const [editing, setEditing] = useState(false)
+  const { showToast } = useToast()
+  const [editing,    setEditing]    = useState(false)
+  const [addingConsultant, setAddingConsultant] = useState(false)
+  const [empId,      setEmpId]      = useState('')
+  const [projectName, setProjectName] = useState('')
+  const [startDate,  setStartDate]  = useState('')
+  const [formError,  setFormError]  = useState<string | null>(null)
 
   const { data: client, isLoading: clientLoading, error } = useClient(id ?? '')
   const { data: placements, isLoading: placementsLoading }  = usePlacements()
+  const { data: employees = [] } = useEmployees()
+  const createAssignment = useCreateAssignment()
+
+  function openAdd() {
+    setEmpId('')
+    setProjectName('')
+    setStartDate('')
+    setFormError(null)
+    setAddingConsultant(true)
+  }
+
+  function cancelAdd() {
+    setAddingConsultant(false)
+    setFormError(null)
+  }
+
+  function submitAdd() {
+    if (!empId || !projectName.trim() || !startDate) {
+      setFormError('Fyll i alla fält.')
+      return
+    }
+    setFormError(null)
+    createAssignment.mutate(
+      { employeeId: empId, clientId: id, projectName: projectName.trim(), startDate },
+      {
+        onSuccess: () => {
+          showToast('Konsult tillagd', 'success')
+          setAddingConsultant(false)
+        },
+        onError: () => {
+          setFormError('Det gick inte att lägga till konsulten. Försök igen.')
+        },
+      }
+    )
+  }
 
   const activeConsultants = placements?.clientGroups
     .find(g => g.clientId === id)
@@ -63,7 +106,6 @@ export function CrmDetailPage() {
 
   return (
     <>
-      <ToastContainer />
 
       <div className="space-y-5 max-w-4xl">
         {/* Back + header */}
@@ -98,15 +140,17 @@ export function CrmDetailPage() {
 
           {/* Right — active consultants */}
           <Card>
-            <p className="section-label mb-4">Aktiva konsulter</p>
+            <div className="flex items-center justify-between mb-4">
+              <p className="section-label">Aktiva konsulter</p>
+              {!addingConsultant && (
+                <Button variant="secondary" size="sm" onClick={openAdd}>Lägg till</Button>
+              )}
+            </div>
+
             {placementsLoading ? (
               <div className="flex justify-center py-8"><Spinner /></div>
-            ) : !activeConsultants.length ? (
-              <EmptyState
-                title="Inga aktiva konsulter"
-                description="Tilldela en konsult till den här kunden från placeringssidan."
-                action={<Button variant="secondary" size="sm" onClick={() => navigate('/admin/placements')}>Gå till placeringar</Button>}
-              />
+            ) : !activeConsultants.length && !addingConsultant ? (
+              <EmptyState title="Inga aktiva konsulter" />
             ) : (
               <ul className="space-y-3">
                 {activeConsultants.map(a => (
@@ -126,6 +170,57 @@ export function CrmDetailPage() {
                   </li>
                 ))}
               </ul>
+            )}
+
+            {addingConsultant && (
+              <div className="border-t border-subtle mt-4 pt-4 space-y-3">
+                <div>
+                  <label className="field-label">Konsult</label>
+                  <select
+                    value={empId}
+                    onChange={e => setEmpId(e.target.value)}
+                    className="field-input"
+                  >
+                    <option value="">Välj konsult...</option>
+                    {employees
+                      .filter(e => e.isActive)
+                      .map(e => (
+                        <option key={e.id} value={e.id}>
+                          {e.profile ? `${e.profile.firstName} ${e.profile.lastName}` : e.email}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="field-label">Projektnamn</label>
+                  <input
+                    value={projectName}
+                    onChange={e => setProjectName(e.target.value)}
+                    placeholder="t.ex. Backend-utveckling"
+                    className="field-input"
+                  />
+                </div>
+                <div>
+                  <label className="field-label">Startdatum</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={e => setStartDate(e.target.value)}
+                    className="field-input"
+                  />
+                </div>
+                {formError && (
+                  <p className="text-xs text-danger">{formError}</p>
+                )}
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={submitAdd} loading={createAssignment.isPending}>
+                    Spara
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={cancelAdd}>
+                    Avbryt
+                  </Button>
+                </div>
+              </div>
             )}
           </Card>
         </div>

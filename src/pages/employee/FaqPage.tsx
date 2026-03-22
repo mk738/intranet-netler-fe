@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useFaqItems, useCreateFaqItem, useUpdateFaqItem, useDeleteFaqItem } from '@/hooks/useFaq'
-import { useToast, ToastContainer } from '@/components/ui/Toast'
+import { useToast } from '@/components/ui/Toast'
 import { Button, EmptyState, Modal } from '@/components/ui'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -209,7 +209,6 @@ export function FaqPage() {
 
   return (
     <>
-      <ToastContainer />
 
       <div className="max-w-2xl space-y-6">
         {/* Header */}

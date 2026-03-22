@@ -5,7 +5,7 @@ import { format, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns
 import { useEvents } from '@/hooks/useEvents'
 import { useEventRsvp, useSubmitRsvp } from '@/hooks/useRsvp'
 import { useAuth } from '@/context/AuthContext'
-import { ToastContainer } from '@/components/ui/Toast'
+
 import { Button } from '@/components/ui'
 import { DeleteEventConfirmModal } from '@/components/hub/DeleteEventConfirmModal'
 import type { EventDto, RsvpStatus } from '@/types'
@@ -328,7 +328,6 @@ export function EventsPage() {
 
   return (
     <>
-      <ToastContainer />
 
       <div className="space-y-4">
         {/* Calendar header */}

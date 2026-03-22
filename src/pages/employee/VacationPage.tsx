@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useMyVacations } from '@/hooks/useVacations'
 import { Button, EmptyState } from '@/components/ui'
 import { AnimatedList, AnimatedListItem } from '@/components/ui/AnimatedList'
-import { ToastContainer } from '@/components/ui/Toast'
+
 import { RequestVacationModal } from '@/components/vacation/RequestVacationModal'
 import { CancelVacationConfirmModal } from '@/components/vacation/CancelVacationConfirmModal'
 import { formatDateRange } from '@/lib/dateUtils'
@@ -44,7 +44,6 @@ export function VacationPage() {
 
   return (
     <>
-      <ToastContainer />
 
       <div className="max-w-2xl space-y-6">
         {/* Header */}

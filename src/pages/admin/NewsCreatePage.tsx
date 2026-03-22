@@ -7,7 +7,7 @@ import clsx from 'clsx'
 import { useQueryClient } from '@tanstack/react-query'
 import { useCreateNews, useUpdateNews, useNewsPost } from '@/hooks/useNews'
 import { useToast } from '@/components/ui/Toast'
-import { ToastContainer } from '@/components/ui/Toast'
+
 import { Button } from '@/components/ui'
 import { RichTextEditor } from '@/components/hub/RichTextEditor'
 import { CoverImageUpload } from '@/components/hub/CoverImageUpload'
@@ -94,7 +94,6 @@ export function NewsCreatePage() {
 
   return (
     <>
-      <ToastContainer />
 
       <div className="max-w-2xl space-y-6">
         {/* Header */}
