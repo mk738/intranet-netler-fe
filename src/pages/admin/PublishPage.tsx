@@ -7,7 +7,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCreateNews } from '@/hooks/useNews'
 import { useCreateEvent } from '@/hooks/useEvents'
 import { useToast } from '@/components/ui/Toast'
-import { ToastContainer } from '@/components/ui/Toast'
+
 import { Button } from '@/components/ui'
 import { RichTextEditor } from '@/components/hub/RichTextEditor'
 import { CoverImageUpload } from '@/components/hub/CoverImageUpload'
@@ -290,7 +290,6 @@ export function PublishPage() {
 
   return (
     <>
-      <ToastContainer />
 
       <div className="max-w-2xl space-y-8">
         <h1 className="text-xl font-semibold text-text-1">Publicera</h1>

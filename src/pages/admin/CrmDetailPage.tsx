@@ -6,7 +6,7 @@ import { usePlacements } from '@/hooks/usePlacements'
 import { Avatar } from '@/components/ui/Avatar'
 import { Card, Spinner, EmptyState, Button } from '@/components/ui'
 import { EditClientModal } from '@/components/crm/EditClientModal'
-import { ToastContainer } from '@/components/ui/Toast'
+
 import type { ClientDto, AssignmentDto } from '@/types'
 
 function StatusBadge({ status }: { status: ClientDto['status'] }) {
@@ -63,7 +63,6 @@ export function CrmDetailPage() {
 
   return (
     <>
-      <ToastContainer />
 
       <div className="space-y-5 max-w-4xl">
         {/* Back + header */}

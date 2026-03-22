@@ -4,7 +4,7 @@ import { useNewsFeed, useNewsPost } from '@/hooks/useNews'
 import { Button, EmptyState } from '@/components/ui'
 import { AnimatedList, AnimatedListItem } from '@/components/ui/AnimatedList'
 import { Avatar } from '@/components/ui/Avatar'
-import { ToastContainer } from '@/components/ui/Toast'
+
 import { formatShortDate } from '@/lib/dateUtils'
 import { useAuth } from '@/context/AuthContext'
 import { useReadNews } from '@/context/ReadNewsContext'
@@ -117,7 +117,6 @@ export function NewsPage() {
 
   return (
     <>
-      <ToastContainer />
 
       <div className="max-w-2xl space-y-6">
         <h1 className="text-xl font-semibold text-text-1">Företagsnyheter</h1>

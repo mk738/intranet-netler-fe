@@ -4,7 +4,7 @@ import { usePlacements } from '@/hooks/usePlacements'
 import { Avatar } from '@/components/ui/Avatar'
 import { EmptyState } from '@/components/ui'
 import { AnimatedList, AnimatedListItem } from '@/components/ui/AnimatedList'
-import { ToastContainer } from '@/components/ui/Toast'
+
 import { AssignConsultantModal } from '@/components/placements/AssignConsultantModal'
 import { EndAssignmentConfirmModal } from '@/components/placements/EndAssignmentConfirmModal'
 import type { AssignmentDto, UnplacedDto } from '@/types'
@@ -69,7 +69,6 @@ export function PlacementsPage() {
 
   return (
     <>
-      <ToastContainer />
 
       <div className="space-y-5">
         {/* Header */}

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useAllVacations, useVacationSummary } from '@/hooks/useVacations'
 import { Avatar } from '@/components/ui/Avatar'
 import { EmptyState } from '@/components/ui'
-import { ToastContainer } from '@/components/ui/Toast'
+
 import { ReviewConfirmModal } from '@/components/vacation/ReviewConfirmModal'
 import { formatDateRange, formatShortDate } from '@/lib/dateUtils'
 import type { VacationDto } from '@/types'
@@ -88,7 +88,6 @@ export function VacationReviewPage() {
 
   return (
     <>
-      <ToastContainer />
 
       <div className="space-y-6">
         {/* Header */}

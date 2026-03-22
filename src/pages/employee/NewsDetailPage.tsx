@@ -4,7 +4,7 @@ import { useNewsPost, usePublishNews } from '@/hooks/useNews'
 import { useAuth } from '@/context/AuthContext'
 import { useReadNews } from '@/context/ReadNewsContext'
 import { Avatar } from '@/components/ui/Avatar'
-import { ToastContainer } from '@/components/ui/Toast'
+
 import { RichTextEditor } from '@/components/hub/RichTextEditor'
 import { DeleteNewsConfirmModal } from '@/components/hub/DeleteNewsConfirmModal'
 import { Button, EmptyState } from '@/components/ui'
@@ -58,7 +58,6 @@ export function NewsDetailPage() {
 
   return (
     <>
-      <ToastContainer />
 
       <div className="max-w-2xl space-y-6">
         {/* Back link */}

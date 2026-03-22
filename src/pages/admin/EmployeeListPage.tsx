@@ -7,7 +7,7 @@ import { useEmployees } from '@/hooks/useEmployees'
 import { Avatar } from '@/components/ui/Avatar'
 import { EmptyState, Button } from '@/components/ui'
 import { InviteEmployeeModal } from '@/components/employees/InviteEmployeeModal'
-import { ToastContainer } from '@/components/ui/Toast'
+
 import type { Employee } from '@/types'
 
 const prefersReduced = typeof window !== 'undefined'
@@ -58,7 +58,6 @@ export function EmployeeListPage() {
 
   return (
     <>
-      <ToastContainer />
 
       <div className="space-y-5">
         {/* Header */}
