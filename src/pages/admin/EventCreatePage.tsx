@@ -57,9 +57,9 @@ export function EventCreatePage() {
     reset({
       title:       existing.title,
       eventDate:   existing.eventDate.slice(0, 10),
-      startTime:   !existing.allDay && existing.eventDate.length > 10 ? existing.eventDate.slice(11, 16) : '',
+      startTime:   existing.startTime ?? '',
       endDate:     existing.endDate?.slice(0, 10) ?? '',
-      endTime:     !existing.allDay && existing.endDate && existing.endDate.length > 10 ? existing.endDate.slice(11, 16) : '',
+      endTime:     existing.endTime ?? '',
       location:    existing.location ?? '',
       allDay:      existing.allDay,
       description: existing.description ?? '',
@@ -71,10 +71,10 @@ export function EventCreatePage() {
       title:       data.title,
       description: data.description || null,
       location:    data.location    || null,
-      eventDate:   data.allDay || !data.startTime ? data.eventDate : `${data.eventDate}T${data.startTime}`,
-      endDate:     data.endDate
-        ? (data.allDay || !data.endTime ? data.endDate : `${data.endDate}T${data.endTime}`)
-        : null,
+      eventDate:   data.eventDate,
+      endDate:     data.endDate || null,
+      startTime:   !data.allDay && data.startTime ? data.startTime : null,
+      endTime:     !data.allDay && data.endTime   ? data.endTime   : null,
       allDay:      data.allDay,
     }
 

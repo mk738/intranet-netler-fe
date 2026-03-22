@@ -196,6 +196,8 @@ function EventForm({ onDone }: { onDone: () => void }) {
         location:    data.location    || null,
         eventDate:   data.eventDate,
         endDate:     data.endDate     || null,
+        startTime:   null,
+        endTime:     null,
         allDay:      data.allDay,
       },
       {
