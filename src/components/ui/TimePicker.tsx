@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import clsx from 'clsx'
 
 interface TimePickerProps {
@@ -7,23 +8,38 @@ interface TimePickerProps {
   className?: string
 }
 
-const HOURS   = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
-const MINUTES = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55']
+const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/
 
 export function TimePicker({ value, onChange, disabled, className }: TimePickerProps) {
-  const [hh, mm] = value ? value.split(':') : ['08', '00']
+  const [raw, setRaw]       = useState(value ?? '')
+  const [touched, setTouched] = useState(false)
 
-  const set = (nextHh: string, nextMm: string) => onChange(`${nextHh}:${nextMm}`)
+  const invalid = touched && raw !== '' && !TIME_RE.test(raw)
 
-  const selectClass =
-    'bg-transparent border-none text-sm text-text-1 focus:outline-none cursor-pointer appearance-none'
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value
+    setRaw(v)
+    if (TIME_RE.test(v)) onChange(v)
+  }
+
+  const handleBlur = () => {
+    setTouched(true)
+    // Auto-correct "8:00" → "08:00"
+    const match = raw.match(/^(\d):(\d{2})$/)
+    if (match) {
+      const fixed = `0${match[1]}:${match[2]}`
+      setRaw(fixed)
+      onChange(fixed)
+    }
+  }
 
   return (
     <div
       className={clsx(
-        'flex items-center gap-1 px-3 py-2 bg-bg-input border border-mild rounded',
-        'focus-within:border-purple transition-colors',
-        disabled && 'opacity-50 cursor-not-allowed',
+        'flex items-center gap-2 px-3 py-2 bg-bg-input border rounded transition-colors',
+        invalid        ? 'border-danger'       : 'border-mild',
+        !invalid       && 'focus-within:border-purple',
+        disabled       && 'opacity-50 cursor-not-allowed',
         className,
       )}
     >
@@ -34,31 +50,16 @@ export function TimePicker({ value, onChange, disabled, className }: TimePickerP
         <polyline points="12 6 12 12 16 14"/>
       </svg>
 
-      {/* Hour */}
-      <select
-        value={hh}
-        onChange={e => set(e.target.value, mm ?? '00')}
+      <input
+        type="text"
+        value={raw}
+        onChange={handleChange}
+        onBlur={handleBlur}
         disabled={disabled}
-        className={selectClass}
-      >
-        {HOURS.map(h => (
-          <option key={h} value={h} className="bg-bg-card text-text-1">{h}</option>
-        ))}
-      </select>
-
-      <span className="text-text-3 font-medium select-none">:</span>
-
-      {/* Minute */}
-      <select
-        value={mm}
-        onChange={e => set(hh ?? '08', e.target.value)}
-        disabled={disabled}
-        className={selectClass}
-      >
-        {MINUTES.map(m => (
-          <option key={m} value={m} className="bg-bg-card text-text-1">{m}</option>
-        ))}
-      </select>
+        placeholder="HH:MM"
+        maxLength={5}
+        className="bg-transparent border-none text-sm text-text-1 focus:outline-none w-full placeholder:text-text-3"
+      />
     </div>
   )
 }

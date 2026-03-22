@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/Toast'
 
 import { Button } from '@/components/ui'
 import { TimePicker } from '@/components/ui/TimePicker'
+import { DatePicker } from '@/components/ui/DatePicker'
 import { DeleteEventConfirmModal } from '@/components/hub/DeleteEventConfirmModal'
 import { FieldError } from '@/components/ui/FieldError'
 import { FormError } from '@/components/ui/FormError'
@@ -128,19 +129,33 @@ export function EventCreatePage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="field-label">Datum *</label>
-              <input
-                {...register('eventDate')}
-                type="date"
-                className={clsx('field-input', errors.eventDate && 'field-input-error')}
+              <Controller
+                control={control}
+                name="eventDate"
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                    placeholder="Välj startdatum"
+                    className={clsx(errors.eventDate && 'ring-1 ring-danger rounded')}
+                  />
+                )}
               />
               <FieldError message={errors.eventDate?.message} />
             </div>
             <div>
               <label className="field-label">Slutdatum</label>
-              <input
-                {...register('endDate')}
-                type="date"
-                className={clsx('field-input', errors.endDate && 'field-input-error')}
+              <Controller
+                control={control}
+                name="endDate"
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                    placeholder="Välj slutdatum"
+                    className={clsx(errors.endDate && 'ring-1 ring-danger rounded')}
+                  />
+                )}
               />
               <FieldError message={errors.endDate?.message} />
             </div>
