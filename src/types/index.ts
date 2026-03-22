@@ -83,6 +83,12 @@ export interface ReviewVacationRequest {
   approved: boolean
 }
 
+// ── Skills ────────────────────────────────────────────────────
+export interface SkillDto {
+  id:   string
+  name: string
+}
+
 // ── Benefits ──────────────────────────────────────────────────
 export interface BenefitDto {
   id:          string

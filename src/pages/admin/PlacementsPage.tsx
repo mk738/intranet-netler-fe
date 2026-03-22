@@ -41,7 +41,7 @@ function SkeletonRow() {
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all',      label: 'Alla'          },
   { key: 'active',   label: 'Aktiva'        },
-  { key: 'unplaced', label: 'Oplacerade'    },
+  { key: 'unplaced', label: 'Tillgängliga'  },
   { key: 'ending',   label: 'Avslutas snart' },
 ]
 
@@ -105,7 +105,7 @@ export function PlacementsPage() {
           ) : data ? (
             <>
               <StatCard label="På uppdrag"     value={data.totalPlaced}        valueClass="text-success" />
-              <StatCard label="Oplacerade"     value={data.totalUnplaced}      valueClass="text-danger" />
+              <StatCard label="Tillgängliga"    value={data.totalUnplaced}      valueClass="text-warning" />
               <StatCard label="Avslutas snart" value={data.endingSoon}         valueClass="text-warning" />
               <StatCard label="Aktiva kunder"  value={data.totalActiveClients} valueClass="text-text-1" />
             </>
@@ -198,7 +198,7 @@ export function PlacementsPage() {
         {showUnplaced && data && data.unplaced.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold text-danger">Oplacerade konsulter</h2>
+              <h2 className="text-sm font-semibold text-warning">Tillgängliga konsulter</h2>
               <span className="badge-unplaced">{data.unplaced.length}</span>
             </div>
             <div className="overflow-hidden rounded-lg border border-subtle">

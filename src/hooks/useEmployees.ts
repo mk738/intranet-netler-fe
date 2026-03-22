@@ -98,6 +98,7 @@ export function useInviteEmployee() {
   })
 }
 
+
 export function useUpdateEmployeeProfile(id: string) {
   const qc = useQueryClient()
   return useMutation({
