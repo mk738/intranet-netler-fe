@@ -1,6 +1,7 @@
 import { useState, useRef, KeyboardEvent } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
+import { sv } from 'date-fns/locale'
 import { useEmployee } from '@/hooks/useEmployees'
 import { useSkills, useEmployeeSkills, useSetEmployeeSkills } from '@/hooks/useSkills'
 import { Avatar } from '@/components/ui/Avatar'
@@ -263,6 +264,11 @@ export function EmployeeDetailPage() {
     ? format(new Date(p.startDate), 'MMMM yyyy')
     : null
 
+  const today = format(new Date(), 'yyyy-MM-dd')
+  const isEffectivelyActive = data.isActive ||
+    (!!data.terminationDate && data.terminationDate >= today)
+  const pendingTermination = data.terminationDate && data.terminationDate >= today
+
   const personalEmpty = !p?.phone && !p?.address && !p?.emergencyContact && !p?.birthDate
 
   return (
@@ -295,10 +301,15 @@ export function EmployeeDetailPage() {
                   }>
                     {data.role}
                   </span>
-                  <span className={data.isActive ? 'badge-active' : 'badge-unplaced'}>
-                    {data.isActive ? 'Aktiv' : 'Inaktiv'}
+                  <span className={isEffectivelyActive ? 'badge-active' : 'badge-unplaced'}>
+                    {isEffectivelyActive ? 'Aktiv' : 'Inaktiv'}
                   </span>
                 </div>
+                {pendingTermination && (
+                  <p className="text-xs text-warning">
+                    Avslutas {format(new Date(data.terminationDate! + 'T00:00:00'), 'd MMM yyyy', { locale: sv })}
+                  </p>
+                )}
                 {memberSince && (
                   <p className="text-xs text-text-3">Medlem sedan {memberSince}</p>
                 )}
@@ -313,7 +324,7 @@ export function EmployeeDetailPage() {
               Redigera profil
             </Button>
 
-            {data.isActive && (
+            {isEffectivelyActive && !pendingTermination && (
               <Button
                 variant="danger"
                 className="w-full justify-center"

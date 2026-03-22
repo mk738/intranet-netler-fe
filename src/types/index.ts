@@ -2,12 +2,13 @@
 export type Role = 'ADMIN' | 'EMPLOYEE'
 
 export interface Employee {
-  id:        string
-  email:     string
-  role:      Role
-  isActive:  boolean
-  createdAt: string
-  profile:   EmployeeProfile | null
+  id:              string
+  email:           string
+  role:            Role
+  isActive:        boolean
+  terminationDate: string | null
+  createdAt:       string
+  profile:         EmployeeProfile | null
 }
 
 export interface EmployeeProfile {
