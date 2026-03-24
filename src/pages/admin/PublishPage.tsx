@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQueryClient } from '@tanstack/react-query'
@@ -11,6 +11,8 @@ import { useToast } from '@/components/ui/Toast'
 import { Button } from '@/components/ui'
 import { RichTextEditor } from '@/components/hub/RichTextEditor'
 import { CoverImageUpload } from '@/components/hub/CoverImageUpload'
+import { DatePicker } from '@/components/ui/DatePicker'
+import { TimePicker } from '@/components/ui/TimePicker'
 
 type PublishType = 'news' | 'event' | null
 
@@ -26,6 +28,8 @@ const eventSchema = z.object({
   title:       z.string().min(1, 'Titel krävs'),
   eventDate:   z.string().min(1, 'Datum krävs'),
   endDate:     z.string().optional(),
+  startTime:   z.string().optional(),
+  endTime:     z.string().optional(),
   location:    z.string().optional(),
   allDay:      z.boolean(),
   description: z.string().optional(),
@@ -92,7 +96,7 @@ function NewsForm({ onDone }: { onDone: () => void }) {
         title:          data.title,
         body:           data.body,
         pinned:         data.pinned,
-        publish,
+        published:      publish,
         coverImageData: coverImage?.data ?? null,
         coverImageType: coverImage?.type ?? null,
       },
@@ -183,10 +187,11 @@ function EventForm({ onDone }: { onDone: () => void }) {
   const { showToast } = useToast()
   const mutation      = useCreateEvent()
 
-  const { register, handleSubmit, formState: { errors } } = useForm<EventForm>({
+  const { register, handleSubmit, formState: { errors }, control } = useForm<EventForm>({
     resolver: zodResolver(eventSchema),
-    defaultValues: { title: '', eventDate: '', endDate: '', location: '', allDay: true, description: '' },
+    defaultValues: { title: '', eventDate: '', endDate: '', startTime: '', endTime: '', location: '', allDay: true, description: '' },
   })
+  const allDay = useWatch({ control, name: 'allDay' })
 
   const onSubmit = (data: EventForm) => {
     mutation.mutate(
@@ -196,8 +201,8 @@ function EventForm({ onDone }: { onDone: () => void }) {
         location:    data.location    || null,
         eventDate:   data.eventDate,
         endDate:     data.endDate     || null,
-        startTime:   null,
-        endTime:     null,
+        startTime:   !data.allDay && data.startTime ? data.startTime : null,
+        endTime:     !data.allDay && data.endTime   ? data.endTime   : null,
         allDay:      data.allDay,
       },
       {
@@ -227,12 +232,32 @@ function EventForm({ onDone }: { onDone: () => void }) {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="field-label">Datum *</label>
-          <input {...register('eventDate')} type="date" className="field-input" />
+          <Controller
+            control={control}
+            name="eventDate"
+            render={({ field }) => (
+              <DatePicker
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                placeholder="Välj startdatum"
+              />
+            )}
+          />
           {errors.eventDate && <p className="text-xs text-danger mt-1">{errors.eventDate.message}</p>}
         </div>
         <div>
           <label className="field-label">Slutdatum</label>
-          <input {...register('endDate')} type="date" className="field-input" />
+          <Controller
+            control={control}
+            name="endDate"
+            render={({ field }) => (
+              <DatePicker
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                placeholder="Välj slutdatum"
+              />
+            )}
+          />
           {errors.endDate && <p className="text-xs text-danger mt-1">{errors.endDate.message}</p>}
         </div>
       </div>
@@ -254,6 +279,32 @@ function EventForm({ onDone }: { onDone: () => void }) {
         />
         <span className="text-sm text-text-2">Heldag</span>
       </label>
+
+      {/* Time pickers — shown when not all-day */}
+      {!allDay && (
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="field-label">Starttid</label>
+            <Controller
+              control={control}
+              name="startTime"
+              render={({ field }) => (
+                <TimePicker value={field.value ?? '08:00'} onChange={field.onChange} />
+              )}
+            />
+          </div>
+          <div>
+            <label className="field-label">Sluttid</label>
+            <Controller
+              control={control}
+              name="endTime"
+              render={({ field }) => (
+                <TimePicker value={field.value ?? '17:00'} onChange={field.onChange} />
+              )}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Description */}
       <div>

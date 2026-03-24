@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { format } from 'date-fns'
+import { format, addMonths } from 'date-fns'
 import { Modal, Button } from '@/components/ui'
 import { DatePicker } from '@/components/ui/DatePicker'
 import { useEndAssignment } from '@/hooks/usePlacements'
@@ -14,7 +14,7 @@ interface Props {
 export function EndAssignmentConfirmModal({ assignment, onClose }: Props) {
   const { showToast } = useToast()
   const mutation = useEndAssignment()
-  const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [endDate, setEndDate] = useState(format(addMonths(new Date(), 1), 'yyyy-MM-dd'))
 
   const handleEnd = () => {
     mutation.mutate({ id: assignment.id, endDate }, {

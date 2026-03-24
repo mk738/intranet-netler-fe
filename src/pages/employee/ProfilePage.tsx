@@ -143,7 +143,7 @@ export function ProfilePage() {
                 {employee.role}
               </span>
               {memberSince && (
-                <p className="text-xs text-text-3">Medlem sedan {memberSince}</p>
+                <p className="text-xs text-text-3">Anställd sedan {memberSince}</p>
               )}
 
               {/* Vacation days */}

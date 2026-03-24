@@ -9,13 +9,22 @@ import { FieldError } from '@/components/ui/FieldError'
 import { FormError } from '@/components/ui/FormError'
 import { getApiError, getApiCode } from '@/lib/api'
 
+const orgNumberRegex = /^(\d{6}-\d{4}|\d{10}|\d{12})$/
+const phoneRegex     = /^(\+46|0)[0-9\s\-()]{6,14}$/
+
 const schema = z.object({
   companyName:  z.string().min(1, 'Företagsnamn krävs'),
-  orgNumber:    z.string().optional(),
+  orgNumber:    z.string()
+    .regex(orgNumberRegex, 'Ange ett giltigt org-nummer (t.ex. 556000-0000)')
+    .optional()
+    .or(z.literal('')),
   status:       z.enum(['ACTIVE', 'PROSPECT']),
   contactName:  z.string().optional(),
   contactEmail: z.string().email('Ogiltig e-post').optional().or(z.literal('')),
-  phone:        z.string().optional(),
+  phone:        z.string()
+    .regex(phoneRegex, 'Ange ett giltigt telefonnummer (t.ex. 070-123 45 67)')
+    .optional()
+    .or(z.literal('')),
 })
 
 type FormData = z.infer<typeof schema>
@@ -37,6 +46,7 @@ export function AddClientModal({ onClose }: Props) {
       orgNumber:    data.orgNumber    || null,
       contactName:  data.contactName  || null,
       contactEmail: data.contactEmail || null,
+      phone:        data.phone        || null,
       status:       data.status,
     }, {
       onSuccess: () => {
@@ -74,7 +84,8 @@ export function AddClientModal({ onClose }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="field-label">Org-nummer</label>
-            <input {...register('orgNumber')} className="field-input" placeholder="556000-0000" />
+            <input {...register('orgNumber')} className={clsx('field-input', errors.orgNumber && 'field-input-error')} placeholder="556000-0000" />
+            <FieldError message={errors.orgNumber?.message} />
           </div>
           <div>
             <label className="field-label">Status</label>
@@ -92,7 +103,8 @@ export function AddClientModal({ onClose }: Props) {
           </div>
           <div>
             <label className="field-label">Telefon</label>
-            <input {...register('phone')} className="field-input" />
+            <input {...register('phone')} className={clsx('field-input', errors.phone && 'field-input-error')} placeholder="070-123 45 67" />
+            <FieldError message={errors.phone?.message} />
           </div>
         </div>
 
