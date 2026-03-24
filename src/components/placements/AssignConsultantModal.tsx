@@ -123,6 +123,7 @@ export function AssignConsultantModal({ employee, onClose }: Props) {
               orgNumber:    data.orgNumber    || null,
               contactName:  data.contactName  || null,
               contactEmail: data.contactEmail || null,
+              phone:        null,
               status:       data.newClientStatus ?? 'ACTIVE',
             },
             projectName: data.projectName,

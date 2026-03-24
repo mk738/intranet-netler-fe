@@ -68,7 +68,8 @@ export function useDeleteNews() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => api.delete(`/api/news/${id}`),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
+      qc.removeQueries({ queryKey: ['news', id] })
       qc.invalidateQueries({ queryKey: ['news'] })
     },
   })

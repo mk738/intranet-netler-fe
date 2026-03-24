@@ -4,6 +4,7 @@ import {
   eachDayOfInterval, isSameMonth, isSameDay, isToday, isBefore,
   addMonths, subMonths, parseISO,
 } from 'date-fns'
+import { sv } from 'date-fns/locale'
 
 interface Props {
   value:        string          // YYYY-MM-DD
@@ -57,7 +58,7 @@ export function DatePicker({ value, onChange, min, placeholder = 'Välj datum', 
         className="field-input w-full text-left flex items-center justify-between gap-2"
       >
         <span className={selected ? 'text-text-1' : 'text-text-3'}>
-          {selected ? format(selected, 'MMM d, yyyy') : placeholder}
+          {selected ? format(selected, 'd MMM yyyy', { locale: sv }) : placeholder}
         </span>
         <svg className="w-4 h-4 text-text-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -80,7 +81,7 @@ export function DatePicker({ value, onChange, min, placeholder = 'Välj datum', 
               ‹
             </button>
             <span className="text-sm font-medium text-text-1">
-              {format(viewDate, 'MMMM yyyy')}
+              {format(viewDate, 'MMMM yyyy', { locale: sv })}
             </span>
             <button
               type="button"

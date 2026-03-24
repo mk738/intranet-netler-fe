@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
-import { usePlacements } from '@/hooks/usePlacements'
+import { usePlacements, useEndAssignment } from '@/hooks/usePlacements'
+import { useToast } from '@/components/ui/Toast'
 import { Avatar } from '@/components/ui/Avatar'
 import { EmptyState } from '@/components/ui'
 import { AnimatedList, AnimatedListItem } from '@/components/ui/AnimatedList'
@@ -51,6 +52,15 @@ export function PlacementsPage() {
   const [endTarget,    setEndTarget]    = useState<AssignmentDto | null>(null)
 
   const { data, isLoading } = usePlacements()
+  const { showToast }       = useToast()
+  const endMutation         = useEndAssignment()
+
+  const handleMoveToUnplaced = (a: AssignmentDto) => {
+    endMutation.mutate(
+      { id: a.id, endDate: a.endDate ?? format(new Date(), 'yyyy-MM-dd') },
+      { onSuccess: () => showToast(`${a.fullName} är nu oplacerad`, 'success') }
+    )
+  }
 
   const isLoaded = !isLoading && !!data
 
@@ -180,6 +190,15 @@ export function PlacementsPage() {
                               className="btn-danger px-2.5 py-1 text-xs"
                             >
                               Avsluta
+                            </button>
+                          )}
+                          {a.status === 'ENDED' && (
+                            <button
+                              onClick={() => handleMoveToUnplaced(a)}
+                              disabled={endMutation.isPending}
+                              className="px-2.5 py-1 text-xs rounded border border-subtle text-text-2 hover:text-text-1 hover:border-mild bg-transparent transition-colors disabled:opacity-50"
+                            >
+                              Frigör
                             </button>
                           )}
                         </td>

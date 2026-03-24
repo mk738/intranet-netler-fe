@@ -3,16 +3,19 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { sv } from 'date-fns/locale'
 import { useEmployee } from '@/hooks/useEmployees'
+import { useEndAssignment } from '@/hooks/usePlacements'
+import { useToast } from '@/components/ui/Toast'
 import { useSkills, useEmployeeSkills, useSetEmployeeSkills } from '@/hooks/useSkills'
 import { AvatarUpload } from '@/components/employees/AvatarUpload'
 import { Card, Spinner, EmptyState, Button } from '@/components/ui'
 import { EditProfileModal } from '@/components/employees/EditProfileModal'
 import { EditBankModal } from '@/components/employees/EditBankModal'
 import { TerminateEmploymentModal } from '@/components/employees/TerminateEmploymentModal'
+import { EndAssignmentConfirmModal } from '@/components/placements/EndAssignmentConfirmModal'
 import { BenefitsCard } from '@/components/employees/BenefitsCard'
 import { EmploymentContractCard } from '@/components/employees/EmploymentContractCard'
 import { CvCard } from '@/components/employees/CvCard'
-import type { BankInfo, Education, Assignment } from '@/types'
+import type { BankInfo, Education, Assignment, AssignmentDto } from '@/types'
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -74,20 +77,47 @@ function AssignmentList({ items }: { items: Assignment[] }) {
   )
 }
 
-function CurrentAssignmentCard({ assignments }: { assignments: Assignment[] }) {
-  const active = assignments.find(a => a.status === 'ACTIVE')
+function CurrentAssignmentCard({
+  assignment,
+  onEnd,
+  onEndImmediate,
+  endingPending,
+}: {
+  assignment:     Assignment | null
+  onEnd:          () => void
+  onEndImmediate: () => void
+  endingPending:  boolean
+}) {
+  const isEnded = assignment?.status === 'ENDED'
+
   return (
     <Card title="Nuvarande uppdrag">
-      {active ? (
+      {assignment ? (
         <div className="flex items-center justify-between gap-2">
           <div>
-            <p className="text-sm font-medium text-text-1">{active.projectName}</p>
-            <p className="text-xs text-text-2 mt-0.5">{active.companyName}</p>
+            <p className="text-sm font-medium text-text-1">{assignment.projectName}</p>
+            <p className="text-xs text-text-2 mt-0.5">{assignment.companyName}</p>
             <p className="text-xs text-text-3 mt-0.5">
-              Startade {format(new Date(active.startDate), 'MMM yyyy', { locale: sv })}
+              Startade {format(new Date(assignment.startDate), 'MMM yyyy', { locale: sv })}
             </p>
           </div>
-          <span className="badge-active">Aktiv</span>
+          <div className="flex items-center gap-2">
+            <span className={isEnded ? 'badge-ended' : 'badge-active'}>
+              {isEnded ? 'Avslutad' : 'Aktiv'}
+            </span>
+            {isEnded ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                loading={endingPending}
+                onClick={onEndImmediate}
+              >
+                Flytta till oplacerade
+              </Button>
+            ) : (
+              <Button variant="danger" size="sm" onClick={onEnd}>Avsluta</Button>
+            )}
+          </div>
         </div>
       ) : (
         <p className="text-sm text-text-3">Ingen aktiv placering</p>
@@ -257,9 +287,13 @@ function BankInfoCard({ bankInfo, onEdit }: { bankInfo: BankInfo | null; onEdit:
 export function EmployeeDetailPage() {
   const { id }       = useParams<{ id: string }>()
   const navigate     = useNavigate()
-  const [editProfile, setEditProfile] = useState(false)
-  const [editBank,    setEditBank]    = useState(false)
-  const [terminate,   setTerminate]   = useState(false)
+  const [editProfile,    setEditProfile]    = useState(false)
+  const [editBank,       setEditBank]       = useState(false)
+  const [terminate,      setTerminate]      = useState(false)
+  const [endAssignment,  setEndAssignment]  = useState(false)
+
+  const { showToast }      = useToast()
+  const endMutation        = useEndAssignment()
 
   const { data, isLoading, error } = useEmployee(id ?? '')
 
@@ -333,7 +367,7 @@ export function EmployeeDetailPage() {
                   </p>
                 )}
                 {memberSince && (
-                  <p className="text-xs text-text-3">Medlem sedan {memberSince}</p>
+                  <p className="text-xs text-text-3">Anställd sedan {memberSince}</p>
                 )}
               </div>
             </Card>
@@ -382,7 +416,22 @@ export function EmployeeDetailPage() {
             </Card>
 
             {/* Current assignment */}
-            <CurrentAssignmentCard assignments={data.assignments ?? []} />
+            <CurrentAssignmentCard
+              assignment={data.currentAssignment ?? null}
+              onEnd={() => setEndAssignment(true)}
+              onEndImmediate={() => {
+                const a = data.currentAssignment!
+                endMutation.mutate(
+                  { id: a.id, endDate: a.endDate ?? format(new Date(), 'yyyy-MM-dd') },
+                  {
+                    onSuccess: () => {
+                      showToast('Konsulten är nu oplacerad', 'success')
+                    },
+                  }
+                )
+              }}
+              endingPending={endMutation.isPending}
+            />
 
             {/* Assignments */}
             <Card title="Uppdragshistorik">
@@ -421,6 +470,30 @@ export function EmployeeDetailPage() {
           onClose={() => setTerminate(false)}
         />
       )}
+
+      {endAssignment && data.currentAssignment && (() => {
+        const a = data.currentAssignment
+        const initials = (p ? `${p.firstName[0]}${p.lastName[0]}` : name.slice(0, 2)).toUpperCase()
+        const dto: AssignmentDto = {
+          id:          a.id,
+          employeeId:  a.employeeId,
+          fullName:    name,
+          initials,
+          jobTitle:    p?.jobTitle ?? null,
+          clientId:    a.clientId,
+          companyName: a.companyName,
+          projectName: a.projectName,
+          startDate:   a.startDate,
+          endDate:     a.endDate,
+          status:      'ACTIVE',
+        }
+        return (
+          <EndAssignmentConfirmModal
+            assignment={dto}
+            onClose={() => setEndAssignment(false)}
+          />
+        )
+      })()}
     </>
   )
 }

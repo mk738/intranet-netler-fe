@@ -139,6 +139,7 @@ export interface NewClientDto {
   orgNumber:    string | null
   contactName:  string | null
   contactEmail: string | null
+  phone:        string | null
   status:       'ACTIVE' | 'PROSPECT'
 }
 
@@ -265,7 +266,7 @@ export interface CreateNewsRequest {
   title:          string
   body:           string
   pinned:         boolean
-  publish:        boolean
+  published:      boolean
   coverImageData: string | null
   coverImageType: string | null
 }

@@ -5,9 +5,10 @@ import type { Employee, BankInfo, Education, Assignment, BenefitDto, ApiResponse
 // ── Extended detail response ──────────────────────────────────
 
 export interface EmployeeDetail extends Employee {
-  bankInfo:    BankInfo | null
-  education:   Education[]
-  assignments: Assignment[]
+  bankInfo:          BankInfo | null
+  education:         Education[]
+  assignments:       Assignment[]
+  currentAssignment: Assignment | null
 }
 
 // ── Queries ───────────────────────────────────────────────────

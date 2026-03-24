@@ -105,9 +105,7 @@ export function NewsDetailPage() {
             {!post.publishedAt && (
               <Button
                 loading={publishMutation.isPending}
-                onClick={() => publishMutation.mutate(undefined, {
-                  onSuccess: () => navigate(0),
-                })}
+                onClick={() => publishMutation.mutate()}
               >
                 Publicera
               </Button>
