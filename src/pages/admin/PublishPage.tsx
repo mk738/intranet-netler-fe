@@ -33,9 +33,6 @@ const eventSchema = z.object({
   location:    z.string().optional(),
   allDay:      z.boolean(),
   description: z.string().optional(),
-}).refine(d => !d.endDate || !d.eventDate || d.endDate >= d.eventDate, {
-  message: 'Slutdatum måste vara på eller efter startdatum',
-  path: ['endDate'],
 })
 
 type NewsForm  = z.infer<typeof newsSchema>
@@ -191,7 +188,8 @@ function EventForm({ onDone }: { onDone: () => void }) {
     resolver: zodResolver(eventSchema),
     defaultValues: { title: '', eventDate: '', endDate: '', startTime: '', endTime: '', location: '', allDay: true, description: '' },
   })
-  const allDay = useWatch({ control, name: 'allDay' })
+  const allDay    = useWatch({ control, name: 'allDay' })
+  const eventDate = useWatch({ control, name: 'eventDate' })
 
   const onSubmit = (data: EventForm) => {
     mutation.mutate(
@@ -231,7 +229,7 @@ function EventForm({ onDone }: { onDone: () => void }) {
       {/* Dates */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="field-label">Datum *</label>
+          <label className="field-label">Startdatum *</label>
           <Controller
             control={control}
             name="eventDate"
@@ -254,6 +252,7 @@ function EventForm({ onDone }: { onDone: () => void }) {
               <DatePicker
                 value={field.value ?? ''}
                 onChange={field.onChange}
+                min={eventDate || undefined}
                 placeholder="Välj slutdatum"
               />
             )}
@@ -265,7 +264,7 @@ function EventForm({ onDone }: { onDone: () => void }) {
       {/* Location */}
       <div>
         <label className="field-label">Plats</label>
-        <input {...register('location')} className="field-input" placeholder="t.ex. Kontoret, plan 3" />
+        <input {...register('location')} autoComplete="off" className="field-input" placeholder="t.ex. Kontoret, plan 3" />
       </div>
 
       {/* All day */}
@@ -273,7 +272,7 @@ function EventForm({ onDone }: { onDone: () => void }) {
         <input
           type="checkbox"
           {...register('allDay')}
-          className="w-4 h-4 rounded border border-mild bg-bg-input
+          className="appearance-none w-4 h-4 rounded border border-mild bg-bg-input
                      checked:bg-purple-dark checked:border-purple
                      focus:ring-0 focus:outline-none cursor-pointer"
         />

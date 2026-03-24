@@ -142,8 +142,12 @@ export function PlacementsPage() {
                       {group.assignments.length} konsult{group.assignments.length !== 1 ? 'er' : ''}
                     </span>
                   </div>
-                  <span className={group.clientStatus === 'ACTIVE' ? 'badge-active' : 'badge-prospect'}>
-                    {group.clientStatus}
+                  <span className={
+                    group.clientStatus === 'ACTIVE'   ? 'badge-active'   :
+                    group.clientStatus === 'PROSPECT' ? 'badge-prospect' :
+                                                        'badge-ended'
+                  }>
+                    {group.clientStatus === 'ACTIVE' ? 'Aktiv' : group.clientStatus === 'PROSPECT' ? 'Prospekt' : 'Inaktiv'}
                   </span>
                 </div>
 
@@ -169,7 +173,7 @@ export function PlacementsPage() {
                       <tr key={a.id} className="table-row">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2.5">
-                            <Avatar name={a.fullName} avatarUrl={null} size="sm" />
+                            <Avatar name={a.fullName} avatarUrl={a.avatarUrl} size="sm" />
                             <div className="min-w-0">
                               <p className="text-sm font-medium text-text-1 truncate">{a.fullName}</p>
                               {a.jobTitle && <p className="text-xs text-text-3 truncate">{a.jobTitle}</p>}
@@ -226,7 +230,7 @@ export function PlacementsPage() {
                     <tr key={u.employeeId} className="table-row">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
-                          <Avatar name={u.fullName} avatarUrl={null} size="sm" />
+                          <Avatar name={u.fullName} avatarUrl={u.avatarUrl} size="sm" />
                           <div>
                             <p className="text-sm font-medium text-text-1">{u.fullName}</p>
                             {u.jobTitle && <p className="text-xs text-text-3">{u.jobTitle}</p>}

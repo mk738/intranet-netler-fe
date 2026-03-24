@@ -81,6 +81,13 @@
     @apply w-full px-3 py-2 bg-bg-input border border-mild rounded text-sm
            text-text-1 placeholder:text-text-3
            focus:border-purple focus:outline-none transition-colors;
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover,
+    &:-webkit-autofill:focus {
+      -webkit-box-shadow: 0 0 0 1000px #150f20 inset !important;
+      -webkit-text-fill-color: #e2dff0 !important;
+      caret-color: #e2dff0;
+    }
   }
 
   /* Table */
