@@ -12,10 +12,11 @@ import { EditProfileModal } from '@/components/employees/EditProfileModal'
 import { EditBankModal } from '@/components/employees/EditBankModal'
 import { TerminateEmploymentModal } from '@/components/employees/TerminateEmploymentModal'
 import { EndAssignmentConfirmModal } from '@/components/placements/EndAssignmentConfirmModal'
+import { AssignConsultantModal } from '@/components/placements/AssignConsultantModal'
 import { BenefitsCard } from '@/components/employees/BenefitsCard'
 import { EmploymentContractCard } from '@/components/employees/EmploymentContractCard'
 import { CvCard } from '@/components/employees/CvCard'
-import type { BankInfo, Education, Assignment, AssignmentDto } from '@/types'
+import type { BankInfo, Education, Assignment, AssignmentDto, UnplacedDto } from '@/types'
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -81,11 +82,13 @@ function CurrentAssignmentCard({
   assignment,
   onEnd,
   onEndImmediate,
+  onAssign,
   endingPending,
 }: {
   assignment:     Assignment | null
   onEnd:          () => void
   onEndImmediate: () => void
+  onAssign:       () => void
   endingPending:  boolean
 }) {
   const isEnded = assignment?.status === 'ENDED'
@@ -98,7 +101,8 @@ function CurrentAssignmentCard({
             <p className="text-sm font-medium text-text-1">{assignment.projectName}</p>
             <p className="text-xs text-text-2 mt-0.5">{assignment.companyName}</p>
             <p className="text-xs text-text-3 mt-0.5">
-              Startade {format(new Date(assignment.startDate), 'MMM yyyy', { locale: sv })}
+              {assignment.startDate > format(new Date(), 'yyyy-MM-dd') ? 'Startar' : 'Startade'}{' '}
+              {format(new Date(assignment.startDate + 'T00:00:00'), 'd MMM yyyy', { locale: sv })}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -120,7 +124,10 @@ function CurrentAssignmentCard({
           </div>
         </div>
       ) : (
-        <p className="text-sm text-text-3">Ingen aktiv placering</p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-text-3">Ingen aktiv placering</p>
+          <Button size="sm" onClick={onAssign}>Tilldela uppdrag</Button>
+        </div>
       )}
     </Card>
   )
@@ -291,6 +298,7 @@ export function EmployeeDetailPage() {
   const [editBank,       setEditBank]       = useState(false)
   const [terminate,      setTerminate]      = useState(false)
   const [endAssignment,  setEndAssignment]  = useState(false)
+  const [assignOpen,     setAssignOpen]     = useState(false)
 
   const { showToast }      = useToast()
   const endMutation        = useEndAssignment()
@@ -430,6 +438,7 @@ export function EmployeeDetailPage() {
                   }
                 )
               }}
+              onAssign={() => setAssignOpen(true)}
               endingPending={endMutation.isPending}
             />
 
@@ -471,6 +480,25 @@ export function EmployeeDetailPage() {
         />
       )}
 
+      {assignOpen && (() => {
+        const initials = (p ? `${p.firstName[0]}${p.lastName[0]}` : name.slice(0, 2)).toUpperCase()
+        const unplaced: UnplacedDto = {
+          employeeId:       data.id,
+          fullName:         name,
+          initials,
+          jobTitle:         p?.jobTitle ?? null,
+          avatarUrl:        p?.avatarUrl ?? null,
+          lastPlacedClient: null,
+          lastPlacedDate:   null,
+        }
+        return (
+          <AssignConsultantModal
+            employee={unplaced}
+            onClose={() => setAssignOpen(false)}
+          />
+        )
+      })()}
+
       {endAssignment && data.currentAssignment && (() => {
         const a = data.currentAssignment
         const initials = (p ? `${p.firstName[0]}${p.lastName[0]}` : name.slice(0, 2)).toUpperCase()
@@ -480,6 +508,7 @@ export function EmployeeDetailPage() {
           fullName:    name,
           initials,
           jobTitle:    p?.jobTitle ?? null,
+          avatarUrl:   p?.avatarUrl ?? null,
           clientId:    a.clientId,
           companyName: a.companyName,
           projectName: a.projectName,

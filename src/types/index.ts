@@ -60,6 +60,7 @@ export interface VacationDto {
   employeeId:       string
   employeeName:     string
   employeeInitials: string
+  employeeAvatarUrl: string | null
   startDate:        string
   endDate:          string
   daysCount:        number
@@ -168,6 +169,7 @@ export interface AssignmentDto {
   fullName:    string
   initials:    string
   jobTitle:    string | null
+  avatarUrl:   string | null
   clientId:    string
   companyName: string
   projectName: string
@@ -189,6 +191,7 @@ export interface UnplacedDto {
   fullName:         string
   initials:         string
   jobTitle:         string | null
+  avatarUrl:        string | null
   lastPlacedClient: string | null
   lastPlacedDate:   string | null
 }

@@ -156,7 +156,7 @@ export function CrmDetailPage() {
                 {activeConsultants.map(a => (
                   <li key={a.id} className="flex items-start justify-between gap-3 border-b border-subtle last:border-0 pb-3 last:pb-0">
                     <div className="flex items-start gap-2.5">
-                      <Avatar name={a.fullName} avatarUrl={null} size="sm" />
+                      <Avatar name={a.fullName} avatarUrl={a.avatarUrl} size="sm" />
                       <div>
                         <p className="text-sm font-medium text-text-1">{a.fullName}</p>
                         {a.jobTitle && <p className="text-xs text-text-3">{a.jobTitle}</p>}

@@ -24,9 +24,6 @@ const schema = z.object({
   location:    z.string().optional(),
   allDay:      z.boolean(),
   description: z.string().optional(),
-}).refine(d => !d.endDate || !d.eventDate || d.endDate >= d.eventDate, {
-  message: 'Slutdatum måste vara på eller efter startdatum',
-  path:    ['endDate'],
 })
 
 type FormData = z.infer<typeof schema>
@@ -51,7 +48,8 @@ export function EventCreatePage() {
     resolver: zodResolver(schema),
     defaultValues: { title: '', eventDate: '', startTime: '', endDate: '', endTime: '', location: '', allDay: true, description: '' },
   })
-  const allDay = useWatch({ control, name: 'allDay' })
+  const allDay    = useWatch({ control, name: 'allDay' })
+  const eventDate = useWatch({ control, name: 'eventDate' })
 
   // Pre-fill form when editing
   useEffect(() => {
@@ -128,7 +126,7 @@ export function EventCreatePage() {
           {/* Date row */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="field-label">Datum *</label>
+              <label className="field-label">Startdatum *</label>
               <Controller
                 control={control}
                 name="eventDate"
@@ -152,6 +150,7 @@ export function EventCreatePage() {
                   <DatePicker
                     value={field.value ?? ''}
                     onChange={field.onChange}
+                    min={eventDate || undefined}
                     placeholder="Välj slutdatum"
                     className={clsx(errors.endDate && 'ring-1 ring-danger rounded')}
                   />
@@ -166,6 +165,7 @@ export function EventCreatePage() {
             <label className="field-label">Plats</label>
             <input
               {...register('location')}
+              autoComplete="off"
               className="field-input"
               placeholder="t.ex. Kontoret, plan 3"
             />
@@ -176,7 +176,7 @@ export function EventCreatePage() {
             <input
               type="checkbox"
               {...register('allDay')}
-              className="w-4 h-4 rounded border border-mild bg-bg-input
+              className="appearance-none w-4 h-4 rounded border border-mild bg-bg-input
                          checked:bg-purple-dark checked:border-purple
                          focus:ring-0 focus:outline-none cursor-pointer"
             />

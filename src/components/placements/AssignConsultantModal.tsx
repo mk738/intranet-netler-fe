@@ -163,7 +163,7 @@ export function AssignConsultantModal({ employee, onClose }: Props) {
       <form id="assign-form" onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         {/* Consultant chip */}
         <div className="flex items-center gap-3 bg-bg-hover border border-mild rounded-lg p-3">
-          <Avatar name={employee.fullName} avatarUrl={null} size="md" />
+          <Avatar name={employee.fullName} avatarUrl={employee.avatarUrl} size="md" />
           <div className="min-w-0">
             <p className="text-sm font-medium text-text-1">{employee.fullName}</p>
             {employee.jobTitle && (

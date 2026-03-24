@@ -190,7 +190,7 @@ export function VacationReviewPage() {
                     {/* Employee */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <Avatar name={v.employeeName} avatarUrl={null} size="sm" />
+                        <Avatar name={v.employeeName} avatarUrl={v.employeeAvatarUrl} size="sm" />
                         <span className="text-text-1 font-medium truncate max-w-[140px]">{v.employeeName}</span>
                       </div>
                     </td>
