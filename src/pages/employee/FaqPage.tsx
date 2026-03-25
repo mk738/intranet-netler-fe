@@ -196,11 +196,11 @@ export function FaqPage() {
     item.answer.toLowerCase().includes(search.toLowerCase())
   )
 
-  // Group by category
-  const grouped = filtered.reduce<Record<string, FaqItem[]>>((acc, item) => {
-    const key = item.category ?? 'Övrigt'
-    if (!acc[key]) acc[key] = []
-    acc[key].push(item)
+  // Group by category — case insensitive, display first-seen casing
+  const grouped = filtered.reduce<Record<string, { display: string; items: FaqItem[] }>>((acc, item) => {
+    const key = (item.category ?? 'Övrigt').trim().toLowerCase()
+    if (!acc[key]) acc[key] = { display: item.category ?? 'Övrigt', items: [] }
+    acc[key].items.push(item)
     return acc
   }, {})
 
@@ -241,10 +241,10 @@ export function FaqPage() {
           />
         ) : (
           <div className="space-y-6">
-            {Object.entries(grouped).map(([category, catItems]) => (
-              <div key={category} className="space-y-2">
+            {Object.entries(grouped).map(([key, { display, items: catItems }]) => (
+              <div key={key} className="space-y-2">
                 {Object.keys(grouped).length > 1 && (
-                  <p className="section-label">{category}</p>
+                  <p className="section-label">{display}</p>
                 )}
                 {catItems.map(item => (
                   <FaqAccordion
