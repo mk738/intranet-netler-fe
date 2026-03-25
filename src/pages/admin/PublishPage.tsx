@@ -82,7 +82,7 @@ function NewsForm({ onDone }: { onDone: () => void }) {
 
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<NewsForm>({
     resolver: zodResolver(newsSchema),
-    defaultValues: { title: '', body: '', pinned: false, category: '' },
+    defaultValues: { title: '', body: '', pinned: false, category: 'Allmänt' },
   })
 
   const bodyValue = watch('body')
@@ -125,7 +125,11 @@ function NewsForm({ onDone }: { onDone: () => void }) {
         </div>
         <div>
           <label className="field-label">Kategori</label>
-          <input {...register('category')} className="field-input" placeholder="t.ex. Nyheter, HR, IT" />
+          <select {...register('category')} className="field-select">
+            {['Allmänt', 'HR', 'IT', 'Månadsbrev', 'Ekonomi'].map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
         </div>
       </div>
 

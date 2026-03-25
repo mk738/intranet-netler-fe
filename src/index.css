@@ -77,6 +77,15 @@
     @apply block text-xs font-medium text-text-3 uppercase tracking-wide mb-1.5;
   }
 
+  .field-select {
+    @apply w-full pl-3 pr-8 py-2 bg-bg-input border border-mild rounded-lg text-sm
+           text-text-1 focus:border-purple focus:outline-none transition-colors
+           appearance-none cursor-pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6b80' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+
   .field-input {
     @apply w-full px-3 py-2 bg-bg-input border border-mild rounded text-sm
            text-text-1 placeholder:text-text-3
