@@ -83,6 +83,11 @@ export function NewsDetailPage() {
           <span className="text-sm text-text-2">{post.authorName}</span>
           <span className="text-text-3">·</span>
           <span className="text-sm text-text-3">{formatShortDate(post.publishedAt ?? post.createdAt)}</span>
+          {post.category && (
+            <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-bg-hover text-text-3 border border-subtle ml-1">
+              {post.category}
+            </span>
+          )}
           {post.pinned && (
             <span className="badge-active ml-1">Fäst</span>
           )}

@@ -16,14 +16,17 @@ import { FieldError } from '@/components/ui/FieldError'
 import { FormError } from '@/components/ui/FormError'
 import { getApiError } from '@/lib/api'
 
+const NEWS_CATEGORIES = ['Allmänt', 'HR', 'IT', 'Månadsbrev', 'Ekonomi'] as const
+
 const schema = z.object({
-  title:   z.string().min(1, 'Titel krävs').max(300, 'Titeln är för lång'),
-  body:    z.string().refine(html => {
+  title:    z.string().min(1, 'Titel krävs').max(300, 'Titeln är för lång'),
+  body:     z.string().refine(html => {
     const text = html.replace(/<[^>]*>/g, '').trim()
     return text.length > 0
   }, 'Innehåll krävs'),
-  pinned:  z.boolean(),
-  publish: z.boolean(),
+  category: z.string(),
+  pinned:   z.boolean(),
+  publish:  z.boolean(),
 })
 
 type FormData = z.infer<typeof schema>
@@ -47,15 +50,16 @@ export function NewsCreatePage() {
 
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { title: '', body: '', pinned: false, publish: true },
+    defaultValues: { title: '', body: '', category: '', pinned: false, publish: true },
   })
 
   // Pre-fill form when editing
   useEffect(() => {
     if (!existing || !isEdit) return
-    setValue('title',  existing.title)
-    setValue('body',   existing.body)
-    setValue('pinned', existing.pinned)
+    setValue('title',    existing.title)
+    setValue('body',     existing.body)
+    setValue('category', existing.category ?? '')
+    setValue('pinned',   existing.pinned)
     if (existing.coverImageData && existing.coverImageType) {
       setCoverImage({ data: existing.coverImageData, type: existing.coverImageType })
     }
@@ -69,7 +73,7 @@ export function NewsCreatePage() {
       body:           data.body,
       pinned:         data.pinned,
       published:      data.publish,
-      category:       null,
+      category:       data.category || null,
       coverImageData: coverImage?.data ?? null,
       coverImageType: coverImage?.type ?? null,
     }
@@ -119,6 +123,20 @@ export function NewsCreatePage() {
               placeholder="Inläggets titel"
             />
             <FieldError message={errors.title?.message} />
+          </div>
+
+          {/* Category */}
+          <div>
+            <label className="field-label">Kategori</label>
+            <select
+              {...register('category')}
+              className="field-select"
+            >
+              <option value="">Ingen kategori</option>
+              {NEWS_CATEGORIES.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
           </div>
 
           {/* Cover image */}

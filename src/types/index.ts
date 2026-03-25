@@ -239,6 +239,7 @@ export interface NewsPostDto {
   pinned:         boolean
   hasCoverImage:  boolean
   coverImageType: string | null
+  category:       string | null
 }
 
 export interface NewsPostDetailDto extends NewsPostDto {
