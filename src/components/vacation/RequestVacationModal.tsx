@@ -66,6 +66,7 @@ export function RequestVacationModal({ onClose }: Props) {
     <Modal
       title="Ansök om ledighet"
       onClose={onClose}
+      disableBackdropClose
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>Avbryt</Button>

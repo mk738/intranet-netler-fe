@@ -112,6 +112,7 @@ function FaqModal({
     <Modal
       title={existing ? 'Redigera fråga' : 'Ny fråga'}
       onClose={onClose}
+      disableBackdropClose
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>Avbryt</Button>
