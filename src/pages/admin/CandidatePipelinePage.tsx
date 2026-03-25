@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -6,57 +6,21 @@ import { format } from 'date-fns'
 import { sv } from 'date-fns/locale'
 import { Modal, Button } from '@/components/ui'
 import { FieldError } from '@/components/ui/FieldError'
+import { useToast } from '@/components/ui/Toast'
+import { getApiError } from '@/lib/api'
+import { useCandidates, useCreateCandidate, usePatchCandidate, useDeleteCandidate } from '@/hooks/useCandidates'
+import type { CandidateDto } from '@/types'
 
-// ── Types & constants ──────────────────────────────────────────
-
-export interface Candidate {
-  id:        string
-  name:      string
-  role:      string
-  email:     string
-  phone:     string
-  notes:     string
-  stage:     number
-  createdAt: string
-}
+// ── Constants ──────────────────────────────────────────────────
 
 const LANES = [
-  { id: 0, label: 'Ny kontakt',   accent: 'text-text-2',       dot: 'bg-text-3',     top: 'border-t-text-3/40'       },
-  { id: 1, label: 'Möte bokat',   accent: 'text-purple-light', dot: 'bg-purple',     top: 'border-t-purple'          },
-  { id: 2, label: 'Intervju',     accent: 'text-amber-300',    dot: 'bg-amber-400',  top: 'border-t-amber-400'       },
-  { id: 3, label: 'Referenskoll', accent: 'text-sky-300',      dot: 'bg-sky-400',    top: 'border-t-sky-400'         },
-  { id: 4, label: 'Erbjudande',   accent: 'text-success',      dot: 'bg-success',    top: 'border-t-success'         },
-  { id: 5, label: 'Anställd',     accent: 'text-emerald-300',  dot: 'bg-emerald-400',top: 'border-t-emerald-400'     },
+  { id: 0, label: 'Ny kontakt',   accent: 'text-text-2',       dot: 'bg-text-3',      top: 'border-t-text-3/40'   },
+  { id: 1, label: 'Möte bokat',   accent: 'text-purple-light', dot: 'bg-purple',      top: 'border-t-purple'      },
+  { id: 2, label: 'Intervju',     accent: 'text-amber-300',    dot: 'bg-amber-400',   top: 'border-t-amber-400'   },
+  { id: 3, label: 'Referenskoll', accent: 'text-sky-300',      dot: 'bg-sky-400',     top: 'border-t-sky-400'     },
+  { id: 4, label: 'Erbjudande',   accent: 'text-success',      dot: 'bg-success',     top: 'border-t-success'     },
+  { id: 5, label: 'Anställd',     accent: 'text-emerald-300',  dot: 'bg-emerald-400', top: 'border-t-emerald-400' },
 ]
-
-const STORAGE_KEY = 'candidate_pipeline_v1'
-
-// ── Mock seed data ─────────────────────────────────────────────
-
-const MOCK_CANDIDATES: Candidate[] = [
-  { id: '1', name: 'Erik Lindqvist',   role: 'Backend-utvecklare',    email: 'erik@example.com',   phone: '070-111 22 33', notes: 'Stark Java-bakgrund, 5 års erfarenhet. Söker remote-möjligheter.', stage: 0, createdAt: '2026-03-10T09:00:00Z' },
-  { id: '2', name: 'Sara Björk',       role: 'Fullstack-utvecklare',  email: 'sara@example.com',   phone: '073-444 55 66', notes: 'React + Node. Tidigare på Spotify.', stage: 0, createdAt: '2026-03-12T11:00:00Z' },
-  { id: '3', name: 'Jonas Holm',       role: 'DevOps-ingenjör',       email: 'jonas@example.com',  phone: '076-777 88 99', notes: 'Certifierad AWS-arkitekt. Tillgänglig omgående.', stage: 1, createdAt: '2026-03-05T08:30:00Z' },
-  { id: '4', name: 'Mia Sandström',    role: 'UX-designer',           email: 'mia@example.com',    phone: '072-123 45 67', notes: 'Figma-expert, tidigare konsultbyrå. Möte bokat 28 mars.', stage: 1, createdAt: '2026-03-08T14:00:00Z' },
-  { id: '5', name: 'Anton Persson',    role: 'Frontend-utvecklare',   email: 'anton@example.com',  phone: '070-987 65 43', notes: 'Vue & React. Bra personlighetsintryck, teknisk intervju genomförd.', stage: 2, createdAt: '2026-02-28T10:00:00Z' },
-  { id: '6', name: 'Lena Gustafsson', role: 'Projektledare',          email: 'lena@example.com',   phone: '073-222 33 44', notes: 'PMP-certifierad, van vid agila team. Intervju gick mycket bra.', stage: 3, createdAt: '2026-02-20T09:00:00Z' },
-  { id: '7', name: 'David Nilsson',    role: 'Systemarkitekt',        email: 'david@example.com',  phone: '076-555 44 33', notes: 'Erbjudande skickat 20 mars. Väntar på svar senast 28 mars.', stage: 4, createdAt: '2026-02-15T08:00:00Z' },
-  { id: '8', name: 'Hanna Wik',        role: 'iOS-utvecklare',        email: 'hanna@example.com',  phone: '072-888 77 66', notes: 'Startdatum 1 april. Onboarding-process påbörjad.', stage: 5, createdAt: '2026-02-01T10:00:00Z' },
-]
-
-// ── localStorage helpers ───────────────────────────────────────
-
-function loadCandidates(): Candidate[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw) as Candidate[]
-  } catch { /* ignore */ }
-  return MOCK_CANDIDATES
-}
-
-function saveCandidates(candidates: Candidate[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(candidates))
-}
 
 // ── Candidate form modal ───────────────────────────────────────
 
@@ -72,14 +36,17 @@ type FormData = z.infer<typeof schema>
 function CandidateModal({
   existing,
   defaultStage,
-  onSave,
   onClose,
 }: {
-  existing?:     Candidate
-  defaultStage:  number
-  onSave:        (data: FormData, stage: number) => void
-  onClose:       () => void
+  existing?:    CandidateDto
+  defaultStage: number
+  onClose:      () => void
 }) {
+  const { showToast }  = useToast()
+  const createMutation = useCreateCandidate()
+  const patchMutation  = usePatchCandidate()
+  const isPending      = createMutation.isPending || patchMutation.isPending
+
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -93,7 +60,30 @@ function CandidateModal({
 
   const [stage, setStage] = useState(existing?.stage ?? defaultStage)
 
-  const onSubmit = (data: FormData) => onSave(data, stage)
+  const onSubmit = (data: FormData) => {
+    const payload = {
+      name:  data.name,
+      role:  data.role,
+      email: data.email || null,
+      phone: data.phone || null,
+      notes: data.notes || null,
+      stage,
+    }
+
+    if (existing) {
+      patchMutation.mutate({ id: existing.id, data: payload }, {
+        onSuccess: () => { showToast('Kandidat uppdaterad', 'success'); onClose() },
+      })
+    } else {
+      createMutation.mutate(payload, {
+        onSuccess: () => { showToast('Kandidat tillagd', 'success'); onClose() },
+      })
+    }
+  }
+
+  const apiError = (createMutation.isError || patchMutation.isError)
+    ? getApiError(createMutation.error ?? patchMutation.error)
+    : null
 
   return (
     <Modal
@@ -103,7 +93,7 @@ function CandidateModal({
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>Avbryt</Button>
-          <Button form="candidate-form" type="submit">
+          <Button form="candidate-form" type="submit" loading={isPending}>
             {existing ? 'Spara' : 'Lägg till'}
           </Button>
         </>
@@ -136,11 +126,7 @@ function CandidateModal({
 
         <div>
           <label className="field-label">Steg</label>
-          <select
-            value={stage}
-            onChange={e => setStage(Number(e.target.value))}
-            className="field-input"
-          >
+          <select value={stage} onChange={e => setStage(Number(e.target.value))} className="field-input">
             {LANES.map(l => (
               <option key={l.id} value={l.id}>{l.label}</option>
             ))}
@@ -155,6 +141,10 @@ function CandidateModal({
             placeholder="Kort notering om kandidaten..."
           />
         </div>
+
+        {apiError && (
+          <p className="text-xs text-danger bg-danger-bg border border-danger/20 rounded px-3 py-2">{apiError}</p>
+        )}
       </form>
     </Modal>
   )
@@ -162,7 +152,10 @@ function CandidateModal({
 
 // ── Delete confirm modal ───────────────────────────────────────
 
-function DeleteModal({ name, onConfirm, onClose }: { name: string; onConfirm: () => void; onClose: () => void }) {
+function DeleteModal({ candidate, onClose }: { candidate: CandidateDto; onClose: () => void }) {
+  const { showToast } = useToast()
+  const mutation      = useDeleteCandidate()
+
   return (
     <Modal
       title="Ta bort kandidat?"
@@ -170,12 +163,20 @@ function DeleteModal({ name, onConfirm, onClose }: { name: string; onConfirm: ()
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>Avbryt</Button>
-          <Button variant="danger" onClick={onConfirm}>Ta bort</Button>
+          <Button
+            variant="danger"
+            loading={mutation.isPending}
+            onClick={() => mutation.mutate(candidate.id, {
+              onSuccess: () => { showToast('Kandidat borttagen', 'success'); onClose() },
+            })}
+          >
+            Ta bort
+          </Button>
         </>
       }
     >
       <p className="text-sm text-text-2">
-        <span className="font-medium text-text-1">{name}</span> tas bort permanent från pipelinen.
+        <span className="font-medium text-text-1">{candidate.name}</span> tas bort permanent från pipelinen.
       </p>
     </Modal>
   )
@@ -187,16 +188,20 @@ function CandidateCard({
   candidate,
   onEdit,
   onDelete,
-  onMove,
 }: {
-  candidate: Candidate
+  candidate: CandidateDto
   onEdit:    () => void
   onDelete:  () => void
-  onMove:    (dir: -1 | 1) => void
 }) {
+  const patchMutation = usePatchCandidate()
   const isFirst = candidate.stage === 0
   const isLast  = candidate.stage === LANES.length - 1
   const dateStr = format(new Date(candidate.createdAt), 'd MMM', { locale: sv })
+
+  const handleMove = (dir: -1 | 1) => {
+    const newStage = Math.max(0, Math.min(LANES.length - 1, candidate.stage + dir))
+    patchMutation.mutate({ id: candidate.id, data: { stage: newStage } })
+  }
 
   return (
     <div className="group bg-bg border border-subtle rounded-lg p-3.5 space-y-2.5 hover:border-mild transition-colors">
@@ -235,12 +240,8 @@ function CandidateCard({
       {/* Contact info */}
       {(candidate.email || candidate.phone) && (
         <div className="space-y-0.5">
-          {candidate.email && (
-            <p className="text-xs text-text-3 truncate">{candidate.email}</p>
-          )}
-          {candidate.phone && (
-            <p className="text-xs text-text-3">{candidate.phone}</p>
-          )}
+          {candidate.email && <p className="text-xs text-text-3 truncate">{candidate.email}</p>}
+          {candidate.phone && <p className="text-xs text-text-3">{candidate.phone}</p>}
         </div>
       )}
 
@@ -254,23 +255,31 @@ function CandidateCard({
         <span className="text-[10px] text-text-3">{dateStr}</span>
         <div className="flex items-center gap-1">
           <button
-            onClick={() => onMove(-1)}
-            disabled={isFirst}
+            onClick={() => handleMove(-1)}
+            disabled={isFirst || patchMutation.isPending}
             title="Flytta bakåt"
             className="w-5 h-5 flex items-center justify-center rounded text-text-3 hover:text-text-1 hover:bg-bg-hover transition-colors disabled:opacity-25 disabled:cursor-not-allowed"
-          >
-            ←
-          </button>
+          >←</button>
           <button
-            onClick={() => onMove(1)}
-            disabled={isLast}
+            onClick={() => handleMove(1)}
+            disabled={isLast || patchMutation.isPending}
             title="Flytta framåt"
             className="w-5 h-5 flex items-center justify-center rounded text-text-3 hover:text-text-1 hover:bg-bg-hover transition-colors disabled:opacity-25 disabled:cursor-not-allowed"
-          >
-            →
-          </button>
+          >→</button>
         </div>
       </div>
+    </div>
+  )
+}
+
+// ── Skeleton ───────────────────────────────────────────────────
+
+function SkeletonCard() {
+  return (
+    <div className="bg-bg border border-subtle rounded-lg p-3.5 space-y-2.5 animate-pulse">
+      <div className="h-4 w-32 bg-bg-hover rounded" />
+      <div className="h-3 w-20 bg-bg-hover rounded" />
+      <div className="h-3 w-full bg-bg-hover rounded" />
     </div>
   )
 }
@@ -278,50 +287,11 @@ function CandidateCard({
 // ── Page ───────────────────────────────────────────────────────
 
 export function CandidatePipelinePage() {
-  const [candidates, setCandidates] = useState<Candidate[]>(loadCandidates)
-  const [modal, setModal]           = useState<{ mode: 'add'; stage: number } | { mode: 'edit'; candidate: Candidate } | null>(null)
-  const [deleteTarget, setDeleteTarget] = useState<Candidate | null>(null)
+  const { data: candidates, isLoading } = useCandidates()
+  const [modal, setModal]               = useState<{ mode: 'add'; stage: number } | { mode: 'edit'; candidate: CandidateDto } | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<CandidateDto | null>(null)
 
-  // Persist to localStorage on every change
-  useEffect(() => {
-    saveCandidates(candidates)
-  }, [candidates])
-
-  const handleSave = (data: FormData, stage: number) => {
-    if (modal?.mode === 'edit') {
-      setCandidates(prev => prev.map(c =>
-        c.id === modal.candidate.id
-          ? { ...c, ...data, stage }
-          : c
-      ))
-    } else {
-      const newCandidate: Candidate = {
-        id:        crypto.randomUUID(),
-        name:      data.name,
-        role:      data.role,
-        email:     data.email ?? '',
-        phone:     data.phone ?? '',
-        notes:     data.notes ?? '',
-        stage,
-        createdAt: new Date().toISOString(),
-      }
-      setCandidates(prev => [...prev, newCandidate])
-    }
-    setModal(null)
-  }
-
-  const handleDelete = (id: string) => {
-    setCandidates(prev => prev.filter(c => c.id !== id))
-    setDeleteTarget(null)
-  }
-
-  const handleMove = (id: string, dir: -1 | 1) => {
-    setCandidates(prev => prev.map(c =>
-      c.id === id
-        ? { ...c, stage: Math.max(0, Math.min(LANES.length - 1, c.stage + dir)) }
-        : c
-    ))
-  }
+  const total = candidates?.length ?? 0
 
   return (
     <>
@@ -330,9 +300,11 @@ export function CandidatePipelinePage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold text-text-1">Kandidatpipeline</h1>
-            <p className="text-sm text-text-3 mt-0.5">
-              {candidates.length} kandidat{candidates.length !== 1 ? 'er' : ''} totalt
-            </p>
+            {!isLoading && (
+              <p className="text-sm text-text-3 mt-0.5">
+                {total} kandidat{total !== 1 ? 'er' : ''} totalt
+              </p>
+            )}
           </div>
           <Button onClick={() => setModal({ mode: 'add', stage: 0 })}>
             + Lägg till kandidat
@@ -343,10 +315,9 @@ export function CandidatePipelinePage() {
         <div className="overflow-x-auto pb-4 -mx-1 px-1">
           <div className="flex gap-4" style={{ minWidth: `${LANES.length * 288 + (LANES.length - 1) * 16}px` }}>
             {LANES.map(lane => {
-              const laneCards = candidates.filter(c => c.stage === lane.id)
+              const laneCards = (candidates ?? []).filter(c => c.stage === lane.id)
               return (
                 <div key={lane.id} className="w-72 flex-shrink-0 flex flex-col">
-                  {/* Lane column */}
                   <div className={`flex flex-col flex-1 bg-bg-card rounded-xl border border-subtle border-t-2 ${lane.top} overflow-hidden`}>
                     {/* Lane header */}
                     <div className="flex items-center gap-2 px-4 py-3 border-b border-subtle">
@@ -356,9 +327,11 @@ export function CandidatePipelinePage() {
                       </span>
                     </div>
 
-                    {/* Card list */}
+                    {/* Cards */}
                     <div className="flex flex-col gap-2.5 p-3 flex-1">
-                      {laneCards.length === 0 ? (
+                      {isLoading ? (
+                        lane.id === 0 ? <><SkeletonCard /><SkeletonCard /></> : null
+                      ) : laneCards.length === 0 ? (
                         <div className="h-16 flex items-center justify-center">
                           <p className="text-xs text-text-3/40">Inga kandidater</p>
                         </div>
@@ -369,7 +342,6 @@ export function CandidatePipelinePage() {
                             candidate={c}
                             onEdit={() => setModal({ mode: 'edit', candidate: c })}
                             onDelete={() => setDeleteTarget(c)}
-                            onMove={dir => handleMove(c.id, dir)}
                           />
                         ))
                       )}
@@ -382,21 +354,17 @@ export function CandidatePipelinePage() {
         </div>
       </div>
 
-      {/* Add / Edit modal */}
       {modal && (
         <CandidateModal
           existing={modal.mode === 'edit' ? modal.candidate : undefined}
           defaultStage={modal.mode === 'add' ? modal.stage : modal.candidate.stage}
-          onSave={handleSave}
           onClose={() => setModal(null)}
         />
       )}
 
-      {/* Delete confirm */}
       {deleteTarget && (
         <DeleteModal
-          name={deleteTarget.name}
-          onConfirm={() => handleDelete(deleteTarget.id)}
+          candidate={deleteTarget}
           onClose={() => setDeleteTarget(null)}
         />
       )}

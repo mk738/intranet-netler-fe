@@ -312,6 +312,36 @@ export interface EventRsvpDto {
   notGoingCount: number
 }
 
+// ── Candidate pipeline ────────────────────────────────────────
+export interface CandidateDto {
+  id:        string
+  name:      string
+  role:      string
+  email:     string | null
+  phone:     string | null
+  notes:     string | null
+  stage:     number
+  createdAt: string
+}
+
+export interface CreateCandidateRequest {
+  name:  string
+  role:  string
+  email: string | null
+  phone: string | null
+  notes: string | null
+  stage: number
+}
+
+export interface PatchCandidateRequest {
+  name?:  string
+  role?:  string
+  email?: string | null
+  phone?: string | null
+  notes?: string | null
+  stage?: number
+}
+
 // ── API responses ─────────────────────────────────────────────
 export interface ApiResponse<T> {
   success: boolean
