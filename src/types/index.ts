@@ -65,6 +65,7 @@ export interface VacationDto {
   endDate:          string
   daysCount:        number
   status:           'PENDING' | 'APPROVED' | 'REJECTED'
+  reason:           string | null
   reviewedBy:       string | null
   reviewedAt:       string | null
   createdAt:        string
@@ -79,6 +80,7 @@ export interface VacationSummaryDto {
 export interface SubmitVacationRequest {
   startDate: string
   endDate:   string
+  reason:    string
 }
 
 export interface ReviewVacationRequest {
