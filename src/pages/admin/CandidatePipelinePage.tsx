@@ -200,7 +200,17 @@ function CandidateCard({
 
   const handleMove = (dir: -1 | 1) => {
     const newStage = Math.max(0, Math.min(LANES.length - 1, candidate.stage + dir))
-    patchMutation.mutate({ id: candidate.id, data: { stage: newStage } })
+    patchMutation.mutate({
+      id: candidate.id,
+      data: {
+        name:  candidate.name,
+        role:  candidate.role,
+        email: candidate.email,
+        phone: candidate.phone,
+        notes: candidate.notes,
+        stage: newStage,
+      },
+    })
   }
 
   return (
