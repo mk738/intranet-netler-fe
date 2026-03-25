@@ -62,7 +62,7 @@ function StatCard({ label, value, valueClass, active, onClick }: StatCardProps) 
 function SkeletonRow() {
   return (
     <tr className="border-b border-subtle">
-      {[28, 32, 16, 20, 16, 20].map((w, i) => (
+      {[28, 32, 24, 16, 20, 16, 20].map((w, i) => (
         <td key={i} className="px-4 py-3">
           <div className="h-3 rounded bg-bg-hover animate-pulse" style={{ width: `${w * 4}px` }} />
         </td>
@@ -409,7 +409,8 @@ export function VacationReviewPage() {
                   <thead>
                     <tr className="border-b border-subtle text-left">
                       <th className="px-4 py-3 text-xs font-medium text-text-3">Anställd</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-3">Period</th>
+                      <th className="pl-4 pr-0 py-3 text-xs font-medium text-text-3 w-52">Period</th>
+                      <th className="pl-1 pr-4 py-3 text-xs font-medium text-text-3">Anledning</th>
                       <th className="px-4 py-3 text-xs font-medium text-text-3">Dagar</th>
                       <th className="px-4 py-3 text-xs font-medium text-text-3">Inskickad</th>
                       <th className="px-4 py-3 text-xs font-medium text-text-3">Status</th>
@@ -432,7 +433,8 @@ export function VacationReviewPage() {
                   <thead>
                     <tr className="border-b border-subtle text-left">
                       <th className="px-4 py-3 text-xs font-medium text-text-3">Anställd</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-3">Period</th>
+                      <th className="pl-4 pr-0 py-3 text-xs font-medium text-text-3 w-52">Period</th>
+                      <th className="pl-1 pr-4 py-3 text-xs font-medium text-text-3">Anledning</th>
                       <th className="px-4 py-3 text-xs font-medium text-text-3">Dagar</th>
                       <th className="px-4 py-3 text-xs font-medium text-text-3">
                         <button
@@ -456,8 +458,11 @@ export function VacationReviewPage() {
                             <span className="text-text-1 font-medium truncate max-w-[140px]">{v.employeeName}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-text-2 whitespace-nowrap">
+                        <td className="pl-4 pr-0 py-3 text-text-2 w-52 whitespace-nowrap">
                           {formatDateRange(v.startDate, v.endDate)}
+                        </td>
+                        <td className="pl-1 pr-4 py-3 text-text-2">
+                          {v.reason ?? '—'}
                         </td>
                         <td className="px-4 py-3 text-text-2">
                           {v.daysCount} dag{v.daysCount !== 1 ? 'ar' : ''}
