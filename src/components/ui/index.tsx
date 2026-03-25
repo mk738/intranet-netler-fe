@@ -116,13 +116,14 @@ export function Modal({ title, onClose, children, footer, disableBackdropClose =
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: prefersReduced ? 0 : 0.15 }}
-      onClick={(e) => !disableBackdropClose && e.target === e.currentTarget && onClose()}
+      onClick={!disableBackdropClose ? onClose : undefined}
     >
       <motion.div
         className="bg-bg-card border border-mild rounded-xl w-full max-w-lg shadow-modal"
         initial={{ opacity: 0, scale: 0.96, y: -8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: prefersReduced ? 0 : 0.18, ease: 'easeOut' }}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-subtle">

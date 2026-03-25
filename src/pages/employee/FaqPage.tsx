@@ -98,7 +98,7 @@ function FaqModal({
 
   const onSubmit = (data: FaqForm) => {
     mutation.mutate(
-      { question: data.question, answer: data.answer, category: data.category || null },
+      { question: data.question, answer: data.answer, category: data.category ? data.category.trim().toUpperCase() : null },
       {
         onSuccess: () => {
           showToast(existing ? 'Fråga uppdaterad' : 'Fråga skapad', 'success')
