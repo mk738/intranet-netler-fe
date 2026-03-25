@@ -270,6 +270,7 @@ export interface CreateNewsRequest {
   body:           string
   pinned:         boolean
   published:      boolean
+  category:       string | null
   coverImageData: string | null
   coverImageType: string | null
 }

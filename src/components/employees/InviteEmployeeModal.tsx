@@ -51,6 +51,7 @@ export function InviteEmployeeModal({ onClose }: Props) {
     <Modal
       title="Bjud in anställd"
       onClose={onClose}
+      disableBackdropClose
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>Avbryt</Button>

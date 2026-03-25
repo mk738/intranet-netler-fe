@@ -69,6 +69,7 @@ export function NewsCreatePage() {
       body:           data.body,
       pinned:         data.pinned,
       published:      data.publish,
+      category:       null,
       coverImageData: coverImage?.data ?? null,
       coverImageType: coverImage?.type ?? null,
     }

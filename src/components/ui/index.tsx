@@ -103,11 +103,12 @@ export function EmptyState({ title, description, action }: {
 }
 
 // ── Modal ─────────────────────────────────────────────────────
-export function Modal({ title, onClose, children, footer }: {
-  title:    string
-  onClose:  () => void
-  children: ReactNode
-  footer?:  ReactNode
+export function Modal({ title, onClose, children, footer, disableBackdropClose = false }: {
+  title:                string
+  onClose:              () => void
+  children:             ReactNode
+  footer?:              ReactNode
+  disableBackdropClose?: boolean
 }) {
   return (
     <motion.div
@@ -115,7 +116,7 @@ export function Modal({ title, onClose, children, footer }: {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: prefersReduced ? 0 : 0.15 }}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      onClick={(e) => !disableBackdropClose && e.target === e.currentTarget && onClose()}
     >
       <motion.div
         className="bg-bg-card border border-mild rounded-xl w-full max-w-lg shadow-modal"
