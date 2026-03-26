@@ -200,7 +200,7 @@ const adminLinks = [
   { to: '/admin/crm',              label: 'CRM',               icon: <IconCRM />           },
   { to: '/admin/boards',           label: 'Boards',            icon: <IconBoards />        },
   { to: '/admin/publish',          label: 'Publicera',         icon: <IconPostNews />      },
-  { to: '/admin/pipeline',         label: 'Kandidatpipeline',  icon: <IconPipeline />      },
+  // { to: '/admin/pipeline',         label: 'Kandidatpipeline',  icon: <IconPipeline />      },
 ]
 
 // ── Sidebar ────────────────────────────────────────────────────
