@@ -12,13 +12,14 @@ export interface BoardComment {
 }
 
 export interface BoardCard {
-  id:        string
-  title:     string
-  text:      string
-  category:  string
-  position:  number
-  createdAt: string
-  comments:  BoardComment[]
+  id:         string
+  title:      string
+  text:       string
+  category:   string
+  assignedTo: string | null
+  position:   number
+  createdAt:  string
+  comments:   BoardComment[]
 }
 
 export interface BoardColumn {
@@ -107,8 +108,8 @@ export function useDeleteColumn() {
 export function useCreateCard() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ columnId, title, text, category, position }: { columnId: string; title: string; text: string; category: string; position: number }) =>
-      api.post<ApiResponse<BoardCard>>(`/api/columns/${columnId}/cards`, { title, text, category, position }).then(r => r.data.data),
+    mutationFn: ({ columnId, title, text, category, assignedTo, position }: { columnId: string; title: string; text: string; category: string; assignedTo: string | null; position: number }) =>
+      api.post<ApiResponse<BoardCard>>(`/api/columns/${columnId}/cards`, { title, text, category, assignedTo, position }).then(r => r.data.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['boards'] }),
   })
 }
@@ -116,12 +117,12 @@ export function useCreateCard() {
 export function useUpdateCard() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ columnId, cardId, title, text, category, position, targetColumnId }: {
+    mutationFn: ({ columnId, cardId, title, text, category, assignedTo, position, targetColumnId }: {
       columnId: string; cardId: string; title: string; text: string
-      category: string; position: number; targetColumnId?: string
+      category: string; assignedTo: string | null; position: number; targetColumnId?: string
     }) =>
       api.put<ApiResponse<BoardCard>>(`/api/columns/${columnId}/cards/${cardId}`, {
-        title, text, category, position,
+        title, text, category, assignedTo, position,
         columnId: targetColumnId ?? columnId,
       }).then(r => r.data.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['boards'] }),

@@ -214,11 +214,8 @@ export function Sidebar() {
     <aside className="w-52 bg-sidebar border-r border-subtle flex flex-col shrink-0">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-subtle">
-        <div className="flex items-baseline gap-2">
-          <span className="text-white font-bold text-lg tracking-tight leading-none">NETLER</span>
-          <span className="text-xs font-semibold">
-            <span className="text-white">intra</span><span className="text-purple-light">net</span>
-          </span>
+        <div className="flex items-baseline">
+          <span className="text-white font-bold text-lg tracking-tight leading-none">intra</span><span className="text-purple-light font-bold text-lg tracking-tight leading-none">NETLER</span>
         </div>
       </div>
 
