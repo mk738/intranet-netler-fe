@@ -4,39 +4,21 @@ import { Modal, Button } from '@/components/ui'
 import { format, parseISO } from 'date-fns'
 import { sv } from 'date-fns/locale'
 import clsx from 'clsx'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/components/ui/Toast'
+import api from '@/lib/api'
+import {
+  useBoards, useUpdateBoard, useDeleteBoard,
+  useCreateColumn, useUpdateColumn, useDeleteColumn,
+  useCreateCard, useUpdateCard, useDeleteCard,
+  useCreateComment,
+} from '@/hooks/useBoards'
+import type { BoardDto, BoardColumn, BoardCard, BoardComment } from '@/hooks/useBoards'
 
-// ── Types ──────────────────────────────────────────────────────
+// ── Local types ────────────────────────────────────────────────
 
-interface Comment {
-  id: string
-  text: string
-  authorName: string
-  createdAt: string
-}
-
-interface BoardCard {
-  id: string
-  title: string
-  text: string
-  category: string
-  createdAt: string
-  comments: Comment[]
-}
-
-interface BoardColumn {
-  id: string
-  title: string
-  colorIndex: number
-  cards: BoardCard[]
-}
-
-interface Board {
-  id: string
-  name: string
-  columns: BoardColumn[]
-}
-
+type Board = BoardDto
 type CardFormData = Pick<BoardCard, 'title' | 'text' | 'category'>
 
 // ── Column colour palette (från KandidatPipeline) ──────────────
@@ -58,36 +40,7 @@ function colColor(colorIndex: number) {
 
 // ── Storage ────────────────────────────────────────────────────
 
-const BOARDS_KEY = 'netler-boards'
 const ACTIVE_KEY = 'netler-boards-active'
-
-function uid() {
-  return Math.random().toString(36).slice(2, 10)
-}
-
-const DEFAULTS: Board[] = [
-  {
-    id: 'board-default',
-    name: 'Mitt Board',
-    columns: [
-      { id: 'col-todo',  title: 'Att göra', colorIndex: 0, cards: [] },
-      { id: 'col-doing', title: 'Pågående', colorIndex: 1, cards: [] },
-      { id: 'col-done',  title: 'Klart',    colorIndex: 4, cards: [] },
-    ],
-  },
-]
-
-function loadBoards(): Board[] {
-  try {
-    const s = localStorage.getItem(BOARDS_KEY)
-    if (s) return JSON.parse(s) as Board[]
-  } catch { /* ignore */ }
-  return DEFAULTS
-}
-
-function persistBoards(boards: Board[]) {
-  localStorage.setItem(BOARDS_KEY, JSON.stringify(boards))
-}
 
 // ── Helpers ────────────────────────────────────────────────────
 
@@ -683,18 +636,41 @@ type DeleteTarget =
 
 export function BoardsPage() {
   const { employee } = useAuth()
+  const { showToast } = useToast()
+  const qc = useQueryClient()
 
   const authorName = employee?.profile
     ? `${employee.profile.firstName} ${employee.profile.lastName}`
     : (employee?.email ?? 'Okänd')
   const authorInits = initials(authorName)
 
-  const [boards,        setBoards]        = useState<Board[]>(loadBoards)
-  const [activeBoardId, setActiveBoardId] = useState<string>(() => {
-    const stored = localStorage.getItem(ACTIVE_KEY)
-    const loaded = loadBoards()
-    return loaded.find(b => b.id === stored) ? stored! : loaded[0]?.id ?? ''
-  })
+  const { data: serverBoards, isLoading: boardsLoading } = useBoards()
+
+  const [boards,        setBoards]        = useState<Board[]>([])
+  const [activeBoardId, setActiveBoardId] = useState<string>('')
+
+  // Sync from server
+  useEffect(() => {
+    if (!serverBoards) return
+    setBoards(serverBoards)
+    setActiveBoardId(prev => {
+      if (prev && serverBoards.find(b => b.id === prev)) return prev
+      const stored = localStorage.getItem(ACTIVE_KEY)
+      const valid  = serverBoards.find(b => b.id === stored)
+      return valid ? stored! : serverBoards[0]?.id ?? ''
+    })
+  }, [serverBoards])
+
+  // Mutations
+  const updateBoardMut  = useUpdateBoard()
+  const deleteBoardMut  = useDeleteBoard()
+  const createColumnMut = useCreateColumn()
+  const updateColumnMut = useUpdateColumn()
+  const deleteColumnMut = useDeleteColumn()
+  const createCardMut   = useCreateCard()
+  const updateCardMut   = useUpdateCard()
+  const deleteCardMut   = useDeleteCard()
+  const createCommentMut = useCreateComment()
 
   // Modal states
   const [cardModal,     setCardModal]     = useState<CardModal | null>(null)
@@ -702,6 +678,20 @@ export function BoardsPage() {
   const [newBoardOpen,  setNewBoardOpen]  = useState(false)
   const [renameBoardId, setRenameBoardId] = useState<string | null>(null)
   const [deleteTarget,  setDeleteTarget]  = useState<DeleteTarget | null>(null)
+  const [addMenuOpen,   setAddMenuOpen]   = useState(false)
+  const [copySourceId,  setCopySourceId]  = useState<string | null>(null)
+  const addMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!addMenuOpen) return
+    const handler = (e: MouseEvent) => {
+      if (addMenuRef.current && !addMenuRef.current.contains(e.target as Node)) {
+        setAddMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [addMenuOpen])
 
   // Drag state
   const [cardDrag,      setCardDrag]      = useState<{ cardId: string; fromColumnId: string } | null>(null)
@@ -715,7 +705,8 @@ export function BoardsPage() {
 
   const activeBoard = boards.find(b => b.id === activeBoardId) ?? boards[0]
 
-  const update = (next: Board[]) => { setBoards(next); persistBoards(next) }
+  // Optimistic local update helper
+  const updateLocal = (next: Board[]) => setBoards(next)
 
   const switchBoard = (id: string) => {
     setActiveBoardId(id)
@@ -724,28 +715,51 @@ export function BoardsPage() {
 
   // ── Board actions ──────────────────────────────────────────
 
-  const addBoard = (name: string) => {
-    const cols = [
-      { id: `col-${uid()}`, title: 'Att göra', colorIndex: 0, cards: [] },
-      { id: `col-${uid()}`, title: 'Pågående', colorIndex: 1, cards: [] },
-      { id: `col-${uid()}`, title: 'Klart',    colorIndex: 4, cards: [] },
-    ]
-    const newBoard: Board = { id: `board-${uid()}`, name, columns: cols }
-    const next = [...boards, newBoard]
-    update(next)
-    switchBoard(newBoard.id)
-    setNewBoardOpen(false)
+  const addBoard = async (name: string) => {
+    try {
+      const newBoard = await api.post<{ success: boolean; data: Board }>('/api/boards', { name }).then(r => r.data.data)
+      await Promise.all([
+        api.post(`/api/boards/${newBoard.id}/columns`, { title: 'Att göra', colorIndex: 0, position: 0 }),
+        api.post(`/api/boards/${newBoard.id}/columns`, { title: 'Pågående', colorIndex: 1, position: 1 }),
+        api.post(`/api/boards/${newBoard.id}/columns`, { title: 'Klart',    colorIndex: 4, position: 2 }),
+      ])
+      await qc.invalidateQueries({ queryKey: ['boards'] })
+      switchBoard(newBoard.id)
+      setNewBoardOpen(false)
+    } catch {
+      showToast('Kunde inte skapa board', 'error')
+    }
+  }
+
+  const copyBoard = async (sourceBoardId: string, name: string) => {
+    const source = boards.find(b => b.id === sourceBoardId)
+    if (!source) return
+    try {
+      const newBoard = await api.post<{ success: boolean; data: Board }>('/api/boards', { name }).then(r => r.data.data)
+      await Promise.all(
+        source.columns.map((c, i) =>
+          api.post(`/api/boards/${newBoard.id}/columns`, { title: c.title, colorIndex: c.colorIndex, position: i })
+        )
+      )
+      await qc.invalidateQueries({ queryKey: ['boards'] })
+      switchBoard(newBoard.id)
+      setCopySourceId(null)
+    } catch {
+      showToast('Kunde inte kopiera board', 'error')
+    }
   }
 
   const renameBoard = (id: string, name: string) => {
-    update(boards.map(b => b.id === id ? { ...b, name } : b))
+    updateLocal(boards.map(b => b.id === id ? { ...b, name } : b))
+    updateBoardMut.mutate({ id, name })
     setRenameBoardId(null)
   }
 
   const deleteBoard = (id: string) => {
     const next = boards.filter(b => b.id !== id)
     if (activeBoardId === id) switchBoard(next[0]?.id ?? '')
-    update(next)
+    updateLocal(next)
+    deleteBoardMut.mutate(id)
     setDeleteTarget(null)
   }
 
@@ -754,24 +768,28 @@ export function BoardsPage() {
   const addColumn = () => {
     if (!activeBoard) return
     const colorIndex = activeBoard.columns.length % COLUMN_PALETTE.length
-    const col: BoardColumn = { id: `col-${uid()}`, title: 'Ny kolumn', colorIndex, cards: [] }
-    update(boards.map(b => b.id === activeBoard.id ? { ...b, columns: [...b.columns, col] } : b))
+    const position   = activeBoard.columns.length
+    createColumnMut.mutate({ boardId: activeBoard.id, title: 'Ny kolumn', colorIndex, position })
   }
 
   const renameColumnAction = (columnId: string, title: string) => {
     if (!activeBoard) return
-    update(boards.map(b =>
+    const col = activeBoard.columns.find(c => c.id === columnId)
+    if (!col) return
+    updateLocal(boards.map(b =>
       b.id !== activeBoard.id ? b
         : { ...b, columns: b.columns.map(c => c.id === columnId ? { ...c, title } : c) }
     ))
+    updateColumnMut.mutate({ boardId: activeBoard.id, columnId, title, colorIndex: col.colorIndex, position: col.position })
   }
 
   const deleteColumnAction = (columnId: string) => {
     if (!activeBoard) return
-    update(boards.map(b =>
+    updateLocal(boards.map(b =>
       b.id !== activeBoard.id ? b
         : { ...b, columns: b.columns.filter(c => c.id !== columnId) }
     ))
+    deleteColumnMut.mutate({ boardId: activeBoard.id, columnId })
     setDeleteTarget(null)
   }
 
@@ -779,33 +797,28 @@ export function BoardsPage() {
 
   const addCard = (columnId: string, data: CardFormData) => {
     if (!activeBoard) return
-    const card: BoardCard = { id: `card-${uid()}`, ...data, createdAt: new Date().toISOString(), comments: [] }
-    update(boards.map(b =>
-      b.id !== activeBoard.id ? b : {
-        ...b,
-        columns: b.columns.map(c =>
-          c.id === columnId ? { ...c, cards: [...c.cards, card] } : c
-        ),
-      }
-    ))
+    const position = activeBoard.columns.find(c => c.id === columnId)?.cards.length ?? 0
+    createCardMut.mutate({ columnId, ...data, position })
     setCardModal(null)
   }
 
   const editCard = (columnId: string, cardId: string, data: CardFormData) => {
     if (!activeBoard) return
-    update(boards.map(b =>
+    const col  = activeBoard.columns.find(c => c.id === columnId)
+    const card = col?.cards.find(c => c.id === cardId)
+    if (!card) return
+    updateLocal(boards.map(b =>
       b.id !== activeBoard.id ? b : {
         ...b,
         columns: b.columns.map(c =>
           c.id !== columnId ? c : {
             ...c,
-            cards: c.cards.map(card =>
-              card.id !== cardId ? card : { ...card, ...data }
-            ),
+            cards: c.cards.map(cd => cd.id !== cardId ? cd : { ...cd, ...data }),
           }
         ),
       }
     ))
+    updateCardMut.mutate({ columnId, cardId, ...data, position: card.position })
     setCardModal(null)
     setCardDetail(prev =>
       prev?.card.id === cardId ? { ...prev, card: { ...prev.card, ...data } } : prev
@@ -814,45 +827,29 @@ export function BoardsPage() {
 
   const deleteCard = (columnId: string, cardId: string) => {
     if (!activeBoard) return
-    update(boards.map(b =>
+    updateLocal(boards.map(b =>
       b.id !== activeBoard.id ? b : {
         ...b,
         columns: b.columns.map(c =>
-          c.id !== columnId ? c : { ...c, cards: c.cards.filter(card => card.id !== cardId) }
+          c.id !== columnId ? c : { ...c, cards: c.cards.filter(cd => cd.id !== cardId) }
         ),
       }
     ))
+    deleteCardMut.mutate({ columnId, cardId })
     setDeleteTarget(null)
     setCardDetail(null)
   }
 
-  const addComment = (columnId: string, cardId: string, text: string) => {
-    if (!activeBoard) return
-    const comment: Comment = {
-      id: `cmt-${uid()}`,
-      text,
-      authorName,
-      createdAt: new Date().toISOString(),
-    }
-    const next = boards.map(b =>
-      b.id !== activeBoard.id ? b : {
-        ...b,
-        columns: b.columns.map(c =>
-          c.id !== columnId ? c : {
-            ...c,
-            cards: c.cards.map(card =>
-              card.id !== cardId ? card : { ...card, comments: [...(card.comments ?? []), comment] }
-            ),
-          }
-        ),
-      }
-    )
-    update(next)
-    setCardDetail(prev =>
-      prev?.card.id === cardId
-        ? { ...prev, card: { ...prev.card, comments: [...(prev.card.comments ?? []), comment] } }
-        : prev
-    )
+  const addComment = (_columnId: string, cardId: string, text: string) => {
+    createCommentMut.mutate({ cardId, text }, {
+      onSuccess: (comment: BoardComment) => {
+        setCardDetail(prev =>
+          prev?.card.id === cardId
+            ? { ...prev, card: { ...prev.card, comments: [...(prev.card.comments ?? []), comment] } }
+            : prev
+        )
+      },
+    })
   }
 
   // ── Drag & Drop ────────────────────────────────────────────
@@ -902,7 +899,12 @@ export function BoardsPage() {
         if (fromI !== -1 && toI !== -1) {
           const [moved] = cols.splice(fromI, 1)
           cols.splice(toI, 0, moved)
-          update(boards.map(b => b.id === activeBoard.id ? { ...b, columns: cols } : b))
+          const reordered = cols.map((c, i) => ({ ...c, position: i }))
+          updateLocal(boards.map(b => b.id === activeBoard.id ? { ...b, columns: reordered } : b))
+          // Sync all column positions to server
+          reordered.forEach(c =>
+            updateColumnMut.mutate({ boardId: activeBoard.id, columnId: c.id, title: c.title, colorIndex: c.colorIndex, position: c.position })
+          )
         }
       }
       colDragRef.current = null
@@ -917,7 +919,9 @@ export function BoardsPage() {
         const fromCol = activeBoard.columns.find(c => c.id === fromColumnId)
         const card    = fromCol?.cards.find(c => c.id === cardId)
         if (card) {
-          update(boards.map(b => {
+          const targetCol  = activeBoard.columns.find(c => c.id === targetColId)
+          const newPosition = targetCol?.cards.length ?? 0
+          updateLocal(boards.map(b => {
             if (b.id !== activeBoard.id) return b
             return {
               ...b,
@@ -928,6 +932,11 @@ export function BoardsPage() {
               }),
             }
           }))
+          updateCardMut.mutate({
+            columnId: fromColumnId, cardId,
+            title: card.title, text: card.text, category: card.category,
+            position: newPosition, targetColumnId: targetColId,
+          })
         }
       }
       cardDragRef.current = null
@@ -946,12 +955,32 @@ export function BoardsPage() {
 
   // ── Render ─────────────────────────────────────────────────
 
+  if (boardsLoading) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="h-6 w-24 bg-bg-hover rounded" />
+        <div className="flex gap-4">
+          {[1,2,3].map(i => (
+            <div key={i} className="w-72 flex-shrink-0 bg-bg-card border border-subtle rounded-xl p-3 space-y-2">
+              <div className="h-4 w-20 bg-bg-hover rounded" />
+              {[1,2].map(j => <div key={j} className="h-16 bg-bg-hover rounded-lg" />)}
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   if (!activeBoard) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
           <h1 className="text-xl font-semibold text-text-1">Boards</h1>
-          <Button onClick={() => setNewBoardOpen(true)}>+ Ny board</Button>
+          <button
+            onClick={() => setNewBoardOpen(true)}
+            className="w-6 h-6 flex items-center justify-center rounded text-text-3 hover:text-text-1 hover:bg-bg-hover transition-colors text-lg leading-none"
+            title="Ny board"
+          >+</button>
         </div>
         <p className="text-sm text-text-3">Inga boards ännu. Skapa ett för att komma igång.</p>
         {newBoardOpen && (
@@ -967,9 +996,40 @@ export function BoardsPage() {
     <>
       <div className="flex flex-col h-full space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <h1 className="text-xl font-semibold text-text-1">Boards</h1>
-          <Button size="sm" onClick={() => setNewBoardOpen(true)}>+ Ny board</Button>
+          <div className="relative" ref={addMenuRef}>
+            <button
+              onClick={() => setAddMenuOpen(v => !v)}
+              className="w-6 h-6 flex items-center justify-center rounded text-text-3 hover:text-text-1 hover:bg-bg-hover transition-colors text-lg leading-none"
+              title="Lägg till board"
+            >+</button>
+            {addMenuOpen && (
+              <div className="absolute left-0 top-8 z-50 bg-bg-card border border-subtle rounded-lg shadow-lg py-1 min-w-[180px]">
+                <button
+                  onClick={() => { setAddMenuOpen(false); setNewBoardOpen(true) }}
+                  className="w-full text-left px-3 py-2 text-sm text-text-1 hover:bg-bg-hover transition-colors"
+                >
+                  Ny board
+                </button>
+                {boards.length > 0 && (
+                  <>
+                    <div className="border-t border-subtle my-1" />
+                    <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-text-3">Kopiera från</p>
+                    {boards.map(b => (
+                      <button
+                        key={b.id}
+                        onClick={() => { setAddMenuOpen(false); setCopySourceId(b.id) }}
+                        className="w-full text-left px-3 py-2 text-sm text-text-2 hover:bg-bg-hover transition-colors truncate"
+                      >
+                        {b.name}
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Board tabs */}
@@ -1052,6 +1112,16 @@ export function BoardsPage() {
 
       {newBoardOpen && (
         <NameModal title="Ny board" label="Namn" placeholder="t.ex. Sprint 1, Design..." onSave={addBoard} onClose={() => setNewBoardOpen(false)} />
+      )}
+
+      {copySourceId && (
+        <NameModal
+          title={`Kopiera "${boards.find(b => b.id === copySourceId)?.name ?? ''}"`}
+          label="Namn på ny board"
+          placeholder="t.ex. Sprint 2, Kopia..."
+          onSave={name => { copyBoard(copySourceId, name); setCopySourceId(null) }}
+          onClose={() => setCopySourceId(null)}
+        />
       )}
 
       {renamingBoard && (
