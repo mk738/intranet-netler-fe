@@ -12,9 +12,12 @@ import { getApiError, getApiCode } from '@/lib/api'
 
 const today = todayString()
 
+const REASONS = ['Semester', 'Föräldraledighet', 'Tjänstledighet'] as const
+
 const schema = z.object({
   startDate: z.string().min(1, 'Obligatoriskt').refine(v => v >= today, 'Startdatum kan inte vara i det förflutna'),
   endDate:   z.string().min(1, 'Obligatoriskt'),
+  reason:    z.string().min(1, 'Obligatoriskt'),
 }).refine(d => d.endDate >= d.startDate, {
   message: 'Slutdatum måste vara på eller efter startdatum',
   path: ['endDate'],
@@ -28,9 +31,9 @@ export function RequestVacationModal({ onClose }: Props) {
   const { showToast } = useToast()
   const mutation = useSubmitVacation()
 
-  const { handleSubmit, formState: { errors }, watch, setValue, setError } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors }, watch, setValue, setError } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { startDate: '', endDate: '' },
+    defaultValues: { startDate: '', endDate: '', reason: '' },
   })
 
   const startDate = watch('startDate')
@@ -66,6 +69,7 @@ export function RequestVacationModal({ onClose }: Props) {
     <Modal
       title="Ansök om ledighet"
       onClose={onClose}
+      disableBackdropClose
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>Avbryt</Button>
@@ -95,6 +99,15 @@ export function RequestVacationModal({ onClose }: Props) {
             />
             <FieldError message={errors.endDate?.message} />
           </div>
+        </div>
+
+        <div>
+          <label className="field-label">Orsak *</label>
+          <select {...register('reason')} className="field-input">
+            <option value="">Välj orsak...</option>
+            {REASONS.map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
+          <FieldError message={errors.reason?.message} />
         </div>
 
         {/* Live business day preview */}

@@ -65,6 +65,7 @@ export interface VacationDto {
   endDate:          string
   daysCount:        number
   status:           'PENDING' | 'APPROVED' | 'REJECTED'
+  reason:           string | null
   reviewedBy:       string | null
   reviewedAt:       string | null
   createdAt:        string
@@ -79,6 +80,7 @@ export interface VacationSummaryDto {
 export interface SubmitVacationRequest {
   startDate: string
   endDate:   string
+  reason:    string
 }
 
 export interface ReviewVacationRequest {
@@ -237,6 +239,7 @@ export interface NewsPostDto {
   pinned:         boolean
   hasCoverImage:  boolean
   coverImageType: string | null
+  category:       string | null
 }
 
 export interface NewsPostDetailDto extends NewsPostDto {
@@ -270,6 +273,7 @@ export interface CreateNewsRequest {
   body:           string
   pinned:         boolean
   published:      boolean
+  category:       string | null
   coverImageData: string | null
   coverImageType: string | null
 }
@@ -309,6 +313,36 @@ export interface EventRsvpDto {
   goingCount:  number
   maybeCount:  number
   notGoingCount: number
+}
+
+// ── Candidate pipeline ────────────────────────────────────────
+export interface CandidateDto {
+  id:        string
+  name:      string
+  role:      string
+  email:     string | null
+  phone:     string | null
+  notes:     string | null
+  stage:     number
+  createdAt: string
+}
+
+export interface CreateCandidateRequest {
+  name:  string
+  role:  string
+  email: string | null
+  phone: string | null
+  notes: string | null
+  stage: number
+}
+
+export interface PatchCandidateRequest {
+  name?:  string
+  role?:  string
+  email?: string | null
+  phone?: string | null
+  notes?: string | null
+  stage?: number
 }
 
 // ── API responses ─────────────────────────────────────────────

@@ -19,9 +19,10 @@ type PublishType = 'news' | 'event' | null
 // ── Schemas ────────────────────────────────────────────────────
 
 const newsSchema = z.object({
-  title:  z.string().min(1, 'Titel krävs').max(300, 'Titeln är för lång'),
-  body:   z.string().refine(html => html.replace(/<[^>]*>/g, '').trim().length > 0, 'Innehåll krävs'),
-  pinned: z.boolean(),
+  title:    z.string().min(1, 'Titel krävs').max(300, 'Titeln är för lång'),
+  body:     z.string().refine(html => html.replace(/<[^>]*>/g, '').trim().length > 0, 'Innehåll krävs'),
+  pinned:   z.boolean(),
+  category: z.string().optional(),
 })
 
 const eventSchema = z.object({
@@ -81,7 +82,7 @@ function NewsForm({ onDone }: { onDone: () => void }) {
 
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<NewsForm>({
     resolver: zodResolver(newsSchema),
-    defaultValues: { title: '', body: '', pinned: false },
+    defaultValues: { title: '', body: '', pinned: false, category: 'Allmänt' },
   })
 
   const bodyValue = watch('body')
@@ -94,6 +95,7 @@ function NewsForm({ onDone }: { onDone: () => void }) {
         body:           data.body,
         pinned:         data.pinned,
         published:      publish,
+        category:       data.category || null,
         coverImageData: coverImage?.data ?? null,
         coverImageType: coverImage?.type ?? null,
       },
@@ -114,11 +116,21 @@ function NewsForm({ onDone }: { onDone: () => void }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
-      {/* Title */}
-      <div>
-        <label className="field-label">Titel *</label>
-        <input {...register('title')} className="field-input" placeholder="Inläggets titel" />
-        {errors.title && <p className="text-xs text-danger mt-1">{errors.title.message}</p>}
+      {/* Title + Category */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="col-span-2">
+          <label className="field-label">Titel *</label>
+          <input {...register('title')} className="field-input" placeholder="Inläggets titel" />
+          {errors.title && <p className="text-xs text-danger mt-1">{errors.title.message}</p>}
+        </div>
+        <div>
+          <label className="field-label">Kategori</label>
+          <select {...register('category')} className="field-select">
+            {['Allmänt', 'HR', 'IT', 'Månadsbrev', 'Ekonomi'].map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Cover image */}

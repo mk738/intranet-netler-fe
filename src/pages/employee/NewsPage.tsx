@@ -54,6 +54,14 @@ function SkeletonCard() {
   )
 }
 
+function CategoryBadge({ category }: { category: string }) {
+  return (
+    <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-bg-hover text-text-3 border border-subtle">
+      {category}
+    </span>
+  )
+}
+
 function NewsCard({ post }: { post: NewsPostDto }) {
   const navigate   = useNavigate()
   const { isRead } = useReadNews()
@@ -73,11 +81,14 @@ function NewsCard({ post }: { post: NewsPostDto }) {
               {post.title}
             </p>
           </button>
-          {unread && (
-            <span className="mt-0.5 shrink-0 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-purple-bg text-purple-light border border-purple/30">
-              Ny
-            </span>
-          )}
+          <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+            {post.category && <CategoryBadge category={post.category} />}
+            {unread && (
+              <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-purple-bg text-purple-light border border-purple/30">
+                Ny
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-2 mt-2">
@@ -105,21 +116,51 @@ function NewsCard({ post }: { post: NewsPostDto }) {
 }
 
 export function NewsPage() {
-  const [page, setPage] = useState(0)
+  const [page,     setPage]     = useState(0)
+  const [category, setCategory] = useState<string | null>(null)
   const { data, isLoading } = useNewsFeed(page, 10)
   const { isAdmin } = useAuth()
   const navigate = useNavigate()
 
-  const posts      = data?.content ?? []
+  const allPosts   = data?.content ?? []
+  const categories = [...new Set(allPosts.map(p => p.category).filter(Boolean) as string[])].sort()
+
+  const posts      = category ? allPosts.filter(p => p.category === category) : allPosts
   const pinned     = posts.filter(p => p.pinned)
   const unpinned   = posts.filter(p => !p.pinned)
   const totalPages = data?.totalPages ?? 0
+
+  const handleCategoryClick = (cat: string | null) => {
+    setCategory(prev => prev === cat ? null : cat)
+    setPage(0)
+  }
 
   return (
     <>
 
       <div className="max-w-2xl space-y-6">
         <h1 className="text-xl font-semibold text-text-1">Företagsnyheter</h1>
+
+        {/* Category filter pills */}
+        {!isLoading && categories.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => handleCategoryClick(null)}
+              className={`pill ${category === null ? 'pill-active' : ''}`}
+            >
+              Alla
+            </button>
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => handleCategoryClick(cat)}
+                className={`pill ${category === cat ? 'pill-active' : ''}`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
 
         {isLoading ? (
           <div className="space-y-4">

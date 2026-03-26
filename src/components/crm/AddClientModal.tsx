@@ -65,6 +65,7 @@ export function AddClientModal({ onClose }: Props) {
     <Modal
       title="Lägg till kund"
       onClose={onClose}
+      disableBackdropClose
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>Avbryt</Button>
