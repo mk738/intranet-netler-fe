@@ -124,6 +124,16 @@ function IconCompetency() {
   )
 }
 
+function IconBoards() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="5" height="18" rx="1"/>
+      <rect x="10" y="3" width="5" height="11" rx="1"/>
+      <rect x="17" y="3" width="5" height="15" rx="1"/>
+    </svg>
+  )
+}
+
 function IconPostNews() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -178,6 +188,7 @@ const adminLinks = [
   { to: '/admin/competencies',     label: 'Kompetenssökning',  icon: <IconCompetency />    },
   { to: '/admin/vacations',        label: 'Ledighet',          icon: <IconVacationAdmin /> },
   { to: '/admin/crm',              label: 'CRM',               icon: <IconCRM />           },
+  { to: '/admin/boards',           label: 'Boards',            icon: <IconBoards />        },
   { to: '/admin/publish',          label: 'Publicera',         icon: <IconPostNews />      },
 ]
 

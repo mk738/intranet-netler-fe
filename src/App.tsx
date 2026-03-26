@@ -27,6 +27,7 @@ import { NewsCreatePage }       from '@/pages/admin/NewsCreatePage'
 import { EventCreatePage }      from '@/pages/admin/EventCreatePage'
 import { PublishPage }          from '@/pages/admin/PublishPage'
 import { CompetencySearchPage } from '@/pages/admin/CompetencySearchPage'
+import { BoardsPage }           from '@/pages/admin/BoardsPage'
 
 export default function App() {
   return (
@@ -58,6 +59,7 @@ export default function App() {
           <Route path="/admin/crm"                element={<CrmListPage />} />
           <Route path="/admin/crm/:id"            element={<CrmDetailPage />} />
           <Route path="/admin/publish"            element={<PublishPage />} />
+          <Route path="/admin/boards"             element={<BoardsPage />} />
           <Route path="/admin/news/new"           element={<NewsCreatePage />} />
           <Route path="/admin/news/:id/edit"      element={<NewsCreatePage />} />
           <Route path="/admin/events/new"         element={<EventCreatePage />} />
