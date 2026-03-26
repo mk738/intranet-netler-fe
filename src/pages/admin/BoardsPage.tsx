@@ -19,7 +19,7 @@ import type { BoardDto, BoardColumn, BoardCard, BoardComment } from '@/hooks/use
 // ── Local types ────────────────────────────────────────────────
 
 type Board = BoardDto
-type CardFormData = Pick<BoardCard, 'title' | 'text' | 'category'>
+type CardFormData = Pick<BoardCard, 'title' | 'text' | 'category' | 'assignedTo'>
 
 // ── Column colour palette (från KandidatPipeline) ──────────────
 
@@ -59,15 +59,16 @@ function CardFormModal({
   onSave: (data: CardFormData) => void
   onClose: () => void
 }) {
-  const [title,    setTitle]    = useState(existing?.title    ?? '')
-  const [text,     setText]     = useState(existing?.text     ?? '')
-  const [category, setCategory] = useState(existing?.category ?? '')
-  const [err,      setErr]      = useState('')
+  const [title,      setTitle]      = useState(existing?.title      ?? '')
+  const [text,       setText]       = useState(existing?.text       ?? '')
+  const [category,   setCategory]   = useState(existing?.category   ?? '')
+  const [assignedTo, setAssignedTo] = useState(existing?.assignedTo ?? '')
+  const [err,        setErr]        = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim()) { setErr('Titel krävs'); return }
-    onSave({ title: title.trim(), text, category })
+    onSave({ title: title.trim(), text, category, assignedTo: assignedTo.trim() || null })
   }
 
   return (
@@ -109,6 +110,15 @@ function CardFormModal({
             value={category}
             onChange={e => setCategory(e.target.value)}
             placeholder="t.ex. Design, Dev..."
+          />
+        </div>
+        <div>
+          <label className="field-label">Tilldelad till</label>
+          <input
+            className="field-input"
+            value={assignedTo}
+            onChange={e => setAssignedTo(e.target.value)}
+            placeholder="t.ex. Anna Svensson..."
           />
         </div>
       </form>
@@ -202,8 +212,20 @@ function CardDetailModal({
               </div>
             )}
 
-            {createdStr && (
-              <p className="text-[10px] text-text-3 pt-3 border-t border-subtle">Skapad {createdStr}</p>
+            {(createdStr || card.assignedTo) && (
+              <div className="flex items-center justify-between pt-3 border-t border-subtle">
+                {createdStr && (
+                  <p className="text-[10px] text-text-3">Skapad {createdStr}</p>
+                )}
+                {card.assignedTo && (
+                  <span className="flex items-center gap-1.5 text-[10px] text-text-3 ml-auto">
+                    <div className="w-4 h-4 rounded-full bg-bg-hover border border-subtle flex items-center justify-center text-[8px] font-bold text-text-2 shrink-0">
+                      {initials(card.assignedTo)}
+                    </div>
+                    {card.assignedTo}
+                  </span>
+                )}
+              </div>
             )}
           </div>
 
@@ -393,7 +415,7 @@ function KanbanCard({
         <p className="text-xs text-text-3 leading-relaxed line-clamp-2">{card.text}</p>
       )}
 
-      {(card.category || commentCount > 0) && (
+      {(card.category || commentCount > 0 || card.assignedTo) && (
         <div className="flex items-center gap-2 pt-0.5 flex-wrap">
           {card.category && (
             <span className="text-[10px] font-medium bg-purple-bg text-purple-light border border-purple/20 rounded px-1.5 py-0.5">
@@ -406,6 +428,14 @@ function KanbanCard({
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
               {commentCount}
+            </span>
+          )}
+          {card.assignedTo && (
+            <span className="ml-auto flex items-center gap-1 text-[10px] text-text-3">
+              <div className="w-4 h-4 rounded-full bg-bg-hover border border-subtle flex items-center justify-center text-[8px] font-bold text-text-2 shrink-0">
+                {initials(card.assignedTo)}
+              </div>
+              <span className="truncate max-w-[72px]">{card.assignedTo}</span>
             </span>
           )}
         </div>
@@ -934,7 +964,7 @@ export function BoardsPage() {
           }))
           updateCardMut.mutate({
             columnId: fromColumnId, cardId,
-            title: card.title, text: card.text, category: card.category,
+            title: card.title, text: card.text, category: card.category, assignedTo: card.assignedTo,
             position: newPosition, targetColumnId: targetColId,
           })
         }
@@ -1033,7 +1063,7 @@ export function BoardsPage() {
         </div>
 
         {/* Board tabs */}
-        <div className="flex items-end border-b border-subtle shrink-0 overflow-x-auto">
+        <div className="flex items-end border-b border-subtle shrink-0">
           {boards.map(board => (
             <div key={board.id} className="relative group flex items-center shrink-0">
               <button
