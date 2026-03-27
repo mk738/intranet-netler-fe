@@ -198,9 +198,9 @@ const adminLinks = [
 // ── Sidebar ────────────────────────────────────────────────────
 
 export function Sidebar() {
-  const { isAdmin, employee } = useAuth()
-  const navigate              = useNavigate()
-  const unreadNews            = useUnreadNewsCount()
+  const { isAdmin, isSuperAdmin, employee } = useAuth()
+  const navigate                            = useNavigate()
+  const unreadNews                          = useUnreadNewsCount()
 
   const initials = employee?.profile
     ? `${employee.profile.firstName[0]}${employee.profile.lastName[0]}`.toUpperCase()
@@ -246,7 +246,7 @@ export function Sidebar() {
       <div className="border-t border-subtle px-3 py-3 space-y-1">
         {/* Inställningar */}
         <button
-          onClick={() => navigate('/profile')}
+          onClick={() => navigate(isSuperAdmin ? '/admin/settings' : '/profile')}
           className="w-full flex items-center gap-2.5 px-3 py-2 rounded text-sm text-text-2
                      hover:bg-bg-hover hover:text-text-1 transition-colors"
         >

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { format, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns'
 import { sv } from 'date-fns/locale'
+import { useAuth } from '@/context/AuthContext'
 import { useAllVacations, useVacationSummary } from '@/hooks/useVacations'
 import { Avatar } from '@/components/ui/Avatar'
 import { EmptyState, Button } from '@/components/ui'
@@ -318,6 +319,7 @@ function VacationCalendar() {
 // ── Page ───────────────────────────────────────────────────────
 
 export function VacationReviewPage() {
+  const { can }         = useAuth()
   const [tab,           setTab]           = useState<Tab>('requests')
   const [filter,        setFilter]        = useState<Filter>('all')
   const [sortDir,       setSortDir]       = useState<'desc' | 'asc'>('desc')
@@ -474,7 +476,7 @@ export function VacationReviewPage() {
                           <StatusBadge status={v.status} />
                         </td>
                         <td className="px-4 py-3">
-                          {v.status === 'PENDING' ? (
+                          {v.status === 'PENDING' && can.approveVacation ? (
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => setReviewTarget({ vacation: v, action: 'approve' })}
