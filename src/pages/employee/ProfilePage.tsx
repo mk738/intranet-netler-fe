@@ -136,11 +136,13 @@ export function ProfilePage() {
                 <p className="text-xs text-text-3 mt-0.5">{employee.email}</p>
               </div>
               <span className={
-                isAdmin
+                employee.role === 'SUPERADMIN'
+                  ? 'text-xs px-2 py-0.5 rounded-full font-medium bg-amber-900/40 text-amber-300 border border-amber-500/20'
+                  : employee.role === 'ADMIN'
                   ? 'text-xs px-2 py-0.5 rounded-full font-medium bg-purple-bg text-purple-light border border-purple/20'
                   : 'text-xs px-2 py-0.5 rounded-full font-medium bg-bg-hover text-text-2 border border-subtle'
               }>
-                {employee.role}
+                {employee.role === 'SUPERADMIN' ? 'Superadmin' : employee.role === 'ADMIN' ? 'Admin' : 'Anställd'}
               </span>
               {memberSince && (
                 <p className="text-xs text-text-3">Anställd sedan {memberSince}</p>

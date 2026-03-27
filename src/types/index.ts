@@ -1,5 +1,5 @@
 // ── Employee ──────────────────────────────────────────────────
-export type Role = 'ADMIN' | 'EMPLOYEE'
+export type Role = 'SUPERADMIN' | 'ADMIN' | 'EMPLOYEE'
 
 export interface Employee {
   id:              string

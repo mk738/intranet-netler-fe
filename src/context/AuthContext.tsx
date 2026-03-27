@@ -1,21 +1,34 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { auth } from '@/lib/firebase'
 import api, { getApiCode } from '@/lib/api'
-import type { Employee } from '@/types'
+import type { Employee, Role } from '@/types'
 import { LoadingScreen } from '@/components/ui/LoadingScreen'
 
+export function buildCan(role: Role | null) {
+  return {
+    terminateEmployee: role === 'SUPERADMIN',
+    approveVacation:   role === 'SUPERADMIN',
+    manageContent:     role === 'ADMIN' || role === 'SUPERADMIN',
+    viewAllEmployees:  role === 'ADMIN' || role === 'SUPERADMIN',
+  }
+}
+
 interface AuthContextValue {
-  employee:  Employee | null
-  loading:   boolean
-  isAdmin:   boolean
-  authError: string | null
+  employee:     Employee | null
+  loading:      boolean
+  isAdmin:      boolean
+  isSuperAdmin: boolean
+  can:          ReturnType<typeof buildCan>
+  authError:    string | null
 }
 
 const AuthContext = createContext<AuthContextValue>({
-  employee:  null,
-  loading:   true,
-  isAdmin:   false,
-  authError: null,
+  employee:     null,
+  loading:      true,
+  isAdmin:      false,
+  isSuperAdmin: false,
+  can:          buildCan(null),
+  authError:    null,
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -72,11 +85,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   if (loading) return <LoadingScreen />
 
+  const role = employee?.role ?? null
+
   return (
     <AuthContext.Provider value={{
       employee,
       loading,
-      isAdmin: employee?.role === 'ADMIN',
+      isAdmin:      role === 'ADMIN' || role === 'SUPERADMIN',
+      isSuperAdmin: role === 'SUPERADMIN',
+      can:          buildCan(role),
       authError,
     }}>
       {children}

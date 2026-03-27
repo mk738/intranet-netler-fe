@@ -16,6 +16,7 @@ import { AssignConsultantModal } from '@/components/placements/AssignConsultantM
 import { BenefitsCard } from '@/components/employees/BenefitsCard'
 import { EmploymentContractCard } from '@/components/employees/EmploymentContractCard'
 import { CvCard } from '@/components/employees/CvCard'
+import { useAuth } from '@/context/AuthContext'
 import type { BankInfo, Education, Assignment, AssignmentDto, UnplacedDto } from '@/types'
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -292,6 +293,7 @@ function BankInfoCard({ bankInfo, onEdit }: { bankInfo: BankInfo | null; onEdit:
 // ── Page ──────────────────────────────────────────────────────
 
 export function EmployeeDetailPage() {
+  const { can }      = useAuth()
   const { id }       = useParams<{ id: string }>()
   const navigate     = useNavigate()
   const [editProfile,    setEditProfile]    = useState(false)
@@ -359,11 +361,13 @@ export function EmployeeDetailPage() {
                 </div>
                 <div className="flex gap-2 flex-wrap justify-center">
                   <span className={
-                    data.role === 'ADMIN'
+                    data.role === 'SUPERADMIN'
+                      ? 'text-xs px-2 py-0.5 rounded-full font-medium bg-amber-900/40 text-amber-300 border border-amber-500/20'
+                      : data.role === 'ADMIN'
                       ? 'text-xs px-2 py-0.5 rounded-full font-medium bg-purple-bg text-purple-light border border-purple/20'
                       : 'text-xs px-2 py-0.5 rounded-full font-medium bg-bg-hover text-text-2 border border-subtle'
                   }>
-                    {data.role}
+                    {data.role === 'SUPERADMIN' ? 'Superadmin' : data.role === 'ADMIN' ? 'Admin' : 'Anställd'}
                   </span>
                   <span className={isEffectivelyActive ? 'badge-active' : 'badge-unplaced'}>
                     {isEffectivelyActive ? 'Aktiv' : 'Inaktiv'}
@@ -388,7 +392,7 @@ export function EmployeeDetailPage() {
               Redigera profil
             </Button>
 
-            {isEffectivelyActive && !pendingTermination && (
+            {isEffectivelyActive && !pendingTermination && can.terminateEmployee && (
               <Button
                 variant="danger"
                 className="w-full justify-center"
