@@ -101,7 +101,7 @@ export function CompetencySearchPage() {
   function removeKeyword(k: string) { setKeywords(prev => prev.filter(x => x !== k)) }
 
   const results = (() => {
-    if (!activeEmployees.length || keywords.length === 0) return []
+    if (!activeEmployees.length) return []
 
     return activeEmployees
       .map(e => {
@@ -110,7 +110,7 @@ export function CompetencySearchPage() {
         const matched    = keywords.filter(k => empSkills.some(s => s.includes(k)))
         return { employee: e, skillNames, matched, matchCount: matched.length }
       })
-      .filter(r => r.matchCount === keywords.length)
+      .filter(r => keywords.length === 0 || r.matchCount === keywords.length)
       .sort((a, b) => b.skillNames.length - a.skillNames.length)
   })()
 
@@ -132,13 +132,6 @@ export function CompetencySearchPage() {
         <div className="flex justify-center py-12"><Spinner /></div>
       )}
 
-      {!isLoading && keywords.length === 0 && (
-        <div className="text-center py-16 text-text-3">
-          <p className="text-4xl mb-3">🔍</p>
-          <p className="text-sm">Ange minst ett sökord för att hitta konsulter</p>
-        </div>
-      )}
-
       {!isLoading && keywords.length > 0 && results.length === 0 && (
         <div className="text-center py-16 text-text-3">
           <p className="text-4xl mb-3">😔</p>
@@ -150,7 +143,9 @@ export function CompetencySearchPage() {
       {results.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs text-text-3">
-            {results.length} konsult{results.length !== 1 ? 'er' : ''} matchar
+            {keywords.length === 0
+              ? `${results.length} konsult${results.length !== 1 ? 'er' : ''}`
+              : `${results.length} konsult${results.length !== 1 ? 'er' : ''} matchar`}
           </p>
           <div className="rounded-lg border border-subtle overflow-hidden">
             {results.map(({ employee: e, skillNames, matched }, i) => {
@@ -193,9 +188,11 @@ export function CompetencySearchPage() {
                       })}
                     </div>
                   </div>
-                  <span className="text-xs text-purple-light font-medium shrink-0 mt-0.5">
-                    {matched.length}/{keywords.length} träff{matched.length !== 1 ? 'ar' : ''}
-                  </span>
+                  {keywords.length > 0 && (
+                    <span className="text-xs text-purple-light font-medium shrink-0 mt-0.5">
+                      {matched.length}/{keywords.length} träff{matched.length !== 1 ? 'ar' : ''}
+                    </span>
+                  )}
                 </div>
               )
             })}
