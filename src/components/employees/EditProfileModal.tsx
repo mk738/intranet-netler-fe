@@ -35,7 +35,7 @@ export function EditProfileModal({ employee, isAdmin, onClose }: Props) {
 
   const p = employee.profile
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors, isDirty } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       firstName:        p?.firstName         ?? '',
@@ -60,7 +60,7 @@ export function EditProfileModal({ employee, isAdmin, onClose }: Props) {
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>Avbryt</Button>
-          <Button form="edit-profile-form" type="submit" loading={mutation.isPending}>
+          <Button form="edit-profile-form" type="submit" loading={mutation.isPending} disabled={!isDirty}>
             Spara ändringar
           </Button>
         </>
