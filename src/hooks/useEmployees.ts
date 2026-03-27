@@ -132,6 +132,32 @@ export function useTerminateEmployee(id: string) {
   })
 }
 
+export function useUpdateEmployeeRole(id: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (role: 'ADMIN' | 'EMPLOYEE') =>
+      api.put<ApiResponse<Employee>>(`/api/employees/${id}/role`, { role })
+         .then(r => r.data.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['employees', id] })
+      qc.invalidateQueries({ queryKey: ['employees'] })
+    },
+  })
+}
+
+export function useSetEmployeeActive(id: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (active: boolean) =>
+      api.put<ApiResponse<Employee>>(`/api/employees/${id}/active`, { active })
+         .then(r => r.data.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['employees', id] })
+      qc.invalidateQueries({ queryKey: ['employees'] })
+    },
+  })
+}
+
 export function useUpdateEmployeeProfile(id: string) {
   const qc = useQueryClient()
   return useMutation({
