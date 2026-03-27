@@ -30,7 +30,7 @@ export function EditClientModal({ client, onClose }: Props) {
   const { showToast } = useToast()
   const mutation = useUpdateClient(client.id)
 
-  const { register, handleSubmit, setError, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, setError, formState: { errors, isDirty } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       companyName:  client.companyName,
@@ -70,7 +70,7 @@ export function EditClientModal({ client, onClose }: Props) {
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>Avbryt</Button>
-          <Button form="edit-client-form" type="submit" loading={mutation.isPending}>
+          <Button form="edit-client-form" type="submit" loading={mutation.isPending} disabled={!isDirty}>
             Spara ändringar
           </Button>
         </>

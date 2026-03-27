@@ -25,7 +25,7 @@ interface Props {
 export function EditBankModal({ onClose }: Props) {
   const mutation = useUpdateMyBank()
 
-  const { register, handleSubmit, setError, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, setError, formState: { errors, isDirty } } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
 
@@ -50,7 +50,7 @@ export function EditBankModal({ onClose }: Props) {
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>Avbryt</Button>
-          <Button form="edit-bank-form" type="submit" loading={mutation.isPending}>
+          <Button form="edit-bank-form" type="submit" loading={mutation.isPending} disabled={!isDirty}>
             Spara ändringar
           </Button>
         </>

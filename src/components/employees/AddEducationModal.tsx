@@ -31,7 +31,7 @@ interface Props {
 export function AddEducationModal({ onClose }: Props) {
   const mutation = useAddEducation()
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors, isDirty } } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
 
@@ -50,10 +50,11 @@ export function AddEducationModal({ onClose }: Props) {
     <Modal
       title="Lägg till utbildning"
       onClose={onClose}
+      disableBackdropClose
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>Avbryt</Button>
-          <Button form="add-edu-form" type="submit" loading={mutation.isPending}>
+          <Button form="add-edu-form" type="submit" loading={mutation.isPending} disabled={!isDirty}>
             Lägg till post
           </Button>
         </>
