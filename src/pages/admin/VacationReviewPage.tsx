@@ -167,11 +167,13 @@ function SkeletonCalendar() {
 // ── Vacation calendar ──────────────────────────────────────────
 
 function VacationCalendar() {
-  const [currentMonth, setCurrentMonth] = useState(
+  const [currentMonth,  setCurrentMonth]  = useState(
     new Date(todayDate.getFullYear(), todayDate.getMonth(), 1)
   )
+  const [showApproved, setShowApproved] = useState(true)
+  const [showPending,  setShowPending]  = useState(true)
 
-  const { data: allVacations, isLoading } = useAllVacations('APPROVED')
+  const { data: allVacations, isLoading } = useAllVacations()
 
   const monthStart = format(startOfMonth(currentMonth), 'yyyy-MM-dd')
   const monthEnd   = format(endOfMonth(currentMonth),   'yyyy-MM-dd')
@@ -179,7 +181,11 @@ function VacationCalendar() {
   const monthVacations = (allVacations ?? []).filter(v => {
     const s = v.startDate.slice(0, 10)
     const e = v.endDate.slice(0, 10)
-    return s <= monthEnd && e >= monthStart
+    const inMonth = s <= monthEnd && e >= monthStart
+    if (!inMonth) return false
+    if (v.status === 'APPROVED') return showApproved
+    if (v.status === 'PENDING')  return showPending
+    return false
   })
 
   const employeeIds = [...new Set(monthVacations.map(v => v.employeeId))].sort()
@@ -190,7 +196,7 @@ function VacationCalendar() {
 
   return (
     <div className="space-y-4">
-      {/* Month nav */}
+      {/* Month nav + status filters */}
       <div className="flex items-center gap-3">
         <Button variant="secondary" onClick={() => setCurrentMonth(m => subMonths(m, 1))}>
           ← Föregående
@@ -201,6 +207,32 @@ function VacationCalendar() {
         <Button variant="secondary" onClick={() => setCurrentMonth(m => addMonths(m, 1))}>
           Nästa →
         </Button>
+      </div>
+
+      {/* Status toggles */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setShowApproved(v => !v)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+            showApproved
+              ? 'bg-success/15 text-success border-success/30'
+              : 'bg-bg-hover text-text-3 border-subtle'
+          }`}
+        >
+          <span className={`w-2 h-2 rounded-sm ${showApproved ? 'bg-success' : 'bg-text-3/30'}`} />
+          Godkänd
+        </button>
+        <button
+          onClick={() => setShowPending(v => !v)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+            showPending
+              ? 'bg-warning/15 text-warning border-warning/30'
+              : 'bg-bg-hover text-text-3 border-subtle'
+          }`}
+        >
+          <span className={`w-2 h-2 rounded-sm border-2 ${showPending ? 'border-warning bg-warning/30' : 'border-text-3/30 bg-transparent'}`} />
+          Väntar
+        </button>
       </div>
 
       {isLoading ? <SkeletonCalendar /> : (
@@ -259,13 +291,18 @@ function VacationCalendar() {
                         const extendRight = (pos === 'start'  || pos === 'middle') && !forceEnd
                         const color       = colorMap.get(v.employeeId) ?? PERSON_COLORS[0]
 
+                        const isPending = v.status === 'PENDING'
+                        const barColor  = isPending
+                          ? 'bg-amber-900/40 text-amber-300 border border-dashed border-amber-400/60'
+                          : color
+
                         return (
                           <div
                             key={v.id}
-                            title={v.employeeName}
+                            title={`${v.employeeName}${isPending ? ' (väntar på godkännande)' : ''}`}
                             className={[
                               'text-xs py-0.5 overflow-hidden leading-tight',
-                              color,
+                              barColor,
                               roundLeft   ? 'rounded-l' : '',
                               roundRight  ? 'rounded-r' : '',
                               extendLeft  ? '-ml-1.5 pl-0.5' : 'pl-1.5',
@@ -292,22 +329,30 @@ function VacationCalendar() {
           {/* Legend */}
           {employeeIds.length > 0 ? (
             <div className="flex flex-wrap gap-x-5 gap-y-2 pt-1">
+              {/* Approved — per person */}
               {employeeIds.map(id => {
-                const vac   = monthVacations.find(v => v.employeeId === id)
-                if (!vac) return null
+                const approved = monthVacations.filter(v => v.employeeId === id && v.status === 'APPROVED')
+                if (!approved.length) return null
                 const color   = colorMap.get(id) ?? PERSON_COLORS[0]
                 const bgClass = color.split(' ')[0]
                 return (
                   <div key={id} className="flex items-center gap-1.5">
                     <span className={`w-2.5 h-2.5 rounded-sm shrink-0 ${bgClass}`} />
-                    <span className="text-xs text-text-2">{vac.employeeName}</span>
+                    <span className="text-xs text-text-2">{approved[0].employeeName}</span>
                   </div>
                 )
               })}
+              {/* Pending — single shared entry */}
+              {monthVacations.some(v => v.status === 'PENDING') && (
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-sm shrink-0 bg-amber-900/40 border border-dashed border-amber-400/60" />
+                  <span className="text-xs text-amber-300">Väntar på godkännande</span>
+                </div>
+              )}
             </div>
           ) : (
             <p className="text-center text-sm text-text-3 py-4">
-              Inga godkända ledigheter under {format(currentMonth, 'MMMM yyyy', { locale: sv })}.
+              Inga ledigheter under {format(currentMonth, 'MMMM yyyy', { locale: sv })}.
             </p>
           )}
         </>
