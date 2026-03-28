@@ -11,6 +11,12 @@ import { Button } from '@/components/ui'
 import { DeleteEventConfirmModal } from '@/components/hub/DeleteEventConfirmModal'
 import type { EventDto, RsvpStatus } from '@/types'
 
+function rsvpDotClass(status: RsvpStatus): string {
+  if (status === 'GOING')     return 'bg-success'
+  if (status === 'MAYBE')     return 'bg-warning'
+  return 'bg-text-3'
+}
+
 // ── Helpers ────────────────────────────────────────────────────
 
 function toDateStr(d: Date): string {
@@ -300,7 +306,12 @@ function MobileEventList({ events, onSelect }: { events: EventDto[]; onSelect: (
                 onClick={() => onSelect(e)}
                 className="w-full text-left card hover:bg-bg-hover transition-colors py-3"
               >
-                <p className="text-sm font-medium text-text-1">{e.title}</p>
+                <div className="flex items-center gap-2">
+                  {e.myRsvpStatus && (
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${rsvpDotClass(e.myRsvpStatus)}`} />
+                  )}
+                  <p className="text-sm font-medium text-text-1">{e.title}</p>
+                </div>
                 {e.location && <p className="text-xs text-text-3 mt-0.5">{e.location}</p>}
               </button>
             ))}
@@ -319,11 +330,12 @@ export function EventsPage() {
   const [currentMonth, setCurrentMonth]   = useState(new Date(today.getFullYear(), today.getMonth(), 1))
   const [selectedEvent, setSelectedEvent] = useState<EventDto | null>(null)
   const [deleteTarget, setDeleteTarget]   = useState<string | null>(null)
+  const [attendingOnly, setAttendingOnly] = useState(false)
 
   const from = format(startOfMonth(currentMonth), 'yyyy-MM-dd')
   const to   = format(endOfMonth(currentMonth),   'yyyy-MM-dd')
 
-  const { data: events, isLoading } = useEvents(from, to)
+  const { data: events, isLoading } = useEvents(from, to, attendingOnly || undefined)
 
   const cells       = buildCalendarCells(currentMonth)
   const currentM    = currentMonth.getMonth()
@@ -358,6 +370,22 @@ export function EventsPage() {
               Lägg till evenemang
             </Button>
           )}
+        </div>
+
+        {/* Filter pills */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => setAttendingOnly(false)}
+            className={`pill ${!attendingOnly ? 'pill-active' : ''}`}
+          >
+            Alla
+          </button>
+          <button
+            onClick={() => setAttendingOnly(true)}
+            className={`pill ${attendingOnly ? 'pill-active' : ''}`}
+          >
+            Deltar
+          </button>
         </div>
 
         {isLoading ? (
@@ -431,9 +459,16 @@ export function EventsPage() {
                                   extendRight ? '-mr-[7px] pr-0'  : 'pr-1.5',
                                 ].join(' ')}
                               >
-                                <span className={showTitle ? 'truncate block' : 'invisible'}>
-                                  {e.title}
-                                </span>
+                                {showTitle ? (
+                                  <span className="flex items-center gap-1 min-w-0">
+                                    {e.myRsvpStatus && (
+                                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${rsvpDotClass(e.myRsvpStatus)}`} />
+                                    )}
+                                    <span className="truncate">{e.title}</span>
+                                  </span>
+                                ) : (
+                                  <span className="invisible">{e.title}</span>
+                                )}
                               </button>
                             )
                           })}

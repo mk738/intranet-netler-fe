@@ -98,10 +98,15 @@ export function VacationPage() {
                         Godkänd av {v.reviewedBy}
                       </p>
                     )}
-                    {v.status === 'REJECTED' && v.reviewedBy && (
-                      <p className="text-xs text-text-3 mt-1">
-                        Avvisad av {v.reviewedBy}
-                      </p>
+                    {v.status === 'REJECTED' && (
+                      <div className="mt-1 space-y-0.5">
+                        {v.reviewedBy && (
+                          <p className="text-xs text-text-3">Avvisad av {v.reviewedBy}</p>
+                        )}
+                        {v.rejectionReason && (
+                          <p className="text-xs text-danger/80">"{v.rejectionReason}"</p>
+                        )}
+                      </div>
                     )}
                   </div>
 

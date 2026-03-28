@@ -66,6 +66,7 @@ export interface VacationDto {
   daysCount:        number
   status:           'PENDING' | 'APPROVED' | 'REJECTED'
   reason:           string | null
+  rejectionReason:  string | null
   reviewedBy:       string | null
   reviewedAt:       string | null
   createdAt:        string
@@ -84,7 +85,8 @@ export interface SubmitVacationRequest {
 }
 
 export interface ReviewVacationRequest {
-  approved: boolean
+  approved:        boolean
+  rejectionReason?: string | null
 }
 
 // ── Skills ────────────────────────────────────────────────────
@@ -255,17 +257,18 @@ export interface NewsListDto {
 }
 
 export interface EventDto {
-  id:          string
-  title:       string
-  description: string | null
-  location:    string | null
-  eventDate:   string
-  endDate:     string | null
-  startTime:   string | null
-  endTime:     string | null
-  allDay:      boolean
-  createdBy:   string
-  authorName:  string | null
+  id:            string
+  title:         string
+  description:   string | null
+  location:      string | null
+  eventDate:     string
+  endDate:       string | null
+  startTime:     string | null
+  endTime:       string | null
+  allDay:        boolean
+  createdBy:     string
+  authorName:    string | null
+  myRsvpStatus:  RsvpStatus | null
 }
 
 export interface CreateNewsRequest {
