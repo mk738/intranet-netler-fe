@@ -66,7 +66,7 @@ export function NewsDetailPage() {
         </Link>
 
         {/* Cover image */}
-        {post.hasCoverImage && post.coverImageData && post.coverImageType && (
+        {post.hasImage && post.coverImageData && post.coverImageType && (
           <img
             src={`data:${post.coverImageType};base64,${post.coverImageData}`}
             alt={post.title}

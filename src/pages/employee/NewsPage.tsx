@@ -70,7 +70,7 @@ function NewsCard({ post }: { post: NewsPostDto }) {
 
   return (
     <div className={`card p-0 overflow-hidden ${post.pinned ? 'border-l-2 border-purple-light pl-0' : ''}`}>
-      {post.hasCoverImage && <LazyCoverImage id={post.id} />}
+      {post.hasImage && <LazyCoverImage id={post.id} />}
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
           <button
