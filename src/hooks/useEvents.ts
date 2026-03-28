@@ -2,13 +2,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
 import type { EventDto, CreateEventRequest, ApiResponse } from '@/types'
 
-export function useEvents(from?: string, to?: string) {
+export function useEvents(from?: string, to?: string, attending?: boolean) {
   return useQuery({
-    queryKey: ['events', from, to],
+    queryKey: ['events', from, to, attending ?? false],
     queryFn:  () => {
       const params = new URLSearchParams()
-      if (from) params.set('from', from)
-      if (to)   params.set('to', to)
+      if (from)     params.set('from', from)
+      if (to)       params.set('to', to)
+      if (attending) params.set('attending', 'true')
       const qs  = params.toString()
       return api.get<ApiResponse<EventDto[]>>(`/api/events${qs ? '?' + qs : ''}`)
                 .then(r => r.data.data)

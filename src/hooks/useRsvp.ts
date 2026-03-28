@@ -20,6 +20,7 @@ export function useSubmitRsvp() {
          .then(r => r.data.data),
     onSuccess: (data, { eventId }) => {
       qc.setQueryData(['rsvp', eventId], data)
+      qc.invalidateQueries({ queryKey: ['events'] })
     },
   })
 }
