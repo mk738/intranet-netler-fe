@@ -13,8 +13,9 @@ import {
   useCreateColumn, useUpdateColumn, useDeleteColumn,
   useCreateCard, useUpdateCard, useDeleteCard,
   useCreateComment,
+  useCardAttachments, useUploadCardAttachment, useDeleteCardAttachment,
 } from '@/hooks/useBoards'
-import type { BoardDto, BoardColumn, BoardCard, BoardComment } from '@/hooks/useBoards'
+import type { BoardDto, BoardColumn, BoardCard, BoardComment, CardAttachmentDto } from '@/hooks/useBoards'
 
 // ── Local types ────────────────────────────────────────────────
 
@@ -126,6 +127,73 @@ function CardFormModal({
   )
 }
 
+// ── Attachment Preview Modal ───────────────────────────────────
+
+function AttachmentPreviewModal({
+  attachment,
+  onClose,
+}: {
+  attachment: CardAttachmentDto
+  onClose: () => void
+}) {
+  const isImage = attachment.contentType.startsWith('image/')
+  const src     = `data:${attachment.contentType};base64,${attachment.data}`
+
+  const handleDownload = () => {
+    const a = document.createElement('a')
+    a.href     = src
+    a.download = attachment.fileName
+    a.click()
+  }
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4"
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div className="bg-bg-card border border-mild rounded-xl w-full max-w-4xl flex flex-col shadow-modal"
+           style={{ maxHeight: 'calc(100vh - 4rem)' }}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-subtle shrink-0">
+          <span className="text-sm font-medium text-text-1 truncate pr-4">{attachment.fileName}</span>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleDownload}
+              className="flex items-center gap-1.5 text-xs text-text-2 hover:text-text-1 transition-colors px-2.5 py-1.5 rounded bg-bg-hover border border-subtle"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Ladda ner
+            </button>
+            <button
+              onClick={onClose}
+              className="w-7 h-7 flex items-center justify-center rounded bg-bg-hover text-text-2 hover:text-text-1 text-lg leading-none transition-colors"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+        {/* Content */}
+        <div className="flex-1 overflow-auto p-4 flex items-center justify-center min-h-0">
+          {isImage ? (
+            <img src={src} alt={attachment.fileName} className="max-w-full max-h-full object-contain rounded" />
+          ) : (
+            <iframe
+              src={src}
+              title={attachment.fileName}
+              className="w-full rounded border border-subtle"
+              style={{ height: 'calc(100vh - 12rem)' }}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Card Detail Modal (wide, two-column) ───────────────────────
 
 const prefersReduced =
@@ -151,6 +219,47 @@ function CardDetailModal({
   onClose: () => void
 }) {
   const [commentText, setCommentText] = useState('')
+  const [previewAtt,  setPreviewAtt]  = useState<CardAttachmentDto | null>(null)
+  const [staged,        setStaged]        = useState<File[]>([])
+  const [uploading,     setUploading]     = useState(false)
+  const [fileInputKey,  setFileInputKey]  = useState(0)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const hasExisting = card.attachmentCount > 0 || false
+  const { data: attachments = [], isLoading: loadingAttachments, refetch } =
+    useCardAttachments(card.id, hasExisting)
+  const uploadMutation = useUploadCardAttachment(card.id)
+  const deleteMutation = useDeleteCardAttachment(card.id)
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return
+    setStaged(prev => [...prev, ...Array.from(e.target.files!)])
+    setFileInputKey(k => k + 1)
+  }
+
+  const removeStaged = (index: number) =>
+    setStaged(prev => prev.filter((_, i) => i !== index))
+
+  const handleUploadAll = async () => {
+    if (!staged.length) return
+    setUploading(true)
+    for (const file of staged) {
+      await uploadMutation.mutateAsync(file)
+    }
+    setStaged([])
+    setUploading(false)
+    refetch()
+  }
+
+  const handleDeleteAttachment = (attachmentId: string) =>
+    deleteMutation.mutate(attachmentId)
+
+  const handleDownload = (att: CardAttachmentDto) => {
+    const a = document.createElement('a')
+    a.href     = `data:${att.contentType};base64,${att.data}`
+    a.download = att.fileName
+    a.click()
+  }
   const createdStr = card.createdAt
     ? format(parseISO(card.createdAt), 'd MMM yyyy', { locale: sv })
     : null
@@ -164,6 +273,7 @@ function CardDetailModal({
   }
 
   return (
+  <>
     <motion.div
       className="fixed inset-0 bg-black/60 flex items-start justify-center pt-12 px-4 z-50"
       initial={{ opacity: 0 }}
@@ -211,6 +321,139 @@ function CardDetailModal({
                 </span>
               </div>
             )}
+
+            {/* Attachments */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="field-label">Bilagor</p>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-1 text-xs text-text-2 hover:text-text-1 transition-colors"
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  Lägg till
+                </button>
+              </div>
+
+              {/* Existing attachments */}
+              {loadingAttachments ? (
+                <div className="space-y-2">
+                  {Array.from({ length: card.attachmentCount }).map((_, i) => (
+                    <div key={i} className="animate-pulse h-10 bg-bg-hover rounded-lg" />
+                  ))}
+                </div>
+              ) : attachments.length > 0 && (
+                <div className="space-y-1.5 mb-3">
+                  {attachments.map(att => (
+                    <div key={att.id} className="flex items-center gap-2 rounded-lg border border-subtle overflow-hidden">
+                      {att.contentType.startsWith('image/') ? (
+                        <button onClick={() => setPreviewAtt(att)} className="shrink-0">
+                          <img
+                            src={`data:${att.contentType};base64,${att.data}`}
+                            alt={att.fileName}
+                            className="w-12 h-10 object-cover"
+                          />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setPreviewAtt(att)}
+                          className="shrink-0 w-12 h-10 flex items-center justify-center bg-bg-hover hover:bg-bg-card transition-colors"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                          </svg>
+                        </button>
+                      )}
+                      <span
+                        className="flex-1 text-xs text-text-2 truncate cursor-pointer hover:text-text-1 transition-colors"
+                        onClick={() => setPreviewAtt(att)}
+                      >
+                        {att.fileName}
+                      </span>
+                      <div className="flex items-center gap-1 pr-2 shrink-0">
+                        <button
+                          onClick={() => handleDownload(att)}
+                          className="p-1 text-text-3 hover:text-text-1 transition-colors"
+                          title="Ladda ner"
+                        >
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteAttachment(att.id)}
+                          disabled={deleteMutation.isPending}
+                          className="p-1 text-text-3 hover:text-danger transition-colors disabled:opacity-40"
+                          title="Ta bort"
+                        >
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Staged (not yet uploaded) files */}
+              {staged.length > 0 && (
+                <div className="space-y-1.5 mb-3">
+                  {staged.map((file, i) => (
+                    <div key={i} className="flex items-center gap-2 rounded-lg border border-dashed border-mild px-3 py-2">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-text-3 shrink-0">
+                        {file.type.startsWith('image/') ? (
+                          <><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></>
+                        ) : (
+                          <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>
+                        )}
+                      </svg>
+                      <span className="flex-1 text-xs text-text-2 truncate">{file.name}</span>
+                      <span className="text-[10px] text-text-3 shrink-0">Ej sparad</span>
+                      <button
+                        onClick={() => removeStaged(i)}
+                        className="p-1 text-text-3 hover:text-danger transition-colors shrink-0"
+                      >
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                  <Button size="sm" loading={uploading} onClick={handleUploadAll} className="w-full">
+                    Ladda upp {staged.length} {staged.length === 1 ? 'fil' : 'filer'}
+                  </Button>
+                </div>
+              )}
+
+              {/* Empty state */}
+              {!loadingAttachments && attachments.length === 0 && staged.length === 0 && (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full border-2 border-dashed border-subtle rounded-lg p-4 text-center hover:border-mild hover:bg-bg-hover transition-colors"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-text-3 mx-auto mb-1.5">
+                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                  </svg>
+                  <p className="text-xs text-text-3">Klicka för att lägga till bild eller PDF</p>
+                </button>
+              )}
+
+              <input
+                key={fileInputKey}
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,.pdf"
+                multiple
+                className="hidden"
+                onChange={handleFileChange}
+              />
+            </div>
 
             {(createdStr || card.assignedTo) && (
               <div className="flex items-center justify-between pt-3 border-t border-subtle">
@@ -301,6 +544,11 @@ function CardDetailModal({
         </div>
       </motion.div>
     </motion.div>
+
+    {previewAtt && (
+      <AttachmentPreviewModal attachment={previewAtt} onClose={() => setPreviewAtt(null)} />
+    )}
+  </>
   )
 }
 
@@ -415,7 +663,7 @@ function KanbanCard({
         <p className="text-xs text-text-3 leading-relaxed line-clamp-2">{card.text}</p>
       )}
 
-      {(card.category || commentCount > 0 || card.assignedTo) && (
+      {(card.category || commentCount > 0 || card.assignedTo || card.attachmentCount > 0) && (
         <div className="flex items-center gap-2 pt-0.5 flex-wrap">
           {card.category && (
             <span className="text-[10px] font-medium bg-purple-bg text-purple-light border border-purple/20 rounded px-1.5 py-0.5">
@@ -428,6 +676,14 @@ function KanbanCard({
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
               {commentCount}
+            </span>
+          )}
+          {card.attachmentCount > 0 && (
+            <span className="text-[10px] text-text-3 flex items-center gap-1" title="Har bilagor">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+              </svg>
+              {card.attachmentCount}
             </span>
           )}
           {card.assignedTo && (

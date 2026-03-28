@@ -12,14 +12,22 @@ export interface BoardComment {
 }
 
 export interface BoardCard {
-  id:         string
-  title:      string
-  text:       string
-  category:   string
-  assignedTo: string | null
-  position:   number
-  createdAt:  string
-  comments:   BoardComment[]
+  id:              string
+  title:           string
+  text:            string
+  category:        string
+  assignedTo:      string | null
+  position:        number
+  createdAt:       string
+  comments:        BoardComment[]
+  attachmentCount: number
+}
+
+export interface CardAttachmentDto {
+  id:          string
+  data:        string
+  contentType: string
+  fileName:    string
 }
 
 export interface BoardColumn {
@@ -135,6 +143,50 @@ export function useDeleteCard() {
     mutationFn: ({ columnId, cardId }: { columnId: string; cardId: string }) =>
       api.delete(`/api/columns/${columnId}/cards/${cardId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['boards'] }),
+  })
+}
+
+// ── Attachment hooks ───────────────────────────────────────────
+
+export function useCardAttachments(cardId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['cards', cardId, 'attachments'],
+    queryFn:  () =>
+      api.get<ApiResponse<CardAttachmentDto[]>>(`/api/cards/${cardId}/attachments`)
+         .then(r => r.data.data),
+    enabled: enabled && !!cardId,
+    retry: false,
+  })
+}
+
+export function useUploadCardAttachment(cardId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData()
+      formData.append('file', file)
+      return api.post<ApiResponse<CardAttachmentDto>>(
+        `/api/cards/${cardId}/attachments`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      ).then(r => r.data.data)
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['cards', cardId, 'attachments'] })
+      qc.invalidateQueries({ queryKey: ['boards'] })
+    },
+  })
+}
+
+export function useDeleteCardAttachment(cardId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (attachmentId: string) =>
+      api.delete(`/api/cards/${cardId}/attachments/${attachmentId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['cards', cardId, 'attachments'] })
+      qc.invalidateQueries({ queryKey: ['boards'] })
+    },
   })
 }
 

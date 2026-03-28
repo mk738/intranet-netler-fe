@@ -237,7 +237,7 @@ export interface NewsPostDto {
   publishedAt:    string | null
   createdAt:      string
   pinned:         boolean
-  hasCoverImage:  boolean
+  hasImage:       boolean
   coverImageType: string | null
   category:       string | null
 }
