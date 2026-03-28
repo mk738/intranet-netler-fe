@@ -23,14 +23,14 @@ function LazyCoverImage({ id }: { id: string }) {
       <img
         src={`data:${data.coverImageType};base64,${data.coverImageData}`}
         alt=""
-        className="w-full max-h-[200px] object-cover rounded-t-lg"
+        className="w-full aspect-[16/7] object-cover"
       />
     )
   }
   return (
-    <div className="bg-purple-bg/30 h-32 rounded-t-lg flex items-center justify-center">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
-           className="text-purple-light/40">
+    <div className="w-full aspect-[16/7] bg-purple-bg/30 flex items-center justify-center">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+           className="text-purple-light/30">
         <rect x="3" y="3" width="18" height="18" rx="2"/>
         <circle cx="8.5" cy="8.5" r="1.5"/>
         <polyline points="21 15 16 10 5 21"/>
@@ -43,7 +43,7 @@ function LazyCoverImage({ id }: { id: string }) {
 function SkeletonCard() {
   return (
     <div className="card p-0 overflow-hidden animate-pulse">
-      <div className="bg-bg-hover h-32" />
+      <div className="w-full aspect-[16/7] bg-bg-hover" />
       <div className="p-4 space-y-2">
         <div className="h-4 bg-bg-hover rounded w-3/4" />
         <div className="h-3 bg-bg-hover rounded w-1/3" />
