@@ -1,4 +1,35 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import api from '@/lib/api'
+
+function useAvatarSrc(avatarUrl: string | null): string | null {
+  const [src, setSrc] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!avatarUrl) { setSrc(null); return }
+    // Firebase Storage URLs are public — use directly
+    if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
+      setSrc(avatarUrl)
+      return
+    }
+    // Relative/backend URLs require auth headers — proxy through API client
+    let objectUrl: string | null = null
+    let cancelled = false
+    api.get(avatarUrl, { responseType: 'blob' })
+      .then(res => {
+        if (!cancelled) {
+          objectUrl = URL.createObjectURL(res.data)
+          setSrc(objectUrl)
+        }
+      })
+      .catch(() => { if (!cancelled) setSrc(null) })
+    return () => {
+      cancelled = true
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [avatarUrl])
+
+  return src
+}
 
 const PALETTES: { bg: string; text: string }[] = [
   { bg: '#2e1e4a', text: '#9d5ff5' },
@@ -34,14 +65,13 @@ interface AvatarProps {
 export function Avatar({ name, avatarUrl, size }: AvatarProps) {
   const { outer, text } = SIZES[size]
   const palette          = getPalette(name)
-  const [imgError, setImgError] = useState(false)
+  const src              = useAvatarSrc(avatarUrl)
 
-  if (avatarUrl && !imgError) {
+  if (src) {
     return (
       <img
-        src={avatarUrl}
+        src={src}
         alt={name}
-        onError={() => setImgError(true)}
         className={`${outer} rounded-full object-cover flex-shrink-0`}
       />
     )
