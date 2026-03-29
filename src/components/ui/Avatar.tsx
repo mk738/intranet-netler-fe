@@ -1,34 +1,4 @@
-import { useState, useEffect } from 'react'
-import api from '@/lib/api'
-
-function useAvatarSrc(avatarUrl: string | null): string | null {
-  const [src, setSrc] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!avatarUrl) { setSrc(null); return }
-    // Data URIs can be used directly
-    if (avatarUrl.startsWith('data:')) { setSrc(avatarUrl); return }
-
-    let cancelled = false
-    let objectUrl: string | null = null
-
-    api.get(avatarUrl, { responseType: 'blob' })
-      .then(res => {
-        if (!cancelled) {
-          objectUrl = URL.createObjectURL(res.data)
-          setSrc(objectUrl)
-        }
-      })
-      .catch(() => { if (!cancelled) setSrc(null) })
-
-    return () => {
-      cancelled = true
-      if (objectUrl) URL.revokeObjectURL(objectUrl)
-    }
-  }, [avatarUrl])
-
-  return src
-}
+import { useState } from 'react'
 
 const PALETTES: { bg: string; text: string }[] = [
   { bg: '#2e1e4a', text: '#9d5ff5' },
@@ -64,13 +34,14 @@ interface AvatarProps {
 export function Avatar({ name, avatarUrl, size }: AvatarProps) {
   const { outer, text } = SIZES[size]
   const palette          = getPalette(name)
-  const src              = useAvatarSrc(avatarUrl)
+  const [imgError, setImgError] = useState(false)
 
-  if (src) {
+  if (avatarUrl && !imgError) {
     return (
       <img
-        src={src}
+        src={avatarUrl}
         alt={name}
+        onError={() => setImgError(true)}
         className={`${outer} rounded-full object-cover flex-shrink-0`}
       />
     )

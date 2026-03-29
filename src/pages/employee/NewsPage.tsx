@@ -15,13 +15,13 @@ function stripHtml(html: string | null | undefined): string {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
-/** Fetches the full post to get coverImageData, shows placeholder while loading. */
+/** Fetches the full post to get coverImageUrl, shows placeholder while loading. */
 function LazyCoverImage({ id }: { id: string }) {
   const { data } = useNewsPost(id)
-  if (data?.coverImageData && data?.coverImageType) {
+  if (data?.coverImageUrl) {
     return (
       <img
-        src={`data:${data.coverImageType};base64,${data.coverImageData}`}
+        src={data.coverImageUrl}
         alt=""
         className="w-full aspect-[16/7] object-cover"
       />

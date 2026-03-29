@@ -240,12 +240,11 @@ export interface NewsPostDto {
   createdAt:      string
   pinned:         boolean
   hasImage:       boolean
-  coverImageType: string | null
   category:       string | null
 }
 
 export interface NewsPostDetailDto extends NewsPostDto {
-  coverImageData: string | null
+  coverImageUrl: string | null
 }
 
 export interface NewsListDto {

@@ -199,7 +199,7 @@ export function useContract(employeeId: string) {
   return useQuery({
     queryKey: ['employees', employeeId, 'contract'],
     queryFn:  () =>
-      api.get<ApiResponse<{ data: string; contentType: string }>>(
+      api.get<ApiResponse<{ downloadUrl: string }>>(
         `/api/employees/${employeeId}/contract`
       ).then(r => r.data.data),
     enabled: !!employeeId,
@@ -226,7 +226,7 @@ export function useCV(employeeId: string) {
   return useQuery({
     queryKey: ['employees', employeeId, 'cv'],
     queryFn:  () =>
-      api.get<ApiResponse<{ data: string; contentType: string }>>(
+      api.get<ApiResponse<{ downloadUrl: string }>>(
         `/api/employees/${employeeId}/cv`
       ).then(r => r.data.data),
     enabled: !!employeeId,

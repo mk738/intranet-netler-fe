@@ -66,10 +66,10 @@ export function NewsDetailPage() {
         </Link>
 
         {/* Cover image */}
-        {post.coverImageData && post.coverImageType && (
+        {post.coverImageUrl && (
           <div className="rounded-2xl overflow-hidden bg-bg-hover">
             <img
-              src={`data:${post.coverImageType};base64,${post.coverImageData}`}
+              src={post.coverImageUrl}
               alt={post.title}
               className="w-full max-h-[480px] object-contain"
             />

@@ -137,11 +137,11 @@ function AttachmentPreviewModal({
   onClose: () => void
 }) {
   const isImage = attachment.contentType.startsWith('image/')
-  const src     = `data:${attachment.contentType};base64,${attachment.data}`
 
   const handleDownload = () => {
     const a = document.createElement('a')
-    a.href     = src
+    a.href     = attachment.downloadUrl
+    a.target   = '_blank'
     a.download = attachment.fileName
     a.click()
   }
@@ -179,10 +179,10 @@ function AttachmentPreviewModal({
         {/* Content */}
         <div className="flex-1 overflow-auto p-4 flex items-center justify-center min-h-0">
           {isImage ? (
-            <img src={src} alt={attachment.fileName} className="max-w-full max-h-full object-contain rounded" />
+            <img src={attachment.downloadUrl} alt={attachment.fileName} className="max-w-full max-h-full object-contain rounded" />
           ) : (
             <iframe
-              src={src}
+              src={attachment.downloadUrl}
               title={attachment.fileName}
               className="w-full rounded border border-subtle"
               style={{ height: 'calc(100vh - 12rem)' }}
@@ -256,7 +256,8 @@ function CardDetailModal({
 
   const handleDownload = (att: CardAttachmentDto) => {
     const a = document.createElement('a')
-    a.href     = `data:${att.contentType};base64,${att.data}`
+    a.href     = att.downloadUrl
+    a.target   = '_blank'
     a.download = att.fileName
     a.click()
   }
@@ -351,7 +352,7 @@ function CardDetailModal({
                       {att.contentType.startsWith('image/') ? (
                         <button onClick={() => setPreviewAtt(att)} className="shrink-0">
                           <img
-                            src={`data:${att.contentType};base64,${att.data}`}
+                            src={att.downloadUrl}
                             alt={att.fileName}
                             className="w-12 h-10 object-cover"
                           />
