@@ -92,9 +92,11 @@ export function CompetencySearchPage() {
     })),
   })
 
-  const isLoading    = empLoading || skillQueries.some(q => q.isLoading)
   const skillsByEmp  = Object.fromEntries(
     activeEmployees.map((e, i) => [e.id, skillQueries[i]?.data ?? []])
+  )
+  const skillLoadingById = Object.fromEntries(
+    activeEmployees.map((e, i) => [e.id, !!skillQueries[i]?.isLoading])
   )
 
   function addKeyword(k: string)    { setKeywords(prev => [...prev, k]) }
@@ -105,12 +107,19 @@ export function CompetencySearchPage() {
 
     return activeEmployees
       .map(e => {
-        const empSkills  = (skillsByEmp[e.id] ?? []).map(s => normalize(s.name))
-        const skillNames = skillsByEmp[e.id]?.map(s => s.name) ?? []
-        const matched    = keywords.filter(k => empSkills.some(s => s.includes(k)))
-        return { employee: e, skillNames, matched, matchCount: matched.length }
+        const skillsReady = !skillLoadingById[e.id]
+        const empSkills   = (skillsByEmp[e.id] ?? []).map(s => normalize(s.name))
+        const skillNames  = skillsByEmp[e.id]?.map(s => s.name) ?? []
+        // While skills are loading we can't match keywords — exclude from filtered results
+        const matched     = skillsReady
+          ? keywords.filter(k => empSkills.some(s => s.includes(k)))
+          : []
+        return { employee: e, skillNames, matched, matchCount: matched.length, skillsReady }
       })
-      .filter(r => keywords.length === 0 || r.matchCount === keywords.length)
+      .filter(r => {
+        if (keywords.length === 0) return true
+        return r.skillsReady && r.matchCount === keywords.length
+      })
       .sort((a, b) => b.skillNames.length - a.skillNames.length)
   })()
 
@@ -128,11 +137,11 @@ export function CompetencySearchPage() {
       <KeywordInput keywords={keywords} onAdd={addKeyword} onRemove={removeKeyword} />
 
       {/* Results */}
-      {isLoading && (
+      {empLoading && (
         <div className="flex justify-center py-12"><Spinner /></div>
       )}
 
-      {!isLoading && keywords.length > 0 && results.length === 0 && (
+      {!empLoading && keywords.length > 0 && results.length === 0 && !skillQueries.some(q => q.isLoading) && (
         <div className="text-center py-16 text-text-3">
           <p className="text-4xl mb-3">😔</p>
           <p className="text-sm">Inga konsulter matchar alla sökord</p>
@@ -140,7 +149,7 @@ export function CompetencySearchPage() {
         </div>
       )}
 
-      {results.length > 0 && (
+      {!empLoading && results.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs text-text-3">
             {keywords.length === 0
@@ -148,7 +157,7 @@ export function CompetencySearchPage() {
               : `${results.length} konsult${results.length !== 1 ? 'er' : ''} matchar`}
           </p>
           <div className="rounded-lg border border-subtle overflow-hidden">
-            {results.map(({ employee: e, skillNames, matched }, i) => {
+            {results.map(({ employee: e, skillNames, matched, skillsReady }, i) => {
               const name = e.profile
                 ? `${e.profile.firstName} ${e.profile.lastName}`
                 : e.email
@@ -169,26 +178,34 @@ export function CompetencySearchPage() {
                         <p className="text-xs text-text-3">{e.profile.jobTitle}</p>
                       )}
                     </div>
-                    <div className="flex flex-wrap gap-1 mt-1.5">
-                      {skillNames.map(s => {
-                        const isMatch = matched.some(m => normalize(s).includes(m))
-                        return (
-                          <span
-                            key={s}
-                            className={[
-                              'px-2 py-0.5 rounded-full text-xs font-medium border',
-                              isMatch
-                                ? 'bg-purple-bg text-purple-light border-purple/20'
-                                : 'bg-bg-hover text-text-3 border-subtle',
-                            ].join(' ')}
-                          >
-                            {s}
-                          </span>
-                        )
-                      })}
-                    </div>
+                    {skillsReady ? (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {skillNames.map(s => {
+                          const isMatch = matched.some(m => normalize(s).includes(m))
+                          return (
+                            <span
+                              key={s}
+                              className={[
+                                'px-2 py-0.5 rounded-full text-xs font-medium border',
+                                isMatch
+                                  ? 'bg-purple-bg text-purple-light border-purple/20'
+                                  : 'bg-bg-hover text-text-3 border-subtle',
+                              ].join(' ')}
+                            >
+                              {s}
+                            </span>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <div className="flex gap-1.5 mt-1.5">
+                        <div className="h-5 w-14 rounded-full bg-bg-hover animate-pulse" />
+                        <div className="h-5 w-20 rounded-full bg-bg-hover animate-pulse" />
+                        <div className="h-5 w-16 rounded-full bg-bg-hover animate-pulse" />
+                      </div>
+                    )}
                   </div>
-                  {keywords.length > 0 && (
+                  {keywords.length > 0 && skillsReady && (
                     <span className="text-xs text-purple-light font-medium shrink-0 mt-0.5">
                       {matched.length}/{keywords.length} träff{matched.length !== 1 ? 'ar' : ''}
                     </span>
