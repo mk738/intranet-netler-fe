@@ -6,7 +6,7 @@ interface Props {
   title:         string
   fileName:      string
   isAdmin:       boolean
-  fileData:      { data: string; contentType: string } | null | undefined
+  fileData:      { downloadUrl: string } | null | undefined
   isLoading:     boolean
   isError:       boolean
   isPending:     boolean
@@ -23,12 +23,8 @@ export function PdfFileCard({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const openFile = () => {
-    if (!fileData?.data) return
-    const bytes  = atob(fileData.data)
-    const buffer = new Uint8Array(bytes.length)
-    for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i)
-    const blob = new Blob([buffer], { type: fileData.contentType ?? 'application/pdf' })
-    window.open(URL.createObjectURL(blob), '_blank', 'noopener,noreferrer')
+    if (!fileData?.downloadUrl) return
+    window.open(fileData.downloadUrl, '_blank', 'noopener,noreferrer')
   }
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,7 +34,7 @@ export function PdfFileCard({
     e.target.value = ''
   }
 
-  const hasFile = !isLoading && !isError && !!fileData?.data
+  const hasFile = !isLoading && !isError && !!fileData?.downloadUrl
 
   return (
     <Card>

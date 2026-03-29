@@ -25,7 +25,7 @@ export interface BoardCard {
 
 export interface CardAttachmentDto {
   id:          string
-  data:        string
+  downloadUrl: string
   contentType: string
   fileName:    string
 }
