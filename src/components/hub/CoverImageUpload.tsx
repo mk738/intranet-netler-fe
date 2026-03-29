@@ -1,22 +1,25 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { Button } from '@/components/ui'
 
-interface ImageValue {
-  data: string
-  type: string
-}
-
 interface Props {
-  value:    ImageValue | null
-  onChange: (value: ImageValue | null) => void
+  value:    File | null
+  onChange: (value: File | null) => void
 }
 
 const ACCEPTED = 'image/jpeg,image/png,image/webp,image/gif'
 const MAX_BYTES = 5 * 1024 * 1024 // 5 MB
 
 export function CoverImageUpload({ value, onChange }: Props) {
-  const inputRef        = useRef<HTMLInputElement>(null)
+  const inputRef          = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!value) { setPreviewUrl(null); return }
+    const url = URL.createObjectURL(value)
+    setPreviewUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [value])
 
   const handleFile = (file: File) => {
     setError(null)
@@ -24,14 +27,7 @@ export function CoverImageUpload({ value, onChange }: Props) {
       setError('Filen överstiger 5 MB-gränsen.')
       return
     }
-    const reader = new FileReader()
-    reader.onload = e => {
-      const result = e.target?.result as string
-      // Strip the data URL prefix: "data:image/jpeg;base64,"
-      const base64 = result.split(',')[1]
-      onChange({ data: base64, type: file.type })
-    }
-    reader.readAsDataURL(file)
+    onChange(file)
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,11 +37,11 @@ export function CoverImageUpload({ value, onChange }: Props) {
     e.target.value = ''
   }
 
-  if (value) {
+  if (value && previewUrl) {
     return (
       <div className="space-y-2">
         <img
-          src={`data:${value.type};base64,${value.data}`}
+          src={previewUrl}
           alt="Cover preview"
           className="w-full max-h-[200px] object-cover rounded-lg"
         />

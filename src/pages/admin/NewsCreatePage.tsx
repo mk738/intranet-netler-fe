@@ -29,9 +29,7 @@ const schema = z.object({
   publish:  z.boolean(),
 })
 
-type FormData = z.infer<typeof schema>
-
-interface CoverImage { data: string; type: string }
+type NewsFormValues = z.infer<typeof schema>
 
 export function NewsCreatePage() {
   const { id }          = useParams<{ id: string }>()
@@ -39,7 +37,7 @@ export function NewsCreatePage() {
   const navigate        = useNavigate()
   const { showToast }   = useToast()
   const qc              = useQueryClient()
-  const [coverImage, setCoverImage] = useState<CoverImage | null>(null)
+  const [coverImage, setCoverImage] = useState<File | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
 
   const { data: existing } = useNewsPost(id ?? '')
@@ -48,7 +46,7 @@ export function NewsCreatePage() {
   const mutation           = isEdit ? updateMutation : createMutation
   const isPending          = mutation.isPending
 
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<NewsFormValues>({
     resolver: zodResolver(schema),
     defaultValues: { title: '', body: '', category: '', pinned: false, publish: true },
   })
@@ -65,19 +63,17 @@ export function NewsCreatePage() {
 
   const bodyValue = watch('body')
 
-  const onSubmit = (data: FormData) => {
-    const payload = {
-      title:          data.title,
-      body:           data.body,
-      pinned:         data.pinned,
-      published:      data.publish,
-      category:       data.category || null,
-      coverImageData: coverImage?.data ?? null,
-      coverImageType: coverImage?.type ?? null,
-    }
+  const onSubmit = (data: NewsFormValues) => {
+    const formData = new FormData()
+    formData.append('title',     data.title)
+    formData.append('body',      data.body)
+    formData.append('pinned',    String(data.pinned))
+    formData.append('published', String(data.publish))
+    if (data.category) formData.append('category', data.category)
+    if (coverImage)    formData.append('coverImage', coverImage)
 
     if (isEdit) {
-      updateMutation.mutate(payload, {
+      updateMutation.mutate(formData, {
         onSuccess: updated => {
           qc.setQueryData(['news', updated.id], updated)
           showToast('Inlägg uppdaterat', 'success')
@@ -85,7 +81,7 @@ export function NewsCreatePage() {
         },
       })
     } else {
-      createMutation.mutate(payload, {
+      createMutation.mutate(formData, {
         onSuccess: created => {
           qc.setQueryData(['news', created.id], created)
           showToast(data.publish ? 'Inlägg publicerat' : 'Inlägg sparat som utkast', 'success')

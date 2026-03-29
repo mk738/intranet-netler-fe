@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { Card, Spinner, EmptyState, Button } from '@/components/ui'
-import { getApiCode } from '@/lib/api'
+import api, { getApiCode } from '@/lib/api'
 
 interface Props {
   title:         string
@@ -22,9 +22,19 @@ export function PdfFileCard({
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const openFile = () => {
+  const openFile = async () => {
     if (!fileData?.downloadUrl) return
-    window.open(fileData.downloadUrl, '_blank', 'noopener,noreferrer')
+    const url = fileData.downloadUrl
+    // Firebase Storage URLs are absolute public URLs — open directly.
+    // Relative or same-origin URLs (e.g. test/staging backend endpoints) require
+    // auth headers, so fetch via the API client first.
+    if (url.startsWith('https://') || url.startsWith('http://')) {
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } else {
+      const resp = await api.get<Blob>(url, { responseType: 'blob' })
+      const blobUrl = URL.createObjectURL(resp.data)
+      window.open(blobUrl, '_blank', 'noopener,noreferrer')
+    }
   }
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
