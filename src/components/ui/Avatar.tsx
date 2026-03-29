@@ -1,27 +1,41 @@
 import { useState, useEffect } from 'react'
-import api from '@/lib/api'
+import { getIdToken } from '@/lib/firebase'
 
 function useAvatarSrc(avatarUrl: string | null): string | null {
   const [src, setSrc] = useState<string | null>(null)
 
   useEffect(() => {
     if (!avatarUrl) { setSrc(null); return }
-    // Firebase Storage URLs are public — use directly
-    if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
+
+    // Firebase Storage / other public CDN URLs — use directly as img src
+    if (avatarUrl.includes('firebasestorage.googleapis.com')) {
       setSrc(avatarUrl)
       return
     }
-    // Relative/backend URLs require auth headers — proxy through API client
-    let objectUrl: string | null = null
+
+    // Relative or backend URLs: fetch with auth token.
+    // Using native fetch (not axios) so the browser automatically strips the
+    // Authorization header when following a cross-origin redirect to Firebase,
+    // avoiding CORS errors on the storage bucket.
     let cancelled = false
-    api.get(avatarUrl, { responseType: 'blob' })
-      .then(res => {
+    let objectUrl: string | null = null
+
+    getIdToken()
+      .then(token =>
+        fetch(avatarUrl, { headers: { Authorization: `Bearer ${token}` } })
+      )
+      .then(r => {
+        if (!r.ok) throw new Error(`${r.status}`)
+        return r.blob()
+      })
+      .then(blob => {
         if (!cancelled) {
-          objectUrl = URL.createObjectURL(res.data)
+          objectUrl = URL.createObjectURL(blob)
           setSrc(objectUrl)
         }
       })
       .catch(() => { if (!cancelled) setSrc(null) })
+
     return () => {
       cancelled = true
       if (objectUrl) URL.revokeObjectURL(objectUrl)
