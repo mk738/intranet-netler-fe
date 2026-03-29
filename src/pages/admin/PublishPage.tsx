@@ -39,8 +39,6 @@ const eventSchema = z.object({
 type NewsForm  = z.infer<typeof newsSchema>
 type EventForm = z.infer<typeof eventSchema>
 
-interface CoverImage { data: string; type: string }
-
 // ── Type selector card ─────────────────────────────────────────
 
 interface TypeCardProps {
@@ -77,7 +75,7 @@ function NewsForm({ onDone }: { onDone: () => void }) {
   const { showToast } = useToast()
   const qc            = useQueryClient()
   const mutation      = useCreateNews()
-  const [coverImage, setCoverImage] = useState<CoverImage | null>(null)
+  const [coverImage, setCoverImage] = useState<File | null>(null)
   const publishIntent = useRef(true)
 
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<NewsForm>({
@@ -89,16 +87,15 @@ function NewsForm({ onDone }: { onDone: () => void }) {
 
   const onSubmit = (data: NewsForm) => {
     const publish = publishIntent.current
+    const formData = new FormData()
+    formData.append('title',     data.title)
+    formData.append('body',      data.body)
+    formData.append('pinned',    String(data.pinned))
+    formData.append('published', String(publish))
+    if (data.category) formData.append('category', data.category)
+    if (coverImage)    formData.append('coverImage', coverImage)
     mutation.mutate(
-      {
-        title:          data.title,
-        body:           data.body,
-        pinned:         data.pinned,
-        published:      publish,
-        category:       data.category || null,
-        coverImageData: coverImage?.data ?? null,
-        coverImageType: coverImage?.type ?? null,
-      },
+      formData,
       {
         onSuccess: created => {
           qc.setQueryData(['news', created.id], created)

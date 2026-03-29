@@ -270,15 +270,6 @@ export interface EventDto {
   myRsvpStatus:  RsvpStatus | null
 }
 
-export interface CreateNewsRequest {
-  title:          string
-  body:           string
-  pinned:         boolean
-  published:      boolean
-  category:       string | null
-  coverImageData: string | null
-  coverImageType: string | null
-}
 
 export interface CreateEventRequest {
   title:       string
