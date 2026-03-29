@@ -60,9 +60,7 @@ export function NewsCreatePage() {
     setValue('body',     existing.body)
     setValue('category', existing.category ?? '')
     setValue('pinned',   existing.pinned)
-    if (existing.coverImageData && existing.coverImageType) {
-      setCoverImage({ data: existing.coverImageData, type: existing.coverImageType })
-    }
+    // Cover image is stored in Firebase — not pre-populated when editing
   }, [existing, isEdit, setValue])
 
   const bodyValue = watch('body')
