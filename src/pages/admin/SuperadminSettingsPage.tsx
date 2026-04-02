@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
+import { format, parseISO } from 'date-fns'
+import { sv } from 'date-fns/locale'
 import { useAuth } from '@/context/AuthContext'
 import { useEmployees, useUpdateEmployeeRole, useSetEmployeeActive } from '@/hooks/useEmployees'
 import { useToast } from '@/components/ui/Toast'
 import { Avatar } from '@/components/ui/Avatar'
 import { Modal, Button, Spinner } from '@/components/ui'
+import { DeactivateEmployeeModal } from '@/components/employees/DeactivateEmployeeModal'
 import type { Employee, Role } from '@/types'
 
 // ── Role badge ──────────────────────────────────────────────────
@@ -52,16 +55,19 @@ function ConfirmModal({
 function EmployeeRow({
   emp,
   currentUserId,
+  isSuperAdmin,
 }: {
   emp: Employee
   currentUserId: string
+  isSuperAdmin: boolean
 }) {
   const { showToast } = useToast()
   const roleMut   = useUpdateEmployeeRole(emp.id)
   const activeMut = useSetEmployeeActive(emp.id)
 
-  const [roleConfirm,   setRoleConfirm]   = useState<'ADMIN' | 'EMPLOYEE' | null>(null)
-  const [activeConfirm, setActiveConfirm] = useState<boolean | null>(null)
+  const [roleConfirm,    setRoleConfirm]    = useState<'ADMIN' | 'EMPLOYEE' | null>(null)
+  const [activeConfirm,  setActiveConfirm]  = useState<boolean | null>(null)
+  const [deactivateOpen, setDeactivateOpen] = useState(false)
 
   const isSelf = emp.id === currentUserId
   const name   = emp.profile
@@ -106,6 +112,11 @@ function EmployeeRow({
             <div className="min-w-0">
               <p className="text-sm font-medium text-text-1 truncate">{name}</p>
               <p className="text-xs text-text-3 truncate">{emp.email}</p>
+              {emp.employmentEndDate && (
+                <p className="text-xs text-text-3 mt-0.5">
+                  Avslutas {format(parseISO(emp.employmentEndDate), 'd MMM', { locale: sv })}
+                </p>
+              )}
             </div>
           </div>
         </td>
@@ -145,15 +156,19 @@ function EmployeeRow({
 
         {/* Active toggle */}
         <td className="px-4 py-3">
-          {emp.role === 'SUPERADMIN' || isSelf ? (
+          {isSelf ? (
             <span className="text-xs text-text-3">—</span>
           ) : emp.isActive ? (
-            <button
-              onClick={() => setActiveConfirm(false)}
-              className="text-xs font-medium text-danger hover:underline"
-            >
-              Inaktivera
-            </button>
+            isSuperAdmin ? (
+              <button
+                onClick={() => setDeactivateOpen(true)}
+                className="text-xs font-medium text-danger hover:underline"
+              >
+                Inaktivera
+              </button>
+            ) : (
+              <span className="text-xs text-text-3">—</span>
+            )
           ) : (
             <button
               onClick={() => setActiveConfirm(true)}
@@ -180,16 +195,18 @@ function EmployeeRow({
 
       {activeConfirm !== null && (
         <ConfirmModal
-          message={
-            activeConfirm
-              ? `Aktivera ${name}? De kan då logga in igen.`
-              : `Inaktivera ${name}? De kan inte längre logga in.`
-          }
+          message={`Aktivera ${name}? De kan då logga in igen.`}
           onConfirm={confirmActive}
           onClose={() => setActiveConfirm(null)}
           loading={activeMut.isPending}
         />
       )}
+
+      <DeactivateEmployeeModal
+        employee={emp}
+        isOpen={deactivateOpen}
+        onClose={() => setDeactivateOpen(false)}
+      />
     </>
   )
 }
@@ -198,6 +215,7 @@ function EmployeeRow({
 
 export function SuperadminSettingsPage() {
   const { employee, isSuperAdmin } = useAuth()
+
   const { data: employees, isLoading } = useEmployees()
 
   if (!isSuperAdmin) return <Navigate to="/dashboard" replace />
@@ -238,6 +256,7 @@ export function SuperadminSettingsPage() {
                     key={emp.id}
                     emp={emp}
                     currentUserId={employee?.id ?? ''}
+                    isSuperAdmin={isSuperAdmin}
                   />
                 ))}
               </tbody>
