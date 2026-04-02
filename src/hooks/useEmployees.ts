@@ -158,6 +158,18 @@ export function useSetEmployeeActive(id: string) {
   })
 }
 
+export function useDeactivateEmployee(id: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: { employmentEndDate?: string | null; confirmName: string }) =>
+      api.patch<ApiResponse<Employee>>(`/api/employees/${id}/deactivate`, payload)
+         .then(r => r.data.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['employees'] })
+    },
+  })
+}
+
 export function useUpdateEmployeeProfile(id: string) {
   const qc = useQueryClient()
   return useMutation({
