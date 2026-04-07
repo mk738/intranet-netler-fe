@@ -6,6 +6,7 @@ import { z } from 'zod'
 import clsx from 'clsx'
 import { useQueryClient } from '@tanstack/react-query'
 import { useCreateNews, useUpdateNews, useNewsPost } from '@/hooks/useNews'
+import { useCategories } from '@/hooks/useCategories'
 import { useToast } from '@/components/ui/Toast'
 
 import { Button } from '@/components/ui'
@@ -15,8 +16,6 @@ import { DeleteNewsConfirmModal } from '@/components/hub/DeleteNewsConfirmModal'
 import { FieldError } from '@/components/ui/FieldError'
 import { FormError } from '@/components/ui/FormError'
 import { getApiError } from '@/lib/api'
-
-const NEWS_CATEGORIES = ['Allmänt', 'HR', 'IT', 'Månadsbrev', 'Ekonomi'] as const
 
 const schema = z.object({
   title:    z.string().min(1, 'Titel krävs').max(300, 'Titeln är för lång'),
@@ -40,7 +39,8 @@ export function NewsCreatePage() {
   const [coverImage, setCoverImage] = useState<File | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
 
-  const { data: existing } = useNewsPost(id ?? '')
+  const { data: existing }                    = useNewsPost(id ?? '')
+  const { data: categories, isLoading: catsLoading } = useCategories('NEWS')
   const createMutation     = useCreateNews()
   const updateMutation     = useUpdateNews(id ?? '')
   const mutation           = isEdit ? updateMutation : createMutation
@@ -64,30 +64,45 @@ export function NewsCreatePage() {
   const bodyValue = watch('body')
 
   const onSubmit = (data: NewsFormValues) => {
-    const formData = new FormData()
-    formData.append('title',     data.title)
-    formData.append('body',      data.body)
-    formData.append('pinned',    String(data.pinned))
-    formData.append('published', String(data.publish))
-    if (data.category) formData.append('category', data.category)
-    if (coverImage)    formData.append('coverImage', coverImage)
+    const submit = (coverImageData?: string, coverImageType?: string) => {
+      const payload = {
+        title:     data.title,
+        body:      data.body,
+        pinned:    data.pinned,
+        published: data.publish,
+        ...(data.category   && { category:       data.category }),
+        ...(coverImageData  && { coverImageData, coverImageType }),
+      }
 
-    if (isEdit) {
-      updateMutation.mutate(formData, {
-        onSuccess: updated => {
-          qc.setQueryData(['news', updated.id], updated)
-          showToast('Inlägg uppdaterat', 'success')
-          navigate(`/news/${updated.id}`)
-        },
-      })
+      if (isEdit) {
+        updateMutation.mutate(payload, {
+          onSuccess: updated => {
+            qc.setQueryData(['news', updated.id], updated)
+            showToast('Inlägg uppdaterat', 'success')
+            navigate(`/news/${updated.id}`)
+          },
+        })
+      } else {
+        createMutation.mutate(payload, {
+          onSuccess: created => {
+            qc.setQueryData(['news', created.id], created)
+            showToast(data.publish ? 'Inlägg publicerat' : 'Inlägg sparat som utkast', 'success')
+            navigate(`/news/${created.id}`)
+          },
+        })
+      }
+    }
+
+    if (coverImage) {
+      const reader = new FileReader()
+      reader.onload = e => {
+        const dataUrl = e.target?.result as string
+        const base64  = dataUrl.substring(dataUrl.indexOf(',') + 1)
+        submit(base64, coverImage.type)
+      }
+      reader.readAsDataURL(coverImage)
     } else {
-      createMutation.mutate(formData, {
-        onSuccess: created => {
-          qc.setQueryData(['news', created.id], created)
-          showToast(data.publish ? 'Inlägg publicerat' : 'Inlägg sparat som utkast', 'success')
-          navigate(`/news/${created.id}`)
-        },
-      })
+      submit()
     }
   }
 
@@ -125,10 +140,11 @@ export function NewsCreatePage() {
             <select
               {...register('category')}
               className="field-select"
+              disabled={catsLoading}
             >
               <option value="">Ingen kategori</option>
-              {NEWS_CATEGORIES.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
+              {(categories ?? []).map(cat => (
+                <option key={cat.id} value={cat.name}>{cat.name}</option>
               ))}
             </select>
           </div>

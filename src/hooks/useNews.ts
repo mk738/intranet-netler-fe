@@ -25,13 +25,22 @@ export function useNewsPost(id: string) {
   })
 }
 
+export interface NewsPayload {
+  title:           string
+  body:            string
+  pinned:          boolean
+  published:       boolean
+  category?:       string
+  coverImageData?: string
+  coverImageType?: string
+}
+
 export function useCreateNews() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (formData: FormData) =>
-      api.post<ApiResponse<NewsPostDetailDto>>('/api/news', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }).then(r => r.data.data),
+    mutationFn: (payload: NewsPayload) =>
+      api.post<ApiResponse<NewsPostDetailDto>>('/api/news', payload)
+         .then(r => r.data.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['news'] })
     },
@@ -41,10 +50,9 @@ export function useCreateNews() {
 export function useUpdateNews(id: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (formData: FormData) =>
-      api.put<ApiResponse<NewsPostDetailDto>>(`/api/news/${id}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }).then(r => r.data.data),
+    mutationFn: (payload: NewsPayload) =>
+      api.put<ApiResponse<NewsPostDetailDto>>(`/api/news/${id}`, payload)
+         .then(r => r.data.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['news', id] })
       qc.invalidateQueries({ queryKey: ['news'] })

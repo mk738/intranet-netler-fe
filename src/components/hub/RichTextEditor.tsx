@@ -34,42 +34,45 @@ function ToolbarButton({ onClick, active, children, title }: ToolbarButtonProps)
 
 function BoldIcon() {
   return (
-    <svg width="12" height="13" viewBox="0 0 12 13" fill="currentColor">
-      <path d="M3 2h3.5a2.5 2.5 0 0 1 0 5H3V2zm0 5h4a2.5 2.5 0 0 1 0 5H3V7z"/>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/>
+      <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/>
     </svg>
   )
 }
 
 function ItalicIcon() {
   return (
-    <svg width="12" height="13" viewBox="0 0 12 13" fill="currentColor">
-      <path d="M5 2h4v1.5H7.3l-2.6 7H7V12H3v-1.5h1.7l2.6-7H5V2z"/>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <line x1="19" y1="4" x2="10" y2="4"/>
+      <line x1="14" y1="20" x2="5" y2="20"/>
+      <line x1="15" y1="4" x2="9" y2="20"/>
     </svg>
   )
 }
 
 function BulletListIcon() {
   return (
-    <svg width="14" height="13" viewBox="0 0 14 13" fill="currentColor">
-      <circle cx="1.5" cy="3" r="1.5"/>
-      <rect x="4" y="2.25" width="10" height="1.5" rx="0.75"/>
-      <circle cx="1.5" cy="7" r="1.5"/>
-      <rect x="4" y="6.25" width="10" height="1.5" rx="0.75"/>
-      <circle cx="1.5" cy="11" r="1.5"/>
-      <rect x="4" y="10.25" width="10" height="1.5" rx="0.75"/>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <line x1="9" y1="6" x2="20" y2="6"/>
+      <line x1="9" y1="12" x2="20" y2="12"/>
+      <line x1="9" y1="18" x2="20" y2="18"/>
+      <line x1="4" y1="6" x2="4.01" y2="6"/>
+      <line x1="4" y1="12" x2="4.01" y2="12"/>
+      <line x1="4" y1="18" x2="4.01" y2="18"/>
     </svg>
   )
 }
 
 function OrderedListIcon() {
   return (
-    <svg width="14" height="13" viewBox="0 0 14 13" fill="currentColor">
-      <text x="0" y="4" fontSize="4" fontFamily="monospace">1.</text>
-      <rect x="4" y="2.25" width="10" height="1.5" rx="0.75"/>
-      <text x="0" y="8" fontSize="4" fontFamily="monospace">2.</text>
-      <rect x="4" y="6.25" width="10" height="1.5" rx="0.75"/>
-      <text x="0" y="12" fontSize="4" fontFamily="monospace">3.</text>
-      <rect x="4" y="10.25" width="10" height="1.5" rx="0.75"/>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <line x1="10" y1="6" x2="21" y2="6"/>
+      <line x1="10" y1="12" x2="21" y2="12"/>
+      <line x1="10" y1="18" x2="21" y2="18"/>
+      <path d="M4 6h1v4"/>
+      <path d="M4 10h2"/>
+      <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>
     </svg>
   )
 }

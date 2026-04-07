@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { useCreateNews } from '@/hooks/useNews'
+import { useCategories } from '@/hooks/useCategories'
 import { useCreateEvent } from '@/hooks/useEvents'
 import { useToast } from '@/components/ui/Toast'
 
@@ -75,35 +76,51 @@ function NewsForm({ onDone }: { onDone: () => void }) {
   const { showToast } = useToast()
   const qc            = useQueryClient()
   const mutation      = useCreateNews()
+  const { data: categories, isLoading: catsLoading } = useCategories('NEWS')
   const [coverImage, setCoverImage] = useState<File | null>(null)
   const publishIntent = useRef(true)
 
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<NewsForm>({
     resolver: zodResolver(newsSchema),
-    defaultValues: { title: '', body: '', pinned: false, category: 'Allmänt' },
+    defaultValues: { title: '', body: '', pinned: false, category: '' },
   })
 
   const bodyValue = watch('body')
 
   const onSubmit = (data: NewsForm) => {
     const publish = publishIntent.current
-    const formData = new FormData()
-    formData.append('title',     data.title)
-    formData.append('body',      data.body)
-    formData.append('pinned',    String(data.pinned))
-    formData.append('published', String(publish))
-    if (data.category) formData.append('category', data.category)
-    if (coverImage)    formData.append('coverImage', coverImage)
-    mutation.mutate(
-      formData,
-      {
-        onSuccess: created => {
-          qc.setQueryData(['news', created.id], created)
-          showToast(publish ? 'Inlägg publicerat' : 'Inlägg sparat som utkast', 'success')
-          navigate(`/news/${created.id}`)
+
+    const submit = (coverImageData?: string, coverImageType?: string) => {
+      mutation.mutate(
+        {
+          title:     data.title,
+          body:      data.body,
+          pinned:    data.pinned,
+          published: publish,
+          ...(data.category  && { category: data.category }),
+          ...(coverImageData && { coverImageData, coverImageType }),
         },
+        {
+          onSuccess: created => {
+            qc.setQueryData(['news', created.id], created)
+            showToast(publish ? 'Inlägg publicerat' : 'Inlägg sparat som utkast', 'success')
+            navigate(`/news/${created.id}`)
+          },
+        }
+      )
+    }
+
+    if (coverImage) {
+      const reader = new FileReader()
+      reader.onload = e => {
+        const dataUrl = e.target?.result as string
+        const base64  = dataUrl.substring(dataUrl.indexOf(',') + 1)
+        submit(base64, coverImage.type)
       }
-    )
+      reader.readAsDataURL(coverImage)
+    } else {
+      submit()
+    }
   }
 
   const apiError = mutation.isError
@@ -122,9 +139,10 @@ function NewsForm({ onDone }: { onDone: () => void }) {
         </div>
         <div>
           <label className="field-label">Kategori</label>
-          <select {...register('category')} className="field-select">
-            {['Allmänt', 'HR', 'IT', 'Månadsbrev', 'Ekonomi'].map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
+          <select {...register('category')} className="field-select" disabled={catsLoading}>
+            <option value="">Ingen kategori</option>
+            {(categories ?? []).map(cat => (
+              <option key={cat.id} value={cat.name}>{cat.name}</option>
             ))}
           </select>
         </div>

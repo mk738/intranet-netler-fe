@@ -155,6 +155,19 @@ function IconFaq() {
 
 // function IconPipeline() — reserved for Kandidatpipeline if re-enabled
 
+function IconContent() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="8" y1="6" x2="21" y2="6"/>
+      <line x1="8" y1="12" x2="21" y2="12"/>
+      <line x1="8" y1="18" x2="21" y2="18"/>
+      <line x1="3" y1="6" x2="3.01" y2="6"/>
+      <line x1="3" y1="12" x2="3.01" y2="12"/>
+      <line x1="3" y1="18" x2="3.01" y2="18"/>
+    </svg>
+  )
+}
+
 function IconSettings() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -192,13 +205,14 @@ const adminLinks = [
   { to: '/admin/crm',              label: 'CRM',               icon: <IconCRM />           },
   { to: '/admin/boards',           label: 'Boards',            icon: <IconBoards />        },
   { to: '/admin/publish',          label: 'Publicera',         icon: <IconPostNews />      },
+  { to: '/admin/content',          label: 'Innehåll',          icon: <IconContent />       },
   // { to: '/admin/pipeline',         label: 'Kandidatpipeline',  icon: <IconPipeline />      },
 ]
 
 // ── Sidebar ────────────────────────────────────────────────────
 
 export function Sidebar() {
-  const { isAdmin, isSuperAdmin, employee } = useAuth()
+  const { isAdmin, employee } = useAuth()
   const navigate                            = useNavigate()
   const unreadNews                          = useUnreadNewsCount()
 
@@ -246,7 +260,7 @@ export function Sidebar() {
       <div className="border-t border-subtle px-3 py-3 space-y-1">
         {/* Inställningar */}
         <button
-          onClick={() => navigate(isSuperAdmin ? '/admin/settings' : '/profile')}
+          onClick={() => navigate(isAdmin ? '/admin/settings' : '/profile')}
           className="w-full flex items-center gap-2.5 px-3 py-2 rounded text-sm text-text-2
                      hover:bg-bg-hover hover:text-text-1 transition-colors"
         >

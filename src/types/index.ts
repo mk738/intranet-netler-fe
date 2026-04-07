@@ -283,6 +283,21 @@ export interface CreateEventRequest {
   allDay:      boolean
 }
 
+// ── Categories ────────────────────────────────────────────────
+export type CategoryType = 'NEWS' | 'FAQ'
+
+export interface Category {
+  id:        string
+  name:      string
+  type:      CategoryType
+  createdAt: string
+}
+
+export interface CreateCategoryRequest {
+  name: string
+  type: CategoryType
+}
+
 // ── FAQ ───────────────────────────────────────────────────────
 export interface FaqItem {
   id:        string

@@ -7,8 +7,12 @@ function useAvatarSrc(avatarUrl: string | null): string | null {
   useEffect(() => {
     if (!avatarUrl) { setSrc(null); return }
 
-    // Firebase Storage / other public CDN URLs — use directly as img src
-    if (avatarUrl.includes('firebasestorage.googleapis.com') || avatarUrl.includes('storage.googleapis.com')) {
+    // Firebase Storage, other public CDN URLs, or pre-signed S3/MinIO URLs — use directly as img src
+    if (
+      avatarUrl.includes('firebasestorage.googleapis.com') ||
+      avatarUrl.includes('storage.googleapis.com') ||
+      avatarUrl.includes('X-Amz-Signature')
+    ) {
       setSrc(avatarUrl)
       return
     }
