@@ -226,7 +226,7 @@ export function SuperadminSettingsPage() {
   })
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-4xl space-y-8">
       <div>
         <h1 className="text-xl font-semibold text-text-1">Inställningar</h1>
         <p className="text-sm text-text-3 mt-1">Hantera roller och kontostatus för alla användare.</p>

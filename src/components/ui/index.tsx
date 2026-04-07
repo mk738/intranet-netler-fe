@@ -1,4 +1,5 @@
 import { ReactNode, ButtonHTMLAttributes } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import clsx from 'clsx'
 
@@ -110,7 +111,7 @@ export function Modal({ title, onClose, children, footer, disableBackdropClose =
   footer?:              ReactNode
   disableBackdropClose?: boolean
 }) {
-  return (
+  return createPortal(
     <motion.div
       className="fixed inset-0 bg-black/60 flex items-start justify-center pt-16 px-4 z-50"
       initial={{ opacity: 0 }}
@@ -146,7 +147,8 @@ export function Modal({ title, onClose, children, footer, disableBackdropClose =
           </div>
         )}
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   )
 }
 

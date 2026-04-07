@@ -210,8 +210,9 @@
   .prose-dark h1     { @apply text-xl font-semibold text-text-1 mb-3 mt-4; }
   .prose-dark h2     { @apply text-lg font-medium text-text-1 mb-2 mt-3; }
   .prose-dark p      { @apply text-text-2 mb-2 leading-relaxed; }
-  .prose-dark ul     { @apply list-disc list-inside text-text-2 mb-2; }
-  .prose-dark ol     { @apply list-decimal list-inside text-text-2 mb-2; }
+  .prose-dark ul     { @apply list-disc text-text-2 mb-2 pl-6; }
+  .prose-dark ol     { @apply list-decimal text-text-2 mb-2 pl-6; }
+  .prose-dark li     { display: list-item; padding-left: 0.25rem; }
   .prose-dark strong { @apply text-text-1 font-medium; }
   .prose-dark em     { @apply italic; }
 

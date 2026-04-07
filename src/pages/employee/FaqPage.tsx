@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useFaqItems, useCreateFaqItem, useUpdateFaqItem, useDeleteFaqItem } from '@/hooks/useFaq'
+import { useCategories } from '@/hooks/useCategories'
 import { useToast } from '@/components/ui/Toast'
 import { Button, EmptyState, Modal } from '@/components/ui'
 import { useForm } from 'react-hook-form'
@@ -82,7 +83,8 @@ function FaqModal({
   existing: FaqItem | null
   onClose:  () => void
 }) {
-  const { showToast }   = useToast()
+  const { showToast }                           = useToast()
+  const { data: categories, isLoading: catsLoading } = useCategories('FAQ')
   const createMutation  = useCreateFaqItem()
   const updateMutation  = useUpdateFaqItem(existing?.id ?? '')
   const mutation        = existing ? updateMutation : createMutation
@@ -98,7 +100,7 @@ function FaqModal({
 
   const onSubmit = (data: FaqForm) => {
     mutation.mutate(
-      { question: data.question, answer: data.answer, category: data.category ? data.category.trim().toUpperCase() : null },
+      { question: data.question, answer: data.answer, category: data.category || null },
       {
         onSuccess: () => {
           showToast(existing ? 'Fråga uppdaterad' : 'Fråga skapad', 'success')
@@ -125,11 +127,16 @@ function FaqModal({
       <form id="faq-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <label className="field-label">Kategori</label>
-          <input
+          <select
             {...register('category')}
-            className="field-input"
-            placeholder="t.ex. Lön, HR, IT (valfritt)"
-          />
+            className="field-select"
+            disabled={catsLoading}
+          >
+            <option value="">Ingen kategori</option>
+            {(categories ?? []).map(cat => (
+              <option key={cat.id} value={cat.name}>{cat.name}</option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="field-label">Fråga *</label>
