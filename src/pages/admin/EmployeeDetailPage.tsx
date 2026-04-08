@@ -10,12 +10,12 @@ import { AvatarUpload } from '@/components/employees/AvatarUpload'
 import { Card, Spinner, EmptyState, Button } from '@/components/ui'
 import { EditProfileModal } from '@/components/employees/EditProfileModal'
 import { EditBankModal } from '@/components/employees/EditBankModal'
-import { TerminateEmploymentModal } from '@/components/employees/TerminateEmploymentModal'
 import { EndAssignmentConfirmModal } from '@/components/placements/EndAssignmentConfirmModal'
 import { AssignConsultantModal } from '@/components/placements/AssignConsultantModal'
 import { BenefitsCard } from '@/components/employees/BenefitsCard'
 import { EmploymentContractCard } from '@/components/employees/EmploymentContractCard'
 import { CvCard } from '@/components/employees/CvCard'
+import { OnboardingChecklist } from '@/components/employees/OnboardingChecklist'
 import { useAuth } from '@/context/AuthContext'
 import type { BankInfo, Education, Assignment, AssignmentDto, UnplacedDto } from '@/types'
 
@@ -293,12 +293,11 @@ function BankInfoCard({ bankInfo, onEdit }: { bankInfo: BankInfo | null; onEdit:
 // ── Page ──────────────────────────────────────────────────────
 
 export function EmployeeDetailPage() {
-  const { can }      = useAuth()
+  useAuth()
   const { id }       = useParams<{ id: string }>()
   const navigate     = useNavigate()
   const [editProfile,    setEditProfile]    = useState(false)
   const [editBank,       setEditBank]       = useState(false)
-  const [terminate,      setTerminate]      = useState(false)
   const [endAssignment,  setEndAssignment]  = useState(false)
   const [assignOpen,     setAssignOpen]     = useState(false)
 
@@ -339,7 +338,7 @@ export function EmployeeDetailPage() {
 
   return (
     <>
-      <div className="space-y-5">
+      <div className="max-w-4xl space-y-5">
         {/* Back */}
         <button
           onClick={() => navigate('/admin/employees')}
@@ -392,15 +391,10 @@ export function EmployeeDetailPage() {
               Redigera profil
             </Button>
 
-            {isEffectivelyActive && !pendingTermination && can.terminateEmployee && (
-              <Button
-                variant="danger"
-                className="w-full justify-center"
-                onClick={() => setTerminate(true)}
-              >
-                Avsluta anställning
-              </Button>
-            )}
+            <div>
+              <p className="section-label mb-3">Onboarding</p>
+              <OnboardingChecklist employeeId={data.id} />
+            </div>
           </div>
 
           {/* Right column */}
@@ -475,14 +469,6 @@ export function EmployeeDetailPage() {
       )}
 
       {editBank && <EditBankModal onClose={() => setEditBank(false)} employeeId={data.id} />}
-
-      {terminate && (
-        <TerminateEmploymentModal
-          employeeId={data.id}
-          employeeName={name}
-          onClose={() => setTerminate(false)}
-        />
-      )}
 
       {assignOpen && (() => {
         const initials = (p ? `${p.firstName[0]}${p.lastName[0]}` : name.slice(0, 2)).toUpperCase()
