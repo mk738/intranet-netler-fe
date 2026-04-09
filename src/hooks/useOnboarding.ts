@@ -9,14 +9,8 @@ export interface OnboardingItem {
   completedByName: string | null
 }
 
-export interface OnboardingData {
-  items:             OnboardingItem[]
-  completedAt:       string | null
-  completedByName:   string | null
-}
-
 export function useOnboarding(employeeId: string) {
-  return useQuery<OnboardingData>({
+  return useQuery<OnboardingItem[]>({
     queryKey: ['onboarding', employeeId],
     queryFn: () =>
       api.get(`/api/employees/${employeeId}/onboarding`)

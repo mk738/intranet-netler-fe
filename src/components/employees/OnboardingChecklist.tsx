@@ -144,7 +144,7 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
     )
   }
 
-  const serverItems: OnboardingItem[] = data?.items?.length ? data.items : FALLBACK_ITEMS
+  const serverItems: OnboardingItem[] = data?.length ? data : FALLBACK_ITEMS
 
   const list = serverItems.map(item => {
     const local = localCompleted[item.id]
@@ -153,7 +153,11 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
   })
 
   const allDone = list.length > 0 && list.every(i => i.completed)
-  const completedAt = data?.completedAt ?? localCompletedAt
+  const serverAllDone = serverItems.length > 0 && serverItems.every(i => i.completed)
+  const serverCompletedAt = serverAllDone
+    ? (serverItems.map(i => i.completedAt).filter(Boolean).sort().slice(-1)[0] ?? null)
+    : null
+  const completedAt = serverCompletedAt ?? localCompletedAt
   const isOfficiallyComplete = Boolean(completedAt)
 
   function handleToggle(item: OnboardingItem) {
@@ -245,7 +249,6 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
           <div className="flex items-center justify-between mb-3 pb-3 border-b border-subtle">
             <span className="text-xs text-text-3">
               Klarmarkerad {completedAt && formatSwedishDate(completedAt)}
-              {data?.completedByName && ` av ${data.completedByName}`}
             </span>
             <button
               type="button"
