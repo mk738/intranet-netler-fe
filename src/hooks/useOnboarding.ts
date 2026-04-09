@@ -9,8 +9,14 @@ export interface OnboardingItem {
   completedByName: string | null
 }
 
+export interface OnboardingData {
+  items:             OnboardingItem[]
+  completedAt:       string | null
+  completedByName:   string | null
+}
+
 export function useOnboarding(employeeId: string) {
-  return useQuery({
+  return useQuery<OnboardingData>({
     queryKey: ['onboarding', employeeId],
     queryFn: () =>
       api.get(`/api/employees/${employeeId}/onboarding`)
@@ -25,6 +31,16 @@ export function useToggleOnboardingItem(employeeId: string) {
   return useMutation({
     mutationFn: (itemId: string) =>
       api.patch(`/api/employees/${employeeId}/onboarding/${itemId}/toggle`)
+         .then(r => r.data.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['onboarding', employeeId] }),
+  })
+}
+
+export function useCompleteOnboarding(employeeId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () =>
+      api.patch(`/api/employees/${employeeId}/onboarding/complete`)
          .then(r => r.data.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['onboarding', employeeId] }),
   })

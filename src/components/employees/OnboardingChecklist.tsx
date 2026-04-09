@@ -1,8 +1,14 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { format } from 'date-fns'
 import { sv } from 'date-fns/locale'
-import { Spinner } from '@/components/ui'
-import { useOnboarding, useToggleOnboardingItem, type OnboardingItem } from '@/hooks/useOnboarding'
+import { Modal, Button, Spinner } from '@/components/ui'
+import { useToast } from '@/components/ui/Toast'
+import {
+  useOnboarding,
+  useToggleOnboardingItem,
+  useCompleteOnboarding,
+  type OnboardingItem,
+} from '@/hooks/useOnboarding'
 
 const TASK_LABELS: Record<string, string> = {
   CREATE_CV:             'Skapa CV',
@@ -31,6 +37,19 @@ function CheckIcon() {
   )
 }
 
+function PencilIcon() {
+  return (
+    <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
+      <path
+        d="M11.5 2.5a1.5 1.5 0 0 1 2.121 2.121L5 13.243 2 14l.757-3L11.5 2.5z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
 
 function CheckboxRow({
   item,
@@ -41,21 +60,18 @@ function CheckboxRow({
   toggling: boolean
   onToggle: () => void
 }) {
-  const [showTooltip, setShowTooltip] = useState(false)
   const label = TASK_LABELS[item.task] ?? item.task
 
   return (
     <div
-      className="relative flex items-center gap-3 py-2"
+      className="flex items-start gap-3 py-2.5"
       style={{ opacity: toggling ? 0.5 : 1 }}
     >
-      <div className="relative flex-shrink-0">
+      <div className="flex-shrink-0 mt-0.5">
         <button
           type="button"
           onClick={onToggle}
           disabled={toggling}
-          onMouseEnter={() => item.completed && setShowTooltip(true)}
-          onMouseLeave={() => setShowTooltip(false)}
           className="w-5 h-5 rounded flex items-center justify-center transition-colors focus:outline-none"
           style={{
             background:  item.completed ? 'var(--color-purple, #7c3aed)' : 'transparent',
@@ -64,29 +80,29 @@ function CheckboxRow({
         >
           {item.completed && <CheckIcon />}
         </button>
+      </div>
 
-        {showTooltip && item.completed && item.completedByName && (
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-20 pointer-events-none">
-            <div className="bg-bg-card border border-subtle rounded-lg px-3 py-1.5 text-xs text-text-2 whitespace-nowrap shadow-modal">
-              Bokad av {item.completedByName}
-              {item.completedAt && ` · ${formatSwedishDate(item.completedAt)}`}
-            </div>
-          </div>
+      <div className="flex-1 min-w-0">
+        <span
+          className="text-sm transition-colors block"
+          style={{
+            color:          item.completed ? 'var(--tw-text-text-3, #6b617e)' : undefined,
+            textDecoration: item.completed ? 'line-through' : 'none',
+          }}
+        >
+          {label}
+        </span>
+        {item.completed && (item.completedByName || item.completedAt) && (
+          <span className="text-xs text-text-3 mt-0.5 block">
+            {item.completedByName && `Av ${item.completedByName}`}
+            {item.completedByName && item.completedAt && ' · '}
+            {item.completedAt && formatSwedishDate(item.completedAt)}
+          </span>
         )}
       </div>
 
-      <span
-        className="text-sm transition-colors"
-        style={{
-          color:          item.completed ? 'var(--tw-text-text-3, #6b617e)' : undefined,
-          textDecoration: item.completed ? 'line-through' : 'none',
-        }}
-      >
-        {label}
-      </span>
-
       {toggling && (
-        <span className="ml-auto">
+        <span className="flex-shrink-0 mt-0.5">
           <Spinner size="sm" />
         </span>
       )}
@@ -103,10 +119,17 @@ const FALLBACK_ITEMS: OnboardingItem[] = Object.keys(TASK_LABELS).map(task => ({
 }))
 
 export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
-  const { data: items, isLoading } = useOnboarding(employeeId)
-  const toggle = useToggleOnboardingItem(employeeId)
-  const [togglingId, setTogglingId] = useState<string | null>(null)
-  const [localCompleted, setLocalCompleted] = useState<Record<string, boolean>>({})
+  const { data, isLoading } = useOnboarding(employeeId)
+  const toggle    = useToggleOnboardingItem(employeeId)
+  const complete  = useCompleteOnboarding(employeeId)
+  const { showToast } = useToast()
+
+  const [togglingId, setTogglingId]             = useState<string | null>(null)
+  const [localCompleted, setLocalCompleted]     = useState<Record<string, boolean>>({})
+  const [showModal, setShowModal]               = useState(false)
+  const [showCompleteButton, setShowCompleteButton] = useState(false)
+  const [isExpanded, setIsExpanded]             = useState(false)
+  const modalShownForAllDone                    = useRef(false)
 
   if (isLoading) {
     return (
@@ -116,34 +139,153 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
     )
   }
 
-  const baseList: OnboardingItem[] = items?.length ? items : FALLBACK_ITEMS
+  const serverItems: OnboardingItem[] = data?.items?.length ? data.items : FALLBACK_ITEMS
 
-  const list = baseList.map(item => ({
+  const list = serverItems.map(item => ({
     ...item,
     completed: item.id in localCompleted ? localCompleted[item.id] : item.completed,
   }))
 
+  const allDone = list.length > 0 && list.every(i => i.completed)
+  const isOfficiallyComplete = Boolean(data?.completedAt)
+
   function handleToggle(item: OnboardingItem) {
     const next = !list.find(i => i.id === item.id)?.completed
-    setLocalCompleted(prev => ({ ...prev, [item.id]: next }))
+    const nextLocal = { ...localCompleted, [item.id]: next }
+    setLocalCompleted(nextLocal)
     setTogglingId(item.id)
+
     toggle.mutate(item.id, {
-      onSettled: () => setTogglingId(null),
+      onSettled: () => {
+        setTogglingId(null)
+        const allNowDone = serverItems.every(si =>
+          si.id in nextLocal ? nextLocal[si.id] : si.completed
+        )
+        if (allNowDone && !isOfficiallyComplete && !modalShownForAllDone.current) {
+          modalShownForAllDone.current = true
+          setShowModal(true)
+        }
+      },
     })
   }
 
+  function handleConfirmComplete() {
+    complete.mutate(undefined, {
+      onSuccess: () => {
+        showToast('Onboarding klarmarkerad!', 'success')
+        setShowModal(false)
+        setShowCompleteButton(false)
+        setIsExpanded(false)
+        modalShownForAllDone.current = false
+      },
+      onError: () => {
+        showToast('Något gick fel. Försök igen.', 'error')
+      },
+    })
+  }
+
+  function handleDismissModal() {
+    setShowModal(false)
+    setShowCompleteButton(true)
+  }
+
+  // Compressed "done" view
+  if (isOfficiallyComplete && !isExpanded) {
+    return (
+      <>
+        <div className="card flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div
+              className="w-5 h-5 rounded flex-shrink-0 flex items-center justify-center"
+              style={{ background: 'var(--color-purple, #7c3aed)', border: '2px solid var(--color-purple, #7c3aed)' }}
+            >
+              <CheckIcon />
+            </div>
+            <div>
+              <span className="text-sm font-medium text-text-1">Onboarding avklarad</span>
+              {data?.completedAt && (
+                <span className="text-xs text-text-3 ml-1.5">
+                  · {formatSwedishDate(data.completedAt)}
+                </span>
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsExpanded(true)}
+            className="text-text-3 hover:text-text-1 transition-colors flex-shrink-0 p-1 rounded hover:bg-bg-hover"
+            title="Visa checklista"
+          >
+            <PencilIcon />
+          </button>
+        </div>
+      </>
+    )
+  }
+
   return (
-    <div className="card">
-      <div className="divide-y divide-subtle">
-        {list.map((item: OnboardingItem) => (
-          <CheckboxRow
-            key={item.id}
-            item={item}
-            toggling={togglingId === item.id}
-            onToggle={() => handleToggle(item)}
-          />
-        ))}
+    <>
+      <div className="card">
+        {isOfficiallyComplete && isExpanded && (
+          <div className="flex items-center justify-between mb-3 pb-3 border-b border-subtle">
+            <span className="text-xs text-text-3">
+              Klarmarkerad {data?.completedAt && formatSwedishDate(data.completedAt)}
+              {data?.completedByName && ` av ${data.completedByName}`}
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsExpanded(false)}
+              className="text-xs text-text-3 hover:text-text-1 transition-colors"
+            >
+              Komprimera
+            </button>
+          </div>
+        )}
+
+        <div className="divide-y divide-subtle">
+          {list.map((item: OnboardingItem) => (
+            <CheckboxRow
+              key={item.id}
+              item={item}
+              toggling={togglingId === item.id}
+              onToggle={() => handleToggle(item)}
+            />
+          ))}
+        </div>
+
+        {!isOfficiallyComplete && showCompleteButton && allDone && (
+          <div className="mt-4 pt-4 border-t border-subtle">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowModal(true)}
+            >
+              Klarmarkera onboarding
+            </Button>
+          </div>
+        )}
       </div>
-    </div>
+
+      {showModal && (
+        <Modal
+          title="Klarmarkera onboarding?"
+          onClose={handleDismissModal}
+          footer={
+            <>
+              <Button variant="secondary" onClick={handleDismissModal}>
+                Nej, senare
+              </Button>
+              <Button loading={complete.isPending} onClick={handleConfirmComplete}>
+                Ja, klarmarkera
+              </Button>
+            </>
+          }
+        >
+          <p className="text-sm text-text-2">
+            Alla uppgifter är avbockade. Vill du klarmarkera onboardingen som helt avklarad?
+          </p>
+        </Modal>
+      )}
+    </>
   )
 }
