@@ -3,6 +3,7 @@ import { format } from 'date-fns'
 import { sv } from 'date-fns/locale'
 import { Modal, Button, Spinner } from '@/components/ui'
 import { useToast } from '@/components/ui/Toast'
+import { useAuth } from '@/context/AuthContext'
 import {
   useOnboarding,
   useToggleOnboardingItem,
@@ -118,14 +119,18 @@ const FALLBACK_ITEMS: OnboardingItem[] = Object.keys(TASK_LABELS).map(task => ({
   completedByName: null,
 }))
 
+type LocalState = { completed: boolean; completedByName: string | null; completedAt: string | null }
+
 export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
   const { data, isLoading } = useOnboarding(employeeId)
   const toggle    = useToggleOnboardingItem(employeeId)
   const complete  = useCompleteOnboarding(employeeId)
   const { showToast } = useToast()
+  const { employee } = useAuth()
 
   const [togglingId, setTogglingId]             = useState<string | null>(null)
-  const [localCompleted, setLocalCompleted]     = useState<Record<string, boolean>>({})
+  const [localCompleted, setLocalCompleted]     = useState<Record<string, LocalState>>({})
+  const [localCompletedAt, setLocalCompletedAt] = useState<string | null>(null)
   const [showModal, setShowModal]               = useState(false)
   const [showCompleteButton, setShowCompleteButton] = useState(false)
   const [isExpanded, setIsExpanded]             = useState(false)
@@ -141,17 +146,26 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
 
   const serverItems: OnboardingItem[] = data?.items?.length ? data.items : FALLBACK_ITEMS
 
-  const list = serverItems.map(item => ({
-    ...item,
-    completed: item.id in localCompleted ? localCompleted[item.id] : item.completed,
-  }))
+  const list = serverItems.map(item => {
+    const local = localCompleted[item.id]
+    if (!local) return item
+    return { ...item, ...local }
+  })
 
   const allDone = list.length > 0 && list.every(i => i.completed)
-  const isOfficiallyComplete = Boolean(data?.completedAt)
+  const completedAt = data?.completedAt ?? localCompletedAt
+  const isOfficiallyComplete = Boolean(completedAt)
 
   function handleToggle(item: OnboardingItem) {
     const next = !list.find(i => i.id === item.id)?.completed
-    const nextLocal = { ...localCompleted, [item.id]: next }
+    const p = employee?.profile
+    const myName = p ? `${p.firstName} ${p.lastName}`.trim() : null
+    const localEntry: LocalState = {
+      completed:       next,
+      completedByName: next ? myName : null,
+      completedAt:     next ? new Date().toISOString() : null,
+    }
+    const nextLocal = { ...localCompleted, [item.id]: localEntry }
     setLocalCompleted(nextLocal)
     setTogglingId(item.id)
 
@@ -159,7 +173,7 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
       onSettled: () => {
         setTogglingId(null)
         const allNowDone = serverItems.every(si =>
-          si.id in nextLocal ? nextLocal[si.id] : si.completed
+          si.id in nextLocal ? nextLocal[si.id].completed : si.completed
         )
         if (allNowDone && !isOfficiallyComplete && !modalShownForAllDone.current) {
           modalShownForAllDone.current = true
@@ -172,6 +186,7 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
   function handleConfirmComplete() {
     complete.mutate(undefined, {
       onSuccess: () => {
+        setLocalCompletedAt(new Date().toISOString())
         showToast('Onboarding klarmarkerad!', 'success')
         setShowModal(false)
         setShowCompleteButton(false)
@@ -203,9 +218,9 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
             </div>
             <div>
               <span className="text-sm font-medium text-text-1">Onboarding avklarad</span>
-              {data?.completedAt && (
+              {completedAt && (
                 <span className="text-xs text-text-3 ml-1.5">
-                  · {formatSwedishDate(data.completedAt)}
+                  · {formatSwedishDate(completedAt!)}
                 </span>
               )}
             </div>
@@ -229,7 +244,7 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
         {isOfficiallyComplete && isExpanded && (
           <div className="flex items-center justify-between mb-3 pb-3 border-b border-subtle">
             <span className="text-xs text-text-3">
-              Klarmarkerad {data?.completedAt && formatSwedishDate(data.completedAt)}
+              Klarmarkerad {completedAt && formatSwedishDate(completedAt)}
               {data?.completedByName && ` av ${data.completedByName}`}
             </span>
             <button
