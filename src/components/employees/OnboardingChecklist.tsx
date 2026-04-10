@@ -11,21 +11,6 @@ import {
   type OnboardingItem,
 } from '@/hooks/useOnboarding'
 
-const TASK_LABELS: Record<string, string> = {
-  CREATE_CV:             'Skapa CV',
-  NETLER_MAIL:           'Netler-mail via Google Admin',
-  BIRTHDAY_IN_SLACK:     'Lägg in födelsedag i Slack',
-  SLACK_INVITATION:      'Slack-inbjudan till Netler-mail',
-  FORTNOX_ADD_USER:      'Fortnox: Lägg till i kvitton & utlägg',
-  FORTNOX_RECEIPT_GROUP: 'Fortnox: Lägg till i kvittogruppen',
-  SLACK_WELCOME_MESSAGE: 'Skriv välkommen i Slack-kanalen',
-  SLACK_PROFILE_PHOTO:   'Be om profilbild till Slack',
-  SEND_WELCOME_LETTER:   'Skicka välkomstbrev till Netler-mail',
-  REQUEST_BANK_DETAILS:  'Be om bankuppgifter',
-  NOTIFY_PAYROLL:        'Meddela löneavdelningen',
-  SETUP_PENSION:         'Lägg upp pension',
-}
-
 function formatSwedishDate(iso: string): string {
   return format(new Date(iso), 'd MMMM yyyy', { locale: sv })
 }
@@ -61,7 +46,8 @@ function CheckboxRow({
   toggling: boolean
   onToggle: () => void
 }) {
-  const label = TASK_LABELS[item.task] ?? item.task
+  // Use labelSv from backend — no hardcoded map needed
+  const label = item.labelSv ?? item.task
 
   return (
     <div
@@ -75,8 +61,8 @@ function CheckboxRow({
           disabled={toggling}
           className="w-5 h-5 rounded flex items-center justify-center transition-colors focus:outline-none"
           style={{
-            background:  item.completed ? 'var(--color-purple, #7c3aed)' : 'transparent',
-            border:      item.completed ? '2px solid var(--color-purple, #7c3aed)' : '2px solid rgba(107,97,126,0.5)',
+            background: item.completed ? 'var(--color-purple, #7c3aed)' : 'transparent',
+            border:     item.completed ? '2px solid var(--color-purple, #7c3aed)' : '2px solid rgba(107,97,126,0.5)',
           }}
         >
           {item.completed && <CheckIcon />}
@@ -111,31 +97,37 @@ function CheckboxRow({
   )
 }
 
-const FALLBACK_ITEMS: OnboardingItem[] = Object.keys(TASK_LABELS).map(task => ({
-  id:              task,
-  task,
-  completed:       false,
-  completedAt:     null,
-  completedByName: null,
-}))
-
-type LocalState = { completed: boolean; completedByName: string | null; completedAt: string | null }
+type LocalState = {
+  completed:       boolean
+  completedByName: string | null
+  localCompletedAt:     string | null
+}
 
 export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
-  const { data, isLoading } = useOnboarding(employeeId)
-  const toggle    = useToggleOnboardingItem(employeeId)
-  const complete  = useCompleteOnboarding(employeeId)
-  const { showToast } = useToast()
-  const { employee } = useAuth()
+  const { data, isLoading }   = useOnboarding(employeeId)
+  const toggle                = useToggleOnboardingItem(employeeId)
+  const complete              = useCompleteOnboarding(employeeId)
+  const { showToast }         = useToast()
+  const { employee }          = useAuth()
 
-  const [togglingId, setTogglingId]             = useState<string | null>(null)
-  const [localCompleted, setLocalCompleted]     = useState<Record<string, LocalState>>({})
-  const [localCompletedAt, setLocalCompletedAt] = useState<string | null>(null)
-  const [showModal, setShowModal]               = useState(false)
+  const [togglingId, setTogglingId]                 = useState<string | null>(null)
+  const [localCompleted, setLocalCompleted]         = useState<Record<string, LocalState>>({})
+  const [localCompletedAt, setLocalCompletedAt]     = useState<string | null>(null)
+  const [showModal, setShowModal]                   = useState(false)
   const [showCompleteButton, setShowCompleteButton] = useState(false)
-  const [isExpanded, setIsExpanded]             = useState(false)
-  const modalShownForAllDone                    = useRef(false)
+  const [isExpanded, setIsExpanded]                 = useState(false)
+  const modalShownForAllDone                        = useRef(false)
 
+  const serverItems: OnboardingItem[] = data?.length ? data : []
+
+  const list = serverItems.map(item => {
+    const local = localCompleted[item.id]
+    return local ? { ...item, ...local } : item
+  })
+
+  const isOfficiallyComplete = Boolean(localCompletedAt)
+
+  // Early return AFTER all hooks
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -144,45 +136,41 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
     )
   }
 
-  const serverItems: OnboardingItem[] = data?.length ? data : FALLBACK_ITEMS
-
-  const list = serverItems.map(item => {
-    const local = localCompleted[item.id]
-    if (!local) return item
-    return { ...item, ...local }
-  })
-
-  const allDone = list.length > 0 && list.every(i => i.completed)
-  const serverAllDone = serverItems.length > 0 && serverItems.every(i => i.completed)
-  const serverCompletedAt = serverAllDone
-    ? (serverItems.map(i => i.completedAt).filter(Boolean).sort().slice(-1)[0] ?? null)
-    : null
-  const completedAt = serverCompletedAt ?? localCompletedAt
-  const isOfficiallyComplete = Boolean(completedAt)
-
   function handleToggle(item: OnboardingItem) {
     const next = !list.find(i => i.id === item.id)?.completed
-    const p = employee?.profile
+    const p    = employee?.profile
     const myName = p ? `${p.firstName} ${p.lastName}`.trim() : null
+
     const localEntry: LocalState = {
       completed:       next,
       completedByName: next ? myName : null,
-      completedAt:     next ? new Date().toISOString() : null,
+      localCompletedAt:     next ? new Date().toISOString() : null,
     }
+
     const nextLocal = { ...localCompleted, [item.id]: localEntry }
+    const allNowDone = serverItems.every(si => {
+      const local = nextLocal[si.id]
+      return local ? local.completed : si.completed
+    })
     setLocalCompleted(nextLocal)
     setTogglingId(item.id)
 
     toggle.mutate(item.id, {
       onSettled: () => {
         setTogglingId(null)
-        const allNowDone = serverItems.every(si =>
-          si.id in nextLocal ? nextLocal[si.id].completed : si.completed
-        )
         if (allNowDone && !isOfficiallyComplete && !modalShownForAllDone.current) {
           modalShownForAllDone.current = true
           setShowModal(true)
         }
+      },
+      onError: () => {
+        // Roll back local state for this item on error
+        setLocalCompleted(prev => {
+          const next = { ...prev }
+          delete next[item.id]
+          return next
+        })
+        showToast('Något gick fel. Försök igen.', 'error')
       },
     })
   }
@@ -211,34 +199,35 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
   // Compressed "done" view
   if (isOfficiallyComplete && !isExpanded) {
     return (
-      <>
-        <div className="card flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div
-              className="w-5 h-5 rounded flex-shrink-0 flex items-center justify-center"
-              style={{ background: 'var(--color-purple, #7c3aed)', border: '2px solid var(--color-purple, #7c3aed)' }}
-            >
-              <CheckIcon />
-            </div>
-            <div>
-              <span className="text-sm font-medium text-text-1">Onboarding avklarad</span>
-              {completedAt && (
-                <span className="text-xs text-text-3 ml-1.5">
-                  · {formatSwedishDate(completedAt!)}
-                </span>
-              )}
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsExpanded(true)}
-            className="text-text-3 hover:text-text-1 transition-colors flex-shrink-0 p-1 rounded hover:bg-bg-hover"
-            title="Visa checklista"
+      <div className="card flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-5 h-5 rounded flex-shrink-0 flex items-center justify-center"
+            style={{
+              background: 'var(--color-purple, #7c3aed)',
+              border:     '2px solid var(--color-purple, #7c3aed)',
+            }}
           >
-            <PencilIcon />
-          </button>
+            <CheckIcon />
+          </div>
+          <div>
+            <span className="text-sm font-medium text-text-1">Onboarding avklarad</span>
+            {localCompletedAt && (
+              <span className="text-xs text-text-3 ml-1.5">
+                · {formatSwedishDate(localCompletedAt)}
+              </span>
+            )}
+          </div>
         </div>
-      </>
+        <button
+          type="button"
+          onClick={() => setIsExpanded(true)}
+          className="text-text-3 hover:text-text-1 transition-colors flex-shrink-0 p-1 rounded hover:bg-bg-hover"
+          title="Visa checklista"
+        >
+          <PencilIcon />
+        </button>
+      </div>
     )
   }
 
@@ -248,7 +237,7 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
         {isOfficiallyComplete && isExpanded && (
           <div className="flex items-center justify-between mb-3 pb-3 border-b border-subtle">
             <span className="text-xs text-text-3">
-              Klarmarkerad {completedAt && formatSwedishDate(completedAt)}
+              Klarmarkerad {localCompletedAt && formatSwedishDate(localCompletedAt)}
             </span>
             <button
               type="button"
@@ -271,7 +260,7 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
           ))}
         </div>
 
-        {!isOfficiallyComplete && showCompleteButton && allDone && (
+        {!isOfficiallyComplete && showCompleteButton && (
           <div className="mt-4 pt-4 border-t border-subtle">
             <Button
               variant="secondary"

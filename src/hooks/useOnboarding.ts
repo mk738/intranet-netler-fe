@@ -4,6 +4,8 @@ import api from '@/lib/api'
 export interface OnboardingItem {
   id:              string
   task:            string
+  labelSv:         string
+  sortOrder:       number
   completed:       boolean
   completedAt:     string | null
   completedByName: string | null
@@ -22,11 +24,37 @@ export function useOnboarding(employeeId: string) {
 
 export function useToggleOnboardingItem(employeeId: string) {
   const qc = useQueryClient()
+
   return useMutation({
     mutationFn: (itemId: string) =>
       api.patch(`/api/employees/${employeeId}/onboarding/${itemId}/toggle`)
          .then(r => r.data.data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['onboarding', employeeId] }),
+
+    onMutate: async (itemId: string) => {
+      await qc.cancelQueries({ queryKey: ['onboarding', employeeId] })
+
+      const previous = qc.getQueryData(['onboarding', employeeId])
+
+      qc.setQueryData(['onboarding', employeeId], (old: OnboardingItem[] | undefined) =>
+        old?.map(item =>
+          item.id === itemId
+            ? { ...item, completed: !item.completed }
+            : item
+        ) ?? old
+      )
+
+      return { previous }
+    },
+
+    onError: (_err, _itemId, context) => {
+      if (context?.previous) {
+        qc.setQueryData(['onboarding', employeeId], context.previous)
+      }
+    },
+
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['onboarding', employeeId] })
+    },
   })
 }
 
