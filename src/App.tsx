@@ -31,7 +31,6 @@ import { CandidatePipelinePage } from '@/pages/admin/CandidatePipelinePage'
 import { BoardsPage }            from '@/pages/admin/BoardsPage'
 import { SuperadminSettingsPage }  from '@/pages/admin/SuperadminSettingsPage'
 import { ContentSettingsPage }       from '@/pages/admin/ContentSettingsPage'
-import { OnboardingTemplatePage }    from '@/pages/admin/OnboardingTemplatePage'
 
 export default function App() {
   return (
@@ -70,7 +69,6 @@ export default function App() {
           <Route path="/admin/events/:id/edit"    element={<EventCreatePage />} />
           <Route path="/admin/pipeline"            element={<CandidatePipelinePage />} />
           <Route path="/admin/content"            element={<ContentSettingsPage />} />
-          <Route path="/admin/content/onboarding" element={<OnboardingTemplatePage />} />
           <Route path="/admin/settings"           element={<SuperadminSettingsPage />} />
         </Route>
       </Route>

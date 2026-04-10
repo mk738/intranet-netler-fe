@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '@/hooks/useCategories'
+import { OnboardingTemplatePage } from '@/pages/admin/OnboardingTemplatePage'
 import { useToast } from '@/components/ui/Toast'
 import { Button, Modal, Spinner } from '@/components/ui'
 import { useForm } from 'react-hook-form'
@@ -193,11 +194,12 @@ function CategoryList({ type }: { type: CategoryType }) {
 
 // ── Page ───────────────────────────────────────────────────────
 
-type Tab = 'news' | 'faq'
+type Tab = 'news' | 'faq' | 'onboarding'
 
 const TABS: { key: Tab; label: string }[] = [
-  { key: 'news', label: 'Nyheter' },
-  { key: 'faq',  label: 'FAQ'     },
+  { key: 'news',       label: 'Nyheter'        },
+  { key: 'faq',        label: 'FAQ'            },
+  { key: 'onboarding', label: 'Onboarding-mall' },
 ]
 
 export function ContentSettingsPage() {
@@ -228,8 +230,9 @@ export function ContentSettingsPage() {
         ))}
       </div>
 
-      {tab === 'news' && <CategoryList type="NEWS" />}
-      {tab === 'faq'  && <CategoryList type="FAQ"  />}
+      {tab === 'news'       && <CategoryList type="NEWS" />}
+      {tab === 'faq'        && <CategoryList type="FAQ"  />}
+      {tab === 'onboarding' && <OnboardingTemplatePage />}
     </div>
   )
 }

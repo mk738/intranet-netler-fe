@@ -430,15 +430,11 @@ export function OnboardingTemplatePage() {
 
   return (
     <>
-      <div className="max-w-2xl space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-xl font-semibold text-text-1">Onboarding-mall</h1>
-          <p className="text-sm text-text-3 mt-1">
-            Hantera uppgifter som visas vid onboarding av nya anställda.
-            Ändringar påverkar inte befintliga anställda.
-          </p>
-        </div>
+      <div className="space-y-6">
+        <p className="text-sm text-text-3">
+          Hantera uppgifter som visas vid onboarding av nya anställda.
+          Ändringar påverkar inte befintliga anställda.
+        </p>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">

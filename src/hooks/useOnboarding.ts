@@ -11,12 +11,17 @@ export interface OnboardingItem {
   completedByName: string | null
 }
 
+export interface OnboardingChecklistDto {
+  onboardingComplete: boolean
+  items:              OnboardingItem[]
+}
+
 export function useOnboarding(employeeId: string) {
-  return useQuery<OnboardingItem[]>({
+  return useQuery<OnboardingChecklistDto>({
     queryKey: ['onboarding', employeeId],
     queryFn: () =>
       api.get(`/api/employees/${employeeId}/onboarding`)
-         .then(r => r.data.data),
+         .then(r => r.data.data ?? { onboardingComplete: false, items: [] }),
     staleTime: 5 * 60 * 1000,
     retry: 1,
   })
@@ -28,20 +33,24 @@ export function useToggleOnboardingItem(employeeId: string) {
   return useMutation({
     mutationFn: (itemId: string) =>
       api.patch(`/api/employees/${employeeId}/onboarding/${itemId}/toggle`)
-         .then(r => r.data.data),
+         .then(r => r.data.data as OnboardingChecklistDto),
 
     onMutate: async (itemId: string) => {
       await qc.cancelQueries({ queryKey: ['onboarding', employeeId] })
 
-      const previous = qc.getQueryData(['onboarding', employeeId])
+      const previous = qc.getQueryData<OnboardingChecklistDto>(['onboarding', employeeId])
 
-      qc.setQueryData(['onboarding', employeeId], (old: OnboardingItem[] | undefined) =>
-        old?.map(item =>
-          item.id === itemId
-            ? { ...item, completed: !item.completed }
-            : item
-        ) ?? old
-      )
+      qc.setQueryData(['onboarding', employeeId], (old: OnboardingChecklistDto | undefined) => {
+        if (!old) return old
+        return {
+          ...old,
+          items: old.items.map(item =>
+            item.id === itemId
+              ? { ...item, completed: !item.completed }
+              : item
+          ),
+        }
+      })
 
       return { previous }
     },
@@ -50,6 +59,10 @@ export function useToggleOnboardingItem(employeeId: string) {
       if (context?.previous) {
         qc.setQueryData(['onboarding', employeeId], context.previous)
       }
+    },
+
+    onSuccess: (dto: OnboardingChecklistDto) => {
+      qc.setQueryData(['onboarding', employeeId], dto)
     },
 
     onSettled: () => {
@@ -63,7 +76,12 @@ export function useCompleteOnboarding(employeeId: string) {
   return useMutation({
     mutationFn: () =>
       api.patch(`/api/employees/${employeeId}/onboarding/complete`)
-         .then(r => r.data.data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['onboarding', employeeId] }),
+         .then(r => r.data.data as OnboardingChecklistDto),
+    onSuccess: (dto: OnboardingChecklistDto) => {
+      qc.setQueryData(['onboarding', employeeId], dto)
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['onboarding', employeeId] })
+    },
   })
 }

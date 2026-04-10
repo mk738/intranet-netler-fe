@@ -9,6 +9,7 @@ import {
   useToggleOnboardingItem,
   useCompleteOnboarding,
   type OnboardingItem,
+  type OnboardingChecklistDto,
 } from '@/hooks/useOnboarding'
 
 function formatSwedishDate(iso: string): string {
@@ -100,7 +101,7 @@ function CheckboxRow({
 type LocalState = {
   completed:       boolean
   completedByName: string | null
-  localCompletedAt:     string | null
+  completedAt:     string | null
 }
 
 export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
@@ -112,20 +113,19 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
 
   const [togglingId, setTogglingId]                 = useState<string | null>(null)
   const [localCompleted, setLocalCompleted]         = useState<Record<string, LocalState>>({})
-  const [localCompletedAt, setLocalCompletedAt]     = useState<string | null>(null)
   const [showModal, setShowModal]                   = useState(false)
   const [showCompleteButton, setShowCompleteButton] = useState(false)
   const [isExpanded, setIsExpanded]                 = useState(false)
   const modalShownForAllDone                        = useRef(false)
 
-  const serverItems: OnboardingItem[] = data?.length ? data : []
+  const serverItems: OnboardingItem[] = (data as OnboardingChecklistDto | undefined)?.items ?? []
 
   const list = serverItems.map(item => {
     const local = localCompleted[item.id]
     return local ? { ...item, ...local } : item
   })
 
-  const isOfficiallyComplete = Boolean(localCompletedAt)
+  const isOfficiallyComplete = (data as OnboardingChecklistDto | undefined)?.onboardingComplete ?? false
 
   // Early return AFTER all hooks
   if (isLoading) {
@@ -144,7 +144,7 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
     const localEntry: LocalState = {
       completed:       next,
       completedByName: next ? myName : null,
-      localCompletedAt:     next ? new Date().toISOString() : null,
+      completedAt:     next ? new Date().toISOString() : null,
     }
 
     const nextLocal = { ...localCompleted, [item.id]: localEntry }
@@ -178,7 +178,6 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
   function handleConfirmComplete() {
     complete.mutate(undefined, {
       onSuccess: () => {
-        setLocalCompletedAt(new Date().toISOString())
         showToast('Onboarding klarmarkerad!', 'success')
         setShowModal(false)
         setShowCompleteButton(false)
@@ -196,6 +195,10 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
     setShowCompleteButton(true)
   }
 
+  // Derive completion date from latest completed item
+  const completedDates = serverItems.map(i => i.completedAt).filter(Boolean) as string[]
+  const latestCompletedAt = completedDates.sort().slice(-1)[0] ?? null
+
   // Compressed "done" view
   if (isOfficiallyComplete && !isExpanded) {
     return (
@@ -212,9 +215,9 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
           </div>
           <div>
             <span className="text-sm font-medium text-text-1">Onboarding avklarad</span>
-            {localCompletedAt && (
+            {latestCompletedAt && (
               <span className="text-xs text-text-3 ml-1.5">
-                · {formatSwedishDate(localCompletedAt)}
+                · {formatSwedishDate(latestCompletedAt)}
               </span>
             )}
           </div>
@@ -237,7 +240,7 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
         {isOfficiallyComplete && isExpanded && (
           <div className="flex items-center justify-between mb-3 pb-3 border-b border-subtle">
             <span className="text-xs text-text-3">
-              Klarmarkerad {localCompletedAt && formatSwedishDate(localCompletedAt)}
+              Klarmarkerad {latestCompletedAt && formatSwedishDate(latestCompletedAt)}
             </span>
             <button
               type="button"
