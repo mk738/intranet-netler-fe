@@ -54,7 +54,10 @@ export function DatePicker({ value, onChange, min, placeholder = 'Välj datum', 
       {/* Input */}
       <button
         type="button"
-        onClick={() => setOpen(o => !o)}
+        onClick={() => {
+          if (!open && !value && min) setViewDate(parseISO(min))
+          setOpen(o => !o)
+        }}
         className="field-input w-full text-left flex items-center justify-between gap-2"
       >
         <span className={selected ? 'text-text-1' : 'text-text-3'}>
