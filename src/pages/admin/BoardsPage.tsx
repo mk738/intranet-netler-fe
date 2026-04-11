@@ -15,6 +15,7 @@ import {
   useCreateComment,
   useCardAttachments, useUploadCardAttachment, useDeleteCardAttachment,
 } from '@/hooks/useBoards'
+import { useEmployees } from '@/hooks/useEmployees'
 import type { BoardDto, BoardColumn, BoardCard, BoardComment, CardAttachmentDto } from '@/hooks/useBoards'
 
 // ── Local types ────────────────────────────────────────────────
@@ -51,6 +52,79 @@ function initials(name: string) {
 
 // ── Card Form Modal ────────────────────────────────────────────
 
+// ── Assignee dropdown ──────────────────────────────────────────
+
+function AssigneeDropdown({
+  value,
+  options,
+  onChange,
+}: {
+  value: string
+  options: { id: string; name: string }[]
+  onChange: (name: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  const label = value || '— Ingen —'
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="field-input flex items-center justify-between gap-2 text-left"
+      >
+        <span className={value ? 'text-text-1' : 'text-text-3'}>{label}</span>
+        <svg
+          className={`w-4 h-4 text-text-3 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-1 w-full bg-bg-card border border-subtle rounded-lg shadow-modal overflow-hidden">
+          <div className="max-h-52 overflow-y-auto py-1">
+            <button
+              type="button"
+              onClick={() => { onChange(''); setOpen(false) }}
+              className={`w-full text-left px-3 py-2 text-sm transition-colors hover:bg-bg-hover ${!value ? 'text-text-1 font-medium' : 'text-text-3'}`}
+            >
+              — Ingen —
+            </button>
+            {options.map(o => (
+              <button
+                key={o.id}
+                type="button"
+                onClick={() => { onChange(o.name); setOpen(false) }}
+                className={`w-full text-left px-3 py-2 text-sm transition-colors hover:bg-bg-hover flex items-center justify-between gap-2 ${value === o.name ? 'text-purple-light font-medium' : 'text-text-1'}`}
+              >
+                {o.name}
+                {value === o.name && (
+                  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function CardFormModal({
   existing,
   onSave,
@@ -66,10 +140,16 @@ function CardFormModal({
   const [assignedTo, setAssignedTo] = useState(existing?.assignedTo ?? '')
   const [err,        setErr]        = useState('')
 
+  const { data: employees } = useEmployees()
+  const admins = (employees ?? [])
+    .filter(e => (e.role === 'ADMIN' || e.role === 'SUPERADMIN') && e.isActive && e.profile)
+    .map(e => ({ id: e.id, name: `${e.profile!.firstName} ${e.profile!.lastName}`.trim() }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'sv'))
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim()) { setErr('Titel krävs'); return }
-    onSave({ title: title.trim(), text, category, assignedTo: assignedTo.trim() || null })
+    onSave({ title: title.trim(), text, category, assignedTo: assignedTo || null })
   }
 
   return (
@@ -115,11 +195,10 @@ function CardFormModal({
         </div>
         <div>
           <label className="field-label">Tilldelad till</label>
-          <input
-            className="field-input"
+          <AssigneeDropdown
             value={assignedTo}
-            onChange={e => setAssignedTo(e.target.value)}
-            placeholder="t.ex. Anna Svensson..."
+            options={admins}
+            onChange={setAssignedTo}
           />
         </div>
       </form>

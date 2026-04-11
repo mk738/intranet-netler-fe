@@ -30,7 +30,7 @@ export function EditClientModal({ client, onClose }: Props) {
   const { showToast } = useToast()
   const mutation = useUpdateClient(client.id)
 
-  const { register, handleSubmit, setError, formState: { errors, isDirty } } = useForm<FormData>({
+  const { register, handleSubmit, setError, setValue, formState: { errors, isDirty } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       companyName:  client.companyName,
@@ -41,6 +41,12 @@ export function EditClientModal({ client, onClose }: Props) {
       phone:        client.phone        ?? '',
     },
   })
+
+  function handleOrgNumberChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 10)
+    const formatted = digits.length > 6 ? `${digits.slice(0, 6)}-${digits.slice(6)}` : digits
+    setValue('orgNumber', formatted, { shouldValidate: errors.orgNumber !== undefined })
+  }
 
   const onSubmit = (data: FormData) => {
     mutation.mutate({
@@ -86,7 +92,7 @@ export function EditClientModal({ client, onClose }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="field-label">Org-nummer</label>
-            <input {...register('orgNumber')} className="field-input" />
+            <input {...register('orgNumber')} onChange={handleOrgNumberChange} className="field-input" placeholder="556000-0000" />
           </div>
           <div>
             <label className="field-label">Status</label>

@@ -35,10 +35,16 @@ export function AddClientModal({ onClose }: Props) {
   const { showToast } = useToast()
   const mutation = useCreateClient()
 
-  const { register, handleSubmit, setError, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, setError, setValue, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { status: 'ACTIVE' },
   })
+
+  function handleOrgNumberChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 10)
+    const formatted = digits.length > 6 ? `${digits.slice(0, 6)}-${digits.slice(6)}` : digits
+    setValue('orgNumber', formatted, { shouldValidate: errors.orgNumber !== undefined })
+  }
 
   const onSubmit = (data: FormData) => {
     mutation.mutate({
@@ -85,7 +91,7 @@ export function AddClientModal({ onClose }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="field-label">Org-nummer</label>
-            <input {...register('orgNumber')} className={clsx('field-input', errors.orgNumber && 'field-input-error')} placeholder="556000-0000" />
+            <input {...register('orgNumber')} onChange={handleOrgNumberChange} className={clsx('field-input', errors.orgNumber && 'field-input-error')} placeholder="556000-0000" />
             <FieldError message={errors.orgNumber?.message} />
           </div>
           <div>

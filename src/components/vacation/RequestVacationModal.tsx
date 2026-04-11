@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useState, useRef, useEffect } from 'react'
 import { Modal, Button } from '@/components/ui'
 import { DatePicker } from '@/components/ui/DatePicker'
 import { useToast } from '@/components/ui/Toast'
@@ -9,6 +10,70 @@ import { calculateBusinessDays, todayString } from '@/lib/dateUtils'
 import { FieldError } from '@/components/ui/FieldError'
 import { FormError } from '@/components/ui/FormError'
 import { getApiError, getApiCode } from '@/lib/api'
+
+function ReasonDropdown({
+  value,
+  options,
+  onChange,
+}: {
+  value: string
+  options: readonly string[]
+  onChange: (v: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="field-input w-full flex items-center justify-between gap-2 text-left"
+      >
+        <span className={value ? 'text-text-1' : 'text-text-3'}>
+          {value || 'Välj orsak...'}
+        </span>
+        <svg
+          className={`w-4 h-4 text-text-3 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-1 w-full bg-bg-card border border-subtle rounded-lg shadow-modal overflow-hidden">
+          <div className="py-1">
+            {options.map(o => (
+              <button
+                key={o}
+                type="button"
+                onClick={() => { onChange(o); setOpen(false) }}
+                className={`w-full text-left px-3 py-2 text-sm transition-colors hover:bg-bg-hover flex items-center justify-between gap-2 ${value === o ? 'text-purple-light font-medium' : 'text-text-1'}`}
+              >
+                {o}
+                {value === o && (
+                  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 const today = todayString()
 
@@ -31,7 +96,7 @@ export function RequestVacationModal({ onClose }: Props) {
   const { showToast } = useToast()
   const mutation = useSubmitVacation()
 
-  const { register, handleSubmit, formState: { errors }, watch, setValue, setError } = useForm<FormData>({
+  const { handleSubmit, formState: { errors }, watch, setValue, setError } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { startDate: '', endDate: '', reason: '' },
   })
@@ -103,10 +168,11 @@ export function RequestVacationModal({ onClose }: Props) {
 
         <div>
           <label className="field-label">Orsak *</label>
-          <select {...register('reason')} className="field-input">
-            <option value="">Välj orsak...</option>
-            {REASONS.map(r => <option key={r} value={r}>{r}</option>)}
-          </select>
+          <ReasonDropdown
+            value={watch('reason')}
+            options={REASONS}
+            onChange={v => setValue('reason', v, { shouldValidate: true })}
+          />
           <FieldError message={errors.reason?.message} />
         </div>
 
