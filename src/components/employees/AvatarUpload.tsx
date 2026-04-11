@@ -28,8 +28,8 @@ export function AvatarUpload({ employeeId, name, avatarUrl }: Props) {
     : null
 
   return (
-    <div className="relative group w-16 h-16">
-      <Avatar name={name} avatarUrl={versionedUrl} size="lg" />
+    <div className="relative group w-20 h-20">
+      <Avatar name={name} avatarUrl={versionedUrl} size="xl" />
 
       {/* Overlay */}
       <button
