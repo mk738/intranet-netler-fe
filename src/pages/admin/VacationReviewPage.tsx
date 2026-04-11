@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { format, startOfMonth, endOfMonth, addMonths, subMonths, addDays } from 'date-fns'
+import { format, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns'
 import { sv } from 'date-fns/locale'
 import { useAuth } from '@/context/AuthContext'
 import { useAllVacations, useVacationSummary } from '@/hooks/useVacations'
@@ -68,19 +68,6 @@ function SkeletonRow() {
 
 const DOW_LABELS = ['Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör', 'Sön']
 
-const PERSON_COLORS = [
-  'bg-purple-bg text-purple-light',
-  'bg-emerald-900/50 text-emerald-300',
-  'bg-amber-900/50 text-amber-300',
-  'bg-rose-900/50 text-rose-300',
-  'bg-sky-900/50 text-sky-300',
-  'bg-pink-900/50 text-pink-300',
-  'bg-teal-900/50 text-teal-300',
-  'bg-orange-900/50 text-orange-300',
-  'bg-indigo-900/50 text-indigo-300',
-  'bg-cyan-900/50 text-cyan-300',
-]
-
 function toDateStr(d: Date): string {
   const y  = d.getFullYear()
   const m  = String(d.getMonth() + 1).padStart(2, '0')
@@ -106,37 +93,34 @@ function isToday(d: Date): boolean {
          d.getMonth()    === todayDate.getMonth()    &&
          d.getDate()     === todayDate.getDate()
 }
-function isFirstColumn(date: Date): boolean { return (date.getDay() + 6) % 7 === 0 }
-function isLastColumn(date: Date):  boolean { return date.getDay() === 0 }
 
-type VacPos = 'single' | 'start' | 'middle' | 'end'
-function getVacPos(v: VacationDto, date: Date): VacPos {
-  const dayStr = toDateStr(date)
-  const start  = v.startDate.slice(0, 10)
-  const end    = v.endDate.slice(0, 10)
-  // Weekend fill days (after actual end) are always middle
-  if (dayStr > end) return 'middle'
-  if (start === end) return 'single'
-  if (dayStr === start) return 'start'
-  // Weekday end followed by weekend → treat as middle so bar extends right
-  if (dayStr === end) {
-    const dow = date.getDay()
-    return dow >= 1 && dow <= 5 ? 'middle' : 'end'
-  }
-  return 'middle'
-}
 function vacsOnDay(vacations: VacationDto[], date: Date): VacationDto[] {
   const dayStr = toDateStr(date)
-  const dow    = date.getDay() // 0=Sun, 6=Sat
   return vacations.filter(v => {
     const start = v.startDate.slice(0, 10)
     const end   = v.endDate.slice(0, 10)
-    if (dayStr >= start && dayStr <= end) return true
-    // Extend bar visually through Saturday and Sunday when vacation ends on a weekday
-    if (dow === 6) return end >= toDateStr(addDays(date, -1)) && start <= dayStr
-    if (dow === 0) return end >= toDateStr(addDays(date, -2)) && start <= dayStr
-    return false
+    return dayStr >= start && dayStr <= end
   })
+}
+
+function shortName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/)
+  if (parts.length < 2) return parts[0]
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`
+}
+
+function VacChip({ v }: { v: VacationDto }) {
+  const pending = v.status === 'PENDING'
+  return (
+    <span className={[
+      'block w-full px-1.5 py-0.5 rounded-full text-[10px] font-medium leading-tight truncate',
+      pending
+        ? 'bg-amber-900/60 text-amber-300'
+        : 'bg-emerald-900/60 text-emerald-300',
+    ].join(' ')}>
+      {shortName(v.employeeName)}
+    </span>
+  )
 }
 
 // ── Calendar skeleton ──────────────────────────────────────────
@@ -169,16 +153,28 @@ function SkeletonCalendar() {
 
 // ── Vacation calendar ──────────────────────────────────────────
 
-const PENDING_COLOR = 'bg-amber-900/60 text-amber-200'
+type OverflowPopup = { vacations: VacationDto[]; date: Date; top: number; left: number }
 
 function VacationCalendar({ pendingSummaryCount }: { pendingSummaryCount: number | undefined }) {
-  const [currentMonth,  setCurrentMonth]  = useState(new Date(todayDate.getFullYear(), todayDate.getMonth(), 1))
-  const [showPending,   setShowPending]   = useState(false)
+  const [currentMonth, setCurrentMonth] = useState(new Date(todayDate.getFullYear(), todayDate.getMonth(), 1))
+  const [showPending,  setShowPending]  = useState(false)
+  const [popup,        setPopup]        = useState<OverflowPopup | null>(null)
+  const popupRef = useRef<HTMLDivElement>(null)
 
   const { data: approvedVacations, isLoading: loadingApproved } = useAllVacations('APPROVED')
   const { data: pendingVacations,  isLoading: loadingPending  } = useAllVacations(showPending ? 'PENDING' : undefined)
 
   const isLoading = loadingApproved || (showPending && loadingPending)
+
+  // Close popup on outside click
+  useEffect(() => {
+    if (!popup) return
+    function handler(e: MouseEvent) {
+      if (popupRef.current && !popupRef.current.contains(e.target as Node)) setPopup(null)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [popup])
 
   const monthStart = format(startOfMonth(currentMonth), 'yyyy-MM-dd')
   const monthEnd   = format(endOfMonth(currentMonth),   'yyyy-MM-dd')
@@ -190,56 +186,56 @@ function VacationCalendar({ pendingSummaryCount }: { pendingSummaryCount: number
   const approvedInMonth = showPending ? [] : (approvedVacations ?? []).filter(inMonth)
   const pendingInMonth  = showPending ? (pendingVacations ?? []).filter(inMonth) : []
 
-  // Color map only for approved (pending always yellow)
-  const employeeIds = [...new Set(approvedInMonth.map(v => v.employeeId))].sort()
-  const colorMap    = new Map(employeeIds.map((id, i) => [id, PERSON_COLORS[i % PERSON_COLORS.length]]))
-
   const cells    = buildCalendarCells(currentMonth)
   const currentM = currentMonth.getMonth()
 
-  function renderBar(v: VacationDto, date: Date, color: string) {
-    const pos         = getVacPos(v, date)
-    const isStart     = pos === 'start'  || pos === 'single'
-    const isEnd       = pos === 'end'    || pos === 'single'
-    const forceStart  = pos === 'middle' && isFirstColumn(date)
-    const forceEnd    = (pos === 'start' || pos === 'middle') && isLastColumn(date)
-    const showLabel   = isStart || forceStart
-    const roundLeft   = isStart || forceStart
-    const roundRight  = isEnd   || forceEnd
-    const extendLeft  = (pos === 'middle' || pos === 'end')    && !forceStart
-    const extendRight = (pos === 'start'  || pos === 'middle') && !forceEnd
-
-    return (
-      <div
-        key={v.id}
-        title={v.employeeName}
-        className={[
-          'text-xs py-0.5 overflow-hidden leading-tight',
-          color,
-          roundLeft   ? 'rounded-l' : '',
-          roundRight  ? 'rounded-r' : '',
-          extendLeft  ? '-ml-1.5 pl-0.5' : 'pl-1.5',
-          extendRight ? '-mr-[7px] pr-0'  : 'pr-1.5',
-        ].join(' ')}
-      >
-        <span className={showLabel ? 'truncate block' : 'invisible'}>
-          {v.employeeInitials}
-        </span>
-      </div>
-    )
+  function openPopup(e: React.MouseEvent<HTMLButtonElement>, vacations: VacationDto[], date: Date) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const popupWidth = 240
+    const left = Math.min(rect.left, window.innerWidth - popupWidth - 8)
+    setPopup({ vacations, date, top: rect.bottom + 4, left })
   }
 
   return (
     <div className="space-y-4">
+      {/* Overflow popup — fixed to viewport */}
+      {popup && (
+        <div
+          ref={popupRef}
+          style={{ top: popup.top, left: popup.left, width: 240 }}
+          className="fixed z-50 bg-bg-card border border-subtle rounded-xl shadow-modal overflow-hidden"
+        >
+          {/* Date header */}
+          <div className="px-3 py-2 border-b border-subtle">
+            <p className="text-xs font-semibold text-text-1 capitalize">
+              {format(popup.date, 'd MMMM', { locale: sv })}
+            </p>
+          </div>
+
+          {/* Vacation rows */}
+          <div className="py-1 max-h-48 overflow-y-auto">
+            {popup.vacations.map(v => (
+              <div key={v.id} className="flex items-center gap-2.5 px-3 py-1.5">
+                <Avatar name={v.employeeName} avatarUrl={v.employeeAvatarUrl} size="sm" />
+                <span className={`text-sm font-medium truncate ${v.status === 'PENDING' ? 'text-amber-300' : 'text-text-1'}`}>
+                  {shortName(v.employeeName)}
+                </span>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      )}
+
       {/* Month nav */}
       <div className="flex items-center gap-3">
-        <Button variant="secondary" onClick={() => setCurrentMonth(m => subMonths(m, 1))}>
+        <Button variant="secondary" onClick={() => { setCurrentMonth(m => subMonths(m, 1)); setPopup(null) }}>
           ← Föregående
         </Button>
         <p className="flex-1 text-center text-base font-medium text-text-1 capitalize">
           {format(currentMonth, 'MMMM yyyy', { locale: sv })}
         </p>
-        <Button variant="secondary" onClick={() => setCurrentMonth(m => addMonths(m, 1))}>
+        <Button variant="secondary" onClick={() => { setCurrentMonth(m => addMonths(m, 1)); setPopup(null) }}>
           Nästa →
         </Button>
       </div>
@@ -260,22 +256,21 @@ function VacationCalendar({ pendingSummaryCount }: { pendingSummaryCount: number
                 {cells.slice(row * 7, row * 7 + 7).map((date, col) => {
                   const inM       = date.getMonth() === currentM
                   const isLastRow = row === cells.length / 7 - 1
-                  const approved  = vacsOnDay(approvedInMonth, date)
-                  const pending   = vacsOnDay(pendingInMonth,  date)
-                  const allBars   = [...approved, ...pending]
-                  const shown     = allBars.slice(0, 3)
-                  const extra     = allBars.length - 3
+                  const allVacs   = [...vacsOnDay(approvedInMonth, date), ...vacsOnDay(pendingInMonth, date)]
+                  const shown     = allVacs.slice(0, 3)
+                  const overflow  = allVacs.slice(3)
 
                   return (
                     <div
                       key={col}
                       className={[
-                        'min-h-[80px] border-b border-r border-subtle last:border-r-0 p-1.5 flex flex-col gap-0.5',
+                        'min-h-[90px] border-b border-r border-subtle last:border-r-0 p-1.5 flex flex-col gap-0.5',
                         isLastRow ? 'border-b-0' : '',
                         !inM ? 'bg-bg' : '',
                       ].join(' ')}
                     >
-                      <div className="flex justify-center mb-0.5">
+                      {/* Date number */}
+                      <div className="flex justify-center mb-1">
                         {isToday(date) ? (
                           <span className="w-5 h-5 rounded-full bg-purple flex items-center justify-center text-white text-xs">
                             {date.getDate()}
@@ -287,14 +282,18 @@ function VacationCalendar({ pendingSummaryCount }: { pendingSummaryCount: number
                         )}
                       </div>
 
-                      {shown.map(v => {
-                        const isPending = v.status === 'PENDING'
-                        const color     = isPending ? PENDING_COLOR : (colorMap.get(v.employeeId) ?? PERSON_COLORS[0])
-                        return renderBar(v, date, color)
-                      })}
+                      {/* Chips */}
+                      {shown.map(v => <VacChip key={v.id} v={v} />)}
 
-                      {extra > 0 && (
-                        <span className="text-[10px] text-text-3 pl-1">+{extra}</span>
+                      {/* Overflow */}
+                      {overflow.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={e => openPopup(e, allVacs, date)}
+                          className="text-[10px] text-text-3 hover:text-purple-light transition-colors text-left leading-tight mt-0.5"
+                        >
+                          + {overflow.length} till
+                        </button>
                       )}
                     </div>
                   )
@@ -303,10 +302,20 @@ function VacationCalendar({ pendingSummaryCount }: { pendingSummaryCount: number
             ))}
           </div>
 
-          {/* Pending toggle */}
-          <div className="flex items-center gap-3 pt-1">
+          {/* Pending toggle + legend */}
+          <div className="flex items-center justify-between gap-4 pt-1 flex-wrap">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-900/60 shrink-0" />
+                <span className="text-xs text-text-3">Godkänd</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-900/60 shrink-0" />
+                <span className="text-xs text-text-3">Väntande</span>
+              </div>
+            </div>
             <button
-              onClick={() => setShowPending(v => !v)}
+              onClick={() => { setShowPending(v => !v); setPopup(null) }}
               className={['pill transition-colors', showPending ? 'pill-active' : ''].join(' ')}
             >
               Visa väntande ansökningar
@@ -321,36 +330,17 @@ function VacationCalendar({ pendingSummaryCount }: { pendingSummaryCount: number
             </button>
           </div>
 
-          {/* Legend */}
-          {(employeeIds.length > 0 || pendingInMonth.length > 0) ? (
-            <div className="flex flex-wrap gap-x-5 gap-y-2">
-              {employeeIds.map(id => {
-                const vac     = approvedInMonth.find(v => v.employeeId === id)
-                if (!vac) return null
-                const color   = colorMap.get(id) ?? PERSON_COLORS[0]
-                const bgClass = color.split(' ')[0]
-                return (
-                  <div key={id} className="flex items-center gap-1.5">
-                    <span className={`w-2.5 h-2.5 rounded-sm shrink-0 ${bgClass}`} />
-                    <span className="text-xs text-text-2">{vac.employeeName}</span>
-                  </div>
-                )
-              })}
-              {showPending && [...new Set(pendingInMonth.map(v => v.employeeId))].map(id => {
-                const vac = pendingInMonth.find(v => v.employeeId === id)
-                if (!vac) return null
-                return (
-                  <div key={`p-${id}`} className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-sm shrink-0 bg-amber-900/60" />
-                    <span className="text-xs text-amber-300">{vac.employeeName} (väntar)</span>
-                  </div>
-                )
-              })}
+          {/* Per-employee date-range summary */}
+          {[...approvedInMonth, ...pendingInMonth].length > 0 && (
+            <div className="space-y-1 pt-1">
+              {[...approvedInMonth, ...pendingInMonth].map(v => (
+                <p key={v.id} className="text-xs leading-snug">
+                  <span className="text-text-2 font-medium">{v.employeeName}:</span>
+                  {' '}
+                  <span className="text-text-3">{formatDateRange(v.startDate, v.endDate)}</span>
+                </p>
+              ))}
             </div>
-          ) : (
-            <p className="text-center text-sm text-text-3 py-4">
-              Inga godkända ledigheter under {format(currentMonth, 'MMMM yyyy', { locale: sv })}.
-            </p>
           )}
         </>
       )}
