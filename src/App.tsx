@@ -30,7 +30,7 @@ import { CompetencySearchPage }  from '@/pages/admin/CompetencySearchPage'
 import { CandidatePipelinePage } from '@/pages/admin/CandidatePipelinePage'
 import { BoardsPage }            from '@/pages/admin/BoardsPage'
 import { SuperadminSettingsPage }  from '@/pages/admin/SuperadminSettingsPage'
-import { ContentSettingsPage }     from '@/pages/admin/ContentSettingsPage'
+import { ContentSettingsPage }       from '@/pages/admin/ContentSettingsPage'
 
 export default function App() {
   return (

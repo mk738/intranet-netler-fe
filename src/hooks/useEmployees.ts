@@ -188,7 +188,7 @@ export function useBenefits(employeeId: string) {
     queryKey: ['employees', employeeId, 'benefits'],
     queryFn:  () =>
       api.get<ApiResponse<BenefitDto[]>>(`/api/employees/${employeeId}/benefits`)
-         .then(r => r.data.data),
+         .then(r => r.data.data ?? []),
     enabled: !!employeeId,
     retry: false,
   })
@@ -213,7 +213,7 @@ export function useContract(employeeId: string) {
     queryFn:  () =>
       api.get<ApiResponse<{ downloadUrl: string }>>(
         `/api/employees/${employeeId}/contract`
-      ).then(r => r.data.data),
+      ).then(r => r.data.data ?? null),
     enabled: !!employeeId,
     retry: false,
   })
@@ -240,7 +240,7 @@ export function useCV(employeeId: string) {
     queryFn:  () =>
       api.get<ApiResponse<{ downloadUrl: string }>>(
         `/api/employees/${employeeId}/cv`
-      ).then(r => r.data.data),
+      ).then(r => r.data.data ?? null),
     enabled: !!employeeId,
     retry: false,
   })

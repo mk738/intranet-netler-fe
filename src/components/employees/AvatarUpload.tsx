@@ -21,7 +21,11 @@ export function AvatarUpload({ employeeId, name, avatarUrl }: Props) {
   }
 
   const hasPhoto      = !!avatarUrl
-  const versionedUrl  = avatarUrl ? `${avatarUrl}?v=${version}` : null
+  const versionedUrl  = avatarUrl
+    ? version > 0
+      ? `${avatarUrl}${avatarUrl.includes('?') ? '&' : '?'}v=${version}`
+      : avatarUrl
+    : null
 
   return (
     <div className="relative group w-16 h-16">

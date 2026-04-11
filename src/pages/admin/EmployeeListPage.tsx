@@ -148,8 +148,14 @@ export function EmployeeListPage() {
 
                       {/* Role */}
                       <td className="px-4 py-3">
-                        <span className={emp.role === 'ADMIN' ? 'text-sm text-purple-light' : 'text-sm text-text-3'}>
-                          {emp.role}
+                        <span className={
+                          emp.role === 'SUPERADMIN'
+                            ? 'text-xs px-2 py-0.5 rounded-full font-medium bg-amber-900/40 text-amber-300 border border-amber-500/20'
+                            : emp.role === 'ADMIN'
+                            ? 'text-xs px-2 py-0.5 rounded-full font-medium bg-purple-bg text-purple-light border border-purple/20'
+                            : 'text-xs px-2 py-0.5 rounded-full font-medium bg-bg-hover text-text-2 border border-subtle'
+                        }>
+                          {emp.role === 'SUPERADMIN' ? 'Superadmin' : emp.role === 'ADMIN' ? 'Admin' : 'Anställd'}
                         </span>
                       </td>
 
