@@ -24,19 +24,6 @@ function CheckIcon() {
   )
 }
 
-function PencilIcon() {
-  return (
-    <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
-      <path
-        d="M11.5 2.5a1.5 1.5 0 0 1 2.121 2.121L5 13.243 2 14l.757-3L11.5 2.5z"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
 
 function CheckboxRow({
   item,
@@ -202,35 +189,27 @@ export function OnboardingChecklist({ employeeId }: { employeeId: string }) {
   // Compressed "done" view
   if (isOfficiallyComplete && !isExpanded) {
     return (
-      <div className="card flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <div
-            className="w-5 h-5 rounded flex-shrink-0 flex items-center justify-center"
-            style={{
-              background: 'var(--color-purple, #7c3aed)',
-              border:     '2px solid var(--color-purple, #7c3aed)',
-            }}
-          >
-            <CheckIcon />
-          </div>
-          <div>
-            <span className="text-sm font-medium text-text-1">Onboarding avklarad</span>
-            {latestCompletedAt && (
-              <span className="text-xs text-text-3 ml-1.5">
-                · {formatSwedishDate(latestCompletedAt)}
-              </span>
-            )}
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => setIsExpanded(true)}
-          className="text-text-3 hover:text-text-1 transition-colors flex-shrink-0 p-1 rounded hover:bg-bg-hover"
-          title="Visa checklista"
+      <button
+        type="button"
+        onClick={() => setIsExpanded(true)}
+        className="card w-full text-left flex items-center gap-2.5 hover:bg-bg-hover transition-colors"
+      >
+        <div
+          className="w-5 h-5 rounded flex-shrink-0 flex items-center justify-center"
+          style={{
+            background: 'var(--color-purple, #7c3aed)',
+            border:     '2px solid var(--color-purple, #7c3aed)',
+          }}
         >
-          <PencilIcon />
-        </button>
-      </div>
+          <CheckIcon />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-text-1">Onboarding avklarad</p>
+          {latestCompletedAt && (
+            <p className="text-xs text-text-3 mt-0.5">{formatSwedishDate(latestCompletedAt)}</p>
+          )}
+        </div>
+      </button>
     )
   }
 

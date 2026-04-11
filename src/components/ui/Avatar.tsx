@@ -72,12 +72,13 @@ const SIZES = {
   sm: { outer: 'w-6 h-6',   text: 'text-[9px]'  },
   md: { outer: 'w-8 h-8',   text: 'text-xs'     },
   lg: { outer: 'w-16 h-16', text: 'text-xl'     },
+  xl: { outer: 'w-20 h-20', text: 'text-2xl'    },
 }
 
 interface AvatarProps {
   name:      string
   avatarUrl: string | null
-  size:      'sm' | 'md' | 'lg'
+  size:      'sm' | 'md' | 'lg' | 'xl'
 }
 
 export function Avatar({ name, avatarUrl, size }: AvatarProps) {
