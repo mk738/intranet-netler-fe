@@ -364,6 +364,13 @@ export function OnboardingTemplatePage() {
 
   const inactiveItems = (data ?? []).filter(i => !i.active)
 
+  // Auto-stäng inaktiv-sektionen när den sista uppgiften återaktiveras
+  useEffect(() => {
+    if (inactiveItems.length === 0 && showInactive) {
+      setShowInactive(false)
+    }
+  }, [inactiveItems.length])
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
