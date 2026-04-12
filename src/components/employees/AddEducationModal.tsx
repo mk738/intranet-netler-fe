@@ -1,8 +1,9 @@
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import clsx from 'clsx'
 import { Modal, Button } from '@/components/ui'
+import { YearPicker } from '@/components/ui/YearPicker'
 import { useAddEducation } from '@/hooks/useEmployees'
 import { FieldError } from '@/components/ui/FieldError'
 import { FormError } from '@/components/ui/FormError'
@@ -14,8 +15,8 @@ const schema = z.object({
   institution: z.string().min(1, 'Obligatoriskt'),
   degree:      z.string().min(1, 'Obligatoriskt'),
   field:       z.string().min(1, 'Obligatoriskt'),
-  startYear:   z.coerce.number().int().min(1900).max(currentYear, `Max ${currentYear}`),
-  endYear:     z.coerce.number().int().min(1900).optional().or(z.literal('')),
+  startYear:   z.number({ required_error: 'Välj startår' }).int().min(1950).max(currentYear),
+  endYear:     z.number().int().min(1950).nullable().optional(),
   description: z.string().optional(),
 }).refine(
   data => !data.endYear || data.endYear >= data.startYear,
@@ -31,7 +32,7 @@ interface Props {
 export function AddEducationModal({ onClose }: Props) {
   const mutation = useAddEducation()
 
-  const { register, handleSubmit, formState: { errors, isDirty } } = useForm<FormData>({
+  const { register, handleSubmit, control, formState: { errors, isDirty } } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
 
@@ -41,7 +42,7 @@ export function AddEducationModal({ onClose }: Props) {
       degree:      data.degree,
       field:       data.field,
       startYear:   data.startYear,
-      endYear:     data.endYear || null,
+      endYear:     data.endYear ?? null,
       description: data.description ?? null,
     }, { onSuccess: onClose })
   }
@@ -63,19 +64,31 @@ export function AddEducationModal({ onClose }: Props) {
       <form id="add-edu-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <label className="field-label">Institution *</label>
-          <input {...register('institution')} className={clsx('field-input', errors.institution && 'field-input-error')} placeholder="Stockholms universitet" />
+          <input
+            {...register('institution')}
+            className={clsx('field-input', errors.institution && 'field-input-error')}
+            placeholder="Stockholms universitet"
+          />
           <FieldError message={errors.institution?.message} />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="field-label">Examen *</label>
-            <input {...register('degree')} className={clsx('field-input', errors.degree && 'field-input-error')} placeholder="Kandidatexamen" />
+            <input
+              {...register('degree')}
+              className={clsx('field-input', errors.degree && 'field-input-error')}
+              placeholder="Kandidatexamen"
+            />
             <FieldError message={errors.degree?.message} />
           </div>
           <div>
             <label className="field-label">Ämne *</label>
-            <input {...register('field')} className={clsx('field-input', errors.field && 'field-input-error')} placeholder="Datavetenskap" />
+            <input
+              {...register('field')}
+              className={clsx('field-input', errors.field && 'field-input-error')}
+              placeholder="Datavetenskap"
+            />
             <FieldError message={errors.field?.message} />
           </div>
         </div>
@@ -83,12 +96,35 @@ export function AddEducationModal({ onClose }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="field-label">Startår *</label>
-            <input {...register('startYear')} type="number" className={clsx('field-input', errors.startYear && 'field-input-error')} placeholder="2018" />
+            <Controller
+              name="startYear"
+              control={control}
+              render={({ field }) => (
+                <YearPicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Välj startår"
+                  error={!!errors.startYear}
+                />
+              )}
+            />
             <FieldError message={errors.startYear?.message} />
           </div>
           <div>
             <label className="field-label">Slutår</label>
-            <input {...register('endYear')} type="number" className={clsx('field-input', errors.endYear && 'field-input-error')} placeholder="Lämna tomt om pågående" />
+            <Controller
+              name="endYear"
+              control={control}
+              render={({ field }) => (
+                <YearPicker
+                  value={field.value ?? null}
+                  onChange={field.onChange}
+                  placeholder="Pågående"
+                  allowEmpty
+                  error={!!errors.endYear}
+                />
+              )}
+            />
             <FieldError message={errors.endYear?.message} />
           </div>
         </div>
