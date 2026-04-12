@@ -1,8 +1,9 @@
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import clsx from 'clsx'
 import { Modal, Button } from '@/components/ui'
+import { BirthDatePicker } from '@/components/ui/BirthDatePicker'
 import { useUpdateMyProfile, useUpdateEmployeeProfile } from '@/hooks/useEmployees'
 import { FieldError } from '@/components/ui/FieldError'
 import { FormError } from '@/components/ui/FormError'
@@ -35,7 +36,7 @@ export function EditProfileModal({ employee, isAdmin, onClose }: Props) {
 
   const p = employee.profile
 
-  const { register, handleSubmit, formState: { errors, isDirty } } = useForm<FormData>({
+  const { register, handleSubmit, control, formState: { errors, isDirty } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       firstName:        p?.firstName         ?? '',
@@ -92,7 +93,17 @@ export function EditProfileModal({ employee, isAdmin, onClose }: Props) {
           </div>
           <div>
             <label className="field-label">Födelsedatum</label>
-            <input {...register('birthDate')} type="date" className="field-input" />
+            <Controller
+              name="birthDate"
+              control={control}
+              render={({ field }) => (
+                <BirthDatePicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={!!errors.birthDate}
+                />
+              )}
+            />
           </div>
         </div>
 
