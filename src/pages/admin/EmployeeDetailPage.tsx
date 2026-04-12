@@ -21,6 +21,7 @@ import { EditBankModal } from '@/components/employees/EditBankModal'
 import { EndAssignmentConfirmModal } from '@/components/placements/EndAssignmentConfirmModal'
 import { AssignConsultantModal } from '@/components/placements/AssignConsultantModal'
 import { OnboardingChecklist } from '@/components/employees/OnboardingChecklist'
+import { HardwareSection } from '@/components/employees/HardwareSection'
 import { useAuth } from '@/context/AuthContext'
 import api from '@/lib/api'
 import type { BenefitDto, Assignment, AssignmentDto, UnplacedDto } from '@/types'
@@ -608,6 +609,9 @@ export function EmployeeDetailPage() {
 
             {/* Skills */}
             <SkillsSection employeeId={data.id} />
+
+            {/* Hardware */}
+            <HardwareSection employeeId={data.id} />
 
             {/* Benefits */}
             <SectionCard
