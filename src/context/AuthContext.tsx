@@ -37,13 +37,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authError, setAuthError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Counter to discard stale callbacks — onAuthStateChanged can fire
-    // multiple times in quick succession during Google sign-in (token refresh),
-    // causing a race where loading gets stuck true indefinitely.
-    let callId = 0
+    // isMounted guards against state updates after unmount (e.g. StrictMode
+    // double-invoke). We intentionally allow concurrent onAuthStateChanged
+    // callbacks to all proceed — Firebase fires 2-3 times during login and
+    // the old callId-based stale-check caused loading to get stuck when the
+    // "winning" callback's API call was slow or the earlier one was discarded.
+    let isMounted = true
 
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
-      const currentId = ++callId
+      if (!isMounted) return
 
       setAuthError(null)
 
@@ -51,34 +53,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(true)
         try {
           const res = await api.post<{ data: Employee }>('/api/auth/me')
-          if (currentId !== callId) return
+          if (!isMounted) return
           setEmployee(res.data.data)
         } catch (err: unknown) {
-          if (currentId !== callId) return
+          if (!isMounted) return
           const status = (err as { response?: { status?: number } }).response?.status
           const code   = getApiCode(err)
           setEmployee(null)
           if (status === 404) {
             await auth.signOut()
-            setAuthError('Kontot hittades inte. Kontakta din administratör.')
+            if (isMounted) setAuthError('Kontot hittades inte. Kontakta din administratör.')
           } else if (code === 'AUTH_ACCOUNT_INACTIVE') {
             await auth.signOut()
-            setAuthError('Ditt konto är inaktiverat. Kontakta din administratör.')
+            if (isMounted) setAuthError('Ditt konto är inaktiverat. Kontakta din administratör.')
           } else {
             setAuthError('Anslutningsfel. Försök igen.')
           }
+        } finally {
+          if (isMounted) setLoading(false)
         }
       } else {
-        if (currentId !== callId) return
         setEmployee(null)
+        setLoading(false)
       }
-
-      if (currentId !== callId) return
-      setLoading(false)
     })
 
     return () => {
-      callId = Infinity
+      isMounted = false
       unsubscribe()
     }
   }, [])
